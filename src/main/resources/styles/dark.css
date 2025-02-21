@@ -1,0 +1,138 @@
+
+
+
+.button, .label, .radio-button{
+    -fx-text-fill: #ececec; /* White text */
+}
+
+
+
+.text-field{
+    -fx-background-color: #363737;
+    -fx-border-width: 1px;
+    -fx-border-color: #444545;
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+    -fx-text-fill: #999a9a;
+    -fx-padding: 5px, 5px;
+
+
+}
+
+
+.text-field:empty{
+    -fx-text-fill: #999a9a ;
+}
+
+.text-field:focused{
+    -fx-background-color: #444545;
+    -fx-text-fill: #999a9a ;
+}
+
+#passwordField{
+    -fx-border-width: 1px 0px 1px 1px;
+    -fx-background-radius: 5px 0px 0px 5px;
+    -fx-border-radius: 5px 0px 0px 5px ;
+}
+
+
+
+
+
+
+
+#passwordTextField{
+    -fx-border-width: 1px 0px 1px 1px;
+    -fx-background-radius: 5px 0px 0px 5px;
+    -fx-border-radius: 5px 0px 0px 5px ;
+    -fx-focus-traversable: false;
+}
+
+
+
+
+.button {
+    -fx-background-color: #737476;
+    -fx-padding: 4px 9px;
+    -fx-background-radius: 6px;
+    -fx-cursor: hand;
+
+}
+
+
+.button:pressed{
+    -fx-background-color: #858587;
+}
+
+
+.backgroundPane{
+    -fx-background-color: #353737;
+    -fx-text-fill: #ececec;
+}
+
+.togglePassword{
+    -fx-background-color: #363737;
+    -fx-border-width: 1px;
+    -fx-border-color: #444545;
+    -fx-background-radius: 0px 5px 5px 0px;
+    -fx-border-radius: 0px 5px 5px 0px;
+    -fx-text-fill: #999a9a;
+    -fx-padding: 5px, 4px;
+    -fx-cursor: hand;
+    -fx-background-insets: 0;
+
+
+}
+
+
+
+.togglePassword .passwordIcon{
+    -fx-icon-code: "far-eye"; /* Open eye icon */
+    -fx-icon-size: 17px;
+    -fx-icon-color: #999a9a;
+}
+
+.togglePassword:pressed{
+    -fx-background-color: #444545;
+}
+
+
+.togglePassword:selected .passwordIcon {
+    -fx-icon-code: "far-eye-slash";
+    -fx-icon-color: #ff6666;
+}
+
+
+
+#registerPane{
+    -fx-background-color: #1e1e1e;
+    -fx-border-radius: 6px;
+    -fx-border-width: 0px;
+    -fx-background-radius: 10px;
+}
+
+
+.closePane {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 1px, 0px;
+    -fx-cursor: hand;
+}
+
+.closePaneIcon {
+    -fx-icon-code: "fas-angle-down";
+    -fx-icon-size: 20px;
+    -fx-icon-color: #999a9a;
+    -fx-scale-x: 2px;
+}
+
+.warningMessage{
+    -fx-text-fill: #ff6666;
+}
+
+
+
+
+
+
+

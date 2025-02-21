@@ -9,8 +9,9 @@ module com.pach.gsm {
     requires org.kordamp.ikonli.javafx;
     requires org.kordamp.bootstrapfx.core;
     requires eu.hansolo.tilesfx;
-    requires com.almasb.fxgl.all;
 
     opens com.pach.gsm to javafx.fxml;
     exports com.pach.gsm;
+    exports com.pach.gsm.controllers;
+    opens com.pach.gsm.controllers to javafx.fxml;
 }
