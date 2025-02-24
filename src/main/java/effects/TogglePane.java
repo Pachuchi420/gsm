@@ -8,8 +8,7 @@ public class TogglePane {
 
     private boolean isPaneActivated;
     private AnchorPane mainPane;
-
-    double initialYPos;
+    private double initialYPos;
 
     public TogglePane(AnchorPane paneToMove, AnchorPane mainPane) {
         this.initialYPos = paneToMove.getTranslateY();
@@ -17,20 +16,20 @@ public class TogglePane {
         this.isPaneActivated = false;
     }
 
-    public void togglePane(AnchorPane paneToMove) {
+    // ✅ Toggle with Callback
+    public void togglePane(AnchorPane paneToMove, Runnable onFinished) {
         if (!this.isPaneActivated) {
-            activatePane(paneToMove);
+            activatePane(paneToMove, onFinished);
         } else {
-            deactivatePane(paneToMove);
+            deactivatePane(paneToMove, onFinished);
         }
     }
 
-    private void activatePane(AnchorPane paneToMove) {
+    private void activatePane(AnchorPane paneToMove, Runnable onFinished) {
         this.isPaneActivated = true;
         double mainPaneYSize = mainPane.getHeight();
         double paneToMoveYSize = paneToMove.getHeight();
-        double visiblePosition =  mainPaneYSize - paneToMoveYSize + 5 ;
-
+        double visiblePosition = mainPaneYSize - paneToMoveYSize + 5;
 
         TranslateTransition slideUp = new TranslateTransition(Duration.seconds(0.15), paneToMove);
         slideUp.setToY(visiblePosition);
@@ -41,26 +40,27 @@ public class TogglePane {
                 new KeyFrame(Duration.millis(150), new KeyValue(paneToMove.translateYProperty(), visiblePosition))
         );
 
-        slideUp.setOnFinished(event -> jiggle.play());
+        slideUp.setOnFinished(event -> {
+            jiggle.play();
+            if (onFinished != null) {
+                onFinished.run();  // ✅ Run the callback AFTER the animation completes
+            }
+        });
+
         slideUp.play();
     }
 
-    private void deactivatePane(AnchorPane paneToMove) {
+    private void deactivatePane(AnchorPane paneToMove, Runnable onFinished) {
         TranslateTransition slideDown = new TranslateTransition(Duration.seconds(0.15), paneToMove);
         slideDown.setToY(this.initialYPos);
         slideDown.setInterpolator(Interpolator.EASE_IN);
 
-       /* registerEmail.clear();
-        registerPassword.clear();
-        registerPassword2.clear();
-        warningEmail2.setText("");
-        warningPassword2.setText("");*/
-
         slideDown.setOnFinished(event -> {
             isPaneActivated = false;
+            if (onFinished != null) {
+                onFinished.run(); // ✅ Run the callback AFTER the animation completes
+            }
         });
-
         slideDown.play();
-
     }
 }

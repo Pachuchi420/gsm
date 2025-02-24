@@ -9,6 +9,8 @@ module com.pach.gsm {
     requires org.kordamp.ikonli.javafx;
     requires org.kordamp.bootstrapfx.core;
     requires eu.hansolo.tilesfx;
+    requires org.json;
+    requires okhttp3;
 
     opens com.pach.gsm to javafx.fxml;
     exports com.pach.gsm;

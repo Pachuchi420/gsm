@@ -1,10 +1,18 @@
 package com.pach.gsm.controllers;
 
-import effects.textEffects;
+import com.pach.gsm.supabaseAuthentication;
 import effects.TogglePane;
+import effects.textEffects;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
+import javafx.stage.Stage;
+
+import java.io.IOException;
 
 public class loginViewController {
 
@@ -26,17 +34,23 @@ public class loginViewController {
     @FXML
     private PasswordField passwordField, passwordField1, passwordField2;
     @FXML
-    public void initialize(){
+    private ToggleButton rememberMeButton;
+
+    private Boolean rememberMe = false;
+    private String storedRefreshToken;
+    @FXML
+    public void initialize() throws IOException {
 
 
         TogglePane registerToggle = new TogglePane(registerPane, mainPane);
-        registerButton.setOnAction(event -> registerToggle.togglePane(registerPane));
-
+        ToggleGroup rememberMeGroup = new ToggleGroup();
+        rememberMeButton.setToggleGroup(rememberMeGroup);
+        rememberMeButton.setOnAction(e -> selectRememberMe());
+        registerButton.setOnAction(event -> openRegisterPane(registerToggle));
         closeRegisterPane.setOnAction(event -> cancelRegistration(registerToggle));
         togglePassword.selectedProperty().addListener((obs, wasSelected, isSelected) -> {
             if (isSelected) {
                 // ✅ Toggle Password is selected
-
                 passwordTextField.setText(passwordField.getText());
                 passwordTextField.setManaged(true);
                 passwordTextField.setVisible(true);
@@ -55,7 +69,6 @@ public class loginViewController {
                 passwordTextField.setVisible(false);
             }
         });
-
         togglePassword1.selectedProperty().addListener((obs, wasSelected, isSelected) -> {
             if (isSelected){
                 // ✅ Toggle Password is selected
@@ -78,7 +91,6 @@ public class loginViewController {
                 passwordTextField1.setVisible(false);
             }
         });
-
         togglePassword2.selectedProperty().addListener((obs, wasSelected, isSelected) -> {
             if (isSelected) {
                 // ✅ Toggle Password is selected
@@ -102,14 +114,39 @@ public class loginViewController {
             }
         });
 
-        loginButton.setOnAction(event -> loginUser());
-        confirmRegistration.setOnAction(event -> registerUser());
+        loginButton.setOnAction(event -> {
+            try {
+                loginUser();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        confirmRegistration.setOnAction(event -> {
+            registerUser(registerToggle);
+        });
+
+
+        applyFocusStyle(togglePassword);
+
 
 
     }
 
+    private void selectRememberMe() {
+        rememberMe = rememberMeButton.isSelected();
+    }
+
+
+
+    private void openRegisterPane(TogglePane registerToggle) {
+        registerToggle.togglePane(registerPane,null);
+        emailField1.requestFocus();
+
+    }
+
     private void cancelRegistration(TogglePane registerToggle) {
-        registerToggle.togglePane(registerPane);
+        registerToggle.togglePane(registerPane, null);
 
         // Clear email fields
         emailField1.clear();
@@ -127,21 +164,127 @@ public class loginViewController {
 
     }
 
-    private void loginUser() {
-        if (emailField.getText().isEmpty() || passwordField.getText().isEmpty()){
-            warningMessage.setText("Please fill in all fields!");
-            textEffects.vanishText(warningMessage);
 
-        }
-    }
-
-    private void registerUser(){
-        if(emailField1.getText().isEmpty()
+    private void registerUser(TogglePane registerToggle) {
+        if (emailField1.getText().isEmpty()
                 || passwordField1.getText().isEmpty()
                 || passwordField2.getText().isEmpty()) {
             warningMessage1.setText("Please fill in all fields!");
-            textEffects.vanishText(warningMessage1);
+            textEffects.vanishText(warningMessage1, 2);
+            return;
         }
+
+        String email = emailField1.getText();
+        String password1 = passwordField1.getText();
+        String password2 = passwordField2.getText();
+
+        if (!password1.equals(password2)) {
+            warningMessage1.setText("Passwords do not match!");
+            textEffects.vanishText(warningMessage1, 2);
+            passwordField1.clear();
+            passwordField2.clear();
+            return;
+        }
+
+        new Thread(() -> {
+            try {
+                String registrationMessage = supabaseAuthentication.registerUser(email, password1);
+
+                Platform.runLater(() -> {
+                    // Show the message in warningMessage1
+                    warningMessage1.setText(registrationMessage);
+
+                    if (registrationMessage.startsWith("✅")) {
+                        // SUCCESS: Clear input fields
+                        emailField1.clear();
+                        passwordField1.clear();
+                        passwordField2.clear();
+                        passwordTextField1.clear();
+                        passwordTextField2.clear();
+                        togglePassword1.setSelected(false);
+                        togglePassword2.setSelected(false);
+
+                        // ✅ Only toggle the pane if registration was successful
+                        registerToggle.togglePane(registerPane, null);
+                    }
+
+                    textEffects.vanishText(warningMessage1, 2); // Make text fade out
+                });
+
+            } catch (IOException e) {
+                Platform.runLater(() -> {
+                    warningMessage1.setText("🚨 Error connecting to the server. Please try again.");
+                    textEffects.vanishText(warningMessage1);
+                });
+                e.printStackTrace();
+            }
+        }).start();
+    }
+
+
+
+    private void loginUser() throws IOException {
+        if(emailField.getText().isEmpty() || passwordField.getText().isEmpty()) {
+            warningMessage.setText("Please fill in all fields!");
+            textEffects.vanishText(warningMessage, 2);
+            return;
+        }
+
+        String email = emailField.getText();
+        String password = passwordField.getText();
+
+
+
+        new Thread(() -> {
+            try {
+                String loginMessage = supabaseAuthentication.loginUser(email, password, rememberMe);
+
+                Platform.runLater(() -> {
+
+
+                    if (loginMessage.startsWith("✅")) {
+                        emailField.clear();
+                        passwordField.clear();
+                        passwordTextField.clear();
+                        togglePassword.setSelected(false);
+
+                        // Load the list view
+                        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/com/pach/gsm/views/listView.fxml"));
+                        Scene listViewScene = null;
+                        try {
+                            listViewScene = new Scene(fxmlLoader.load());
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+
+                        Stage stage = (Stage) loginButton.getScene().getWindow();
+                        stage.setScene(listViewScene);
+                        return;
+                    }
+                    warningMessage.setText(loginMessage);
+                    textEffects.vanishText(warningMessage, 2); // Make text fade out
+                });
+
+            } catch (IOException e) {
+                Platform.runLater(() -> {
+                    warningMessage.setText("🚨 Error connecting to the server. Please try again.");
+                    textEffects.vanishText(warningMessage);
+                });
+                e.printStackTrace();
+            }
+        }).start();
+    }
+
+    private void applyFocusStyle(ToggleButton togglePassword) {
+        passwordField.focusedProperty().addListener((obs, oldValue, newValue) -> {
+            if (newValue) {
+                // When focused, change border color
+                togglePassword.setStyle("-fx-border-color: #439329;");
+            } else {
+                // Reset when unfocused
+                togglePassword.setStyle("");
+            }
+        });
     }
 
 
