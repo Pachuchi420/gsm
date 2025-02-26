@@ -2,18 +2,48 @@ package effects;
 
 import javafx.animation.*;
 import javafx.scene.layout.AnchorPane;
+import javafx.stage.Stage;
 import javafx.util.Duration;
 
 public class TogglePane {
 
     private boolean isPaneActivated;
-    private AnchorPane mainPane;
+    private AnchorPane mainPane, paneToMove;
+
     private double initialYPos;
 
-    public TogglePane(AnchorPane paneToMove, AnchorPane mainPane) {
+    public TogglePane(AnchorPane paneToMove, AnchorPane mainPane, boolean dynamic) {
+        this.paneToMove = paneToMove;
         this.initialYPos = paneToMove.getTranslateY();
         this.mainPane = mainPane;
         this.isPaneActivated = false;
+
+        if (dynamic) {
+            mainPane.heightProperty().addListener((obs, oldHeight, newHeight) -> checkSize());
+            mainPane.widthProperty().addListener((obs, oldWidth, newWidth) -> checkSize());
+        }
+    }
+
+
+    private void checkSize() {
+        updateMoveToPane(mainPane.getWidth(), mainPane.getHeight());
+    }
+
+    private void updateMoveToPane(double width, double height) {
+        double originalYPos = this.initialYPos;
+        double originalHeight = this.paneToMove.getHeight();
+
+        // Update the pane's size
+        this.paneToMove.setPrefSize(width, height);
+
+        // Calculate the new Y position
+        double newYPos = originalYPos + (height - originalHeight);
+        this.initialYPos = newYPos;
+
+        // ✅ If the pane has never been opened, ensure it starts hidden
+        if (!isPaneActivated) {
+            this.paneToMove.setTranslateY(newYPos);
+        }
     }
 
     // ✅ Toggle with Callback
@@ -24,6 +54,7 @@ public class TogglePane {
             deactivatePane(paneToMove, onFinished);
         }
     }
+
 
     private void activatePane(AnchorPane paneToMove, Runnable onFinished) {
         this.isPaneActivated = true;

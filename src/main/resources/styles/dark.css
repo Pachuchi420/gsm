@@ -32,6 +32,9 @@
     -fx-text-fill: #999a9a ;
 }
 
+
+
+
 #passwordField{
     -fx-border-width: 1px 0px 1px 1px;
     -fx-background-radius: 5px 0px 0px 5px;
@@ -48,11 +51,19 @@
 
 
 
-#registerTitle{
+.paneTitle{
     -fx-border-width: 0px 0px 2px 0px;
     -fx-padding: 5px;
     -fx-border-color: #444545;
+    -fx-font-size: 24px;
 }
+
+.paneTitle .label{
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+}
+
+
 
 .button {
     -fx-background-color: #737476;
@@ -122,8 +133,9 @@
 #registerPane{
     -fx-background-color: #1e1e1e;
     -fx-border-radius: 6px;
-    -fx-border-width: 0px;
     -fx-background-radius: 10px;
+    -fx-border-color: #444545;
+    -fx-border-width: 1px 0px 0px 0px;
 }
 
 
@@ -185,5 +197,17 @@
     -fx-border-width: 0px 1px 2px 0px;
     -fx-border-color: #444545;
     -fx-text-fill: #dddddd;
+}
+
+.logoutButton .logoutButtonIcon{
+    -fx-rotate: 180;
+    -fx-icon-color: #ececec;
+}
+
+.auxiliaryPane{
+    -fx-background-color: #272828;
+    -fx-text-fill: #ececec;
+    -fx-border-color: #444545;
+    -fx-border-width: 1px 0px 0px 0px;
 }
 

@@ -212,5 +212,37 @@ public class supabaseAuthentication {
         return refreshToken;
     }
 
+    public boolean logoutUser() {
+        try {
+            if (refreshToken == null || refreshToken.isEmpty()) {
+                System.out.println("⚠️ No active session found. User is already logged out.");
+                return false;
+            }
+
+
+
+            File tokenFile = new File(TOKEN_FILE);
+            if (tokenFile.exists()) {
+                if (tokenFile.delete()) {
+                    System.out.println("✅ Refresh token deleted successfully.");
+                } else {
+                    System.out.println("⚠️ Failed to delete refresh token file.");
+                }
+            }
+
+            this.refreshToken = null;
+
+            singletonInstance = null;
+
+            System.out.println("✅ User logged out successfully.");
+            return true;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("🚨 Error during logout.");
+            return false;
+        }
+    }
+
 
 }

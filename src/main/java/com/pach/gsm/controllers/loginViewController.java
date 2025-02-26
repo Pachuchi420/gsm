@@ -42,7 +42,18 @@ public class loginViewController {
     public void initialize() throws IOException {
 
 
-        TogglePane registerToggle = new TogglePane(registerPane, mainPane);
+        TogglePane registerToggle = new TogglePane(registerPane, mainPane, false);
+
+        mainPane.setOnKeyPressed(event -> {
+            if (event.getCode() == javafx.scene.input.KeyCode.ESCAPE) {
+                if (registerPane.isVisible()) { // Ensure ESC only works when the pane is open
+                    cancelRegistration(registerToggle);
+                }
+            }
+        });
+
+        mainPane.setFocusTraversable(true); // Ensure the pane can receive key events
+
         ToggleGroup rememberMeGroup = new ToggleGroup();
         rememberMeButton.setToggleGroup(rememberMeGroup);
         rememberMeButton.setOnAction(e -> selectRememberMe());
@@ -132,6 +143,9 @@ public class loginViewController {
 
 
     }
+
+
+
 
     private void selectRememberMe() {
         rememberMe = rememberMeButton.isSelected();
@@ -258,6 +272,8 @@ public class loginViewController {
                         }
 
                         Stage stage = (Stage) loginButton.getScene().getWindow();
+                        stage.setTitle("GSM - ListView");
+                        stage.setResizable(true);
                         stage.setScene(listViewScene);
                         return;
                     }

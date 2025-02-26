@@ -99,11 +99,11 @@
                         <Insets bottom="-10.0" />
                      </VBox.margin>
                   </HBox>
-                  <HBox id="registerTitle" alignment="CENTER" prefHeight="0.0" prefWidth="600.0">
+                  <HBox alignment="CENTER" prefHeight="0.0" prefWidth="600.0" styleClass="paneTitle">
                      <children>
                         <Label prefHeight="29.0" prefWidth="188.0" text="Create an account">
                            <font>
-                              <Font name="System Bold" size="24.0" />
+                              <Font size="10.0" />
                            </font>
                            <HBox.margin>
                               <Insets />

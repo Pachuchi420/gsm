@@ -20,12 +20,12 @@ public class main extends Application {
 
         if (refreshToken != null) {
             System.out.println("🔄 Auto-login enabled. Redirecting to listView.fxml...");
-            fxmlFile = "/com/pach/gsm/views/listView.fxml"; // If token exists, go to listView
+            fxmlFile = "/com/pach/gsm/views/listView.fxml";
             stage.setTitle("GSM - Sales List");
             FXMLLoader fxmlLoader = new FXMLLoader(main.class.getResource(fxmlFile));
             Scene scene = new Scene(fxmlLoader.load());
             stage.setMinWidth(1000);
-            stage.setMinHeight(700);
+            stage.setMinHeight(600);
             stage.setScene(scene);
             stage.show();
         } else {
