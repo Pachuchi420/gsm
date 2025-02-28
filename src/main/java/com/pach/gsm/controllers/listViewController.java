@@ -7,8 +7,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 
@@ -21,21 +20,47 @@ public class listViewController {
     @FXML
     private AnchorPane addItemPane, mainPane;
 
+    @FXML
+    private TextField itemName, itemPrice;
+
+    @FXML
+    private TextArea itemDescription;
+
+    @FXML
+    private ToggleButton itemPriorityHigh, itemPriorityMedium,itemPriorityLow;
+
+    @FXML
+    private RadioButton itemCurrencyUSD, itemCurrencyMXN, itemCurrencyEUR;
+
+
+
+
+
 
 
     @FXML
     public void initialize() throws IOException {
 
+        addItemPane.setVisible(false);
 
         TogglePane addItemToggle = new TogglePane(addItemPane, mainPane, true);
+
         mainPane.setOnKeyPressed(event -> {
-            if (event.getCode() == javafx.scene.input.KeyCode.ESCAPE) {
-                if (addItemPane.isVisible()) { // Ensure ESC only works when the pane is open
-                    cancelAddItem(addItemToggle);
-                }
+            switch (event.getCode()) {
+                case ENTER:
+                    if (!addItemPane.isVisible()) {
+                        openAddItemPane(addItemToggle);
+                    }
+                    break;
+                case ESCAPE:
+                    if (addItemPane.isVisible()) {
+                        cancelAddItem(addItemToggle);
+                    }
+                    break;
+                default:
+                    break;
             }
         });
-
 
 
         addItem.setOnAction(event -> openAddItemPane(addItemToggle));

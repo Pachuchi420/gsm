@@ -19,15 +19,12 @@ public class TogglePane {
         this.isPaneActivated = false;
 
         if (dynamic) {
-            mainPane.heightProperty().addListener((obs, oldHeight, newHeight) -> checkSize());
-            mainPane.widthProperty().addListener((obs, oldWidth, newWidth) -> checkSize());
+            mainPane.heightProperty().addListener((obs, oldHeight, newHeight) -> updateMoveToPane(mainPane.getWidth(), mainPane.getHeight()));
+            mainPane.widthProperty().addListener((obs, oldWidth, newWidth) -> updateMoveToPane(mainPane.getWidth(), mainPane.getHeight()));
         }
     }
 
 
-    private void checkSize() {
-        updateMoveToPane(mainPane.getWidth(), mainPane.getHeight());
-    }
 
     private void updateMoveToPane(double width, double height) {
         double originalYPos = this.initialYPos;
@@ -58,11 +55,12 @@ public class TogglePane {
 
     private void activatePane(AnchorPane paneToMove, Runnable onFinished) {
         this.isPaneActivated = true;
+        this.paneToMove.setVisible(true);
         double mainPaneYSize = mainPane.getHeight();
         double paneToMoveYSize = paneToMove.getHeight();
         double visiblePosition = mainPaneYSize - paneToMoveYSize + 5;
 
-        TranslateTransition slideUp = new TranslateTransition(Duration.seconds(0.15), paneToMove);
+        TranslateTransition slideUp = new TranslateTransition(Duration.seconds(0.35), paneToMove);
         slideUp.setToY(visiblePosition);
         slideUp.setInterpolator(Interpolator.EASE_OUT);
 
@@ -82,16 +80,87 @@ public class TogglePane {
     }
 
     private void deactivatePane(AnchorPane paneToMove, Runnable onFinished) {
-        TranslateTransition slideDown = new TranslateTransition(Duration.seconds(0.15), paneToMove);
+        TranslateTransition slideDown = new TranslateTransition(Duration.seconds(0.35), paneToMove);
         slideDown.setToY(this.initialYPos);
         slideDown.setInterpolator(Interpolator.EASE_IN);
 
         slideDown.setOnFinished(event -> {
             isPaneActivated = false;
+            this.paneToMove.setVisible(false);
             if (onFinished != null) {
                 onFinished.run(); // ✅ Run the callback AFTER the animation completes
             }
         });
         slideDown.play();
+
     }
+
+
+
+    public TogglePane(AnchorPane paneToMove, AnchorPane mainPane, boolean dynamic, double speed) {
+        this.paneToMove = paneToMove;
+        this.initialYPos = paneToMove.getTranslateY();
+        this.mainPane = mainPane;
+        this.isPaneActivated = false;
+
+        if (dynamic) {
+            mainPane.heightProperty().addListener((obs, oldHeight, newHeight) -> updateMoveToPane(mainPane.getWidth(), mainPane.getHeight()));
+            mainPane.widthProperty().addListener((obs, oldWidth, newWidth) -> updateMoveToPane(mainPane.getWidth(), mainPane.getHeight()));
+        }
+    }
+
+
+
+    public void togglePane(AnchorPane paneToMove, Runnable onFinished, double speed) {
+        if (!this.isPaneActivated) {
+            activatePane(paneToMove, onFinished, speed);
+        } else {
+            deactivatePane(paneToMove, onFinished, speed);
+        }
+    }
+
+
+    private void activatePane(AnchorPane paneToMove, Runnable onFinished, double speed) {
+        this.isPaneActivated = true;
+        this.paneToMove.setVisible(true);
+        double mainPaneYSize = mainPane.getHeight();
+        double paneToMoveYSize = paneToMove.getHeight();
+        double visiblePosition = mainPaneYSize - paneToMoveYSize + 5;
+
+        TranslateTransition slideUp = new TranslateTransition(Duration.seconds(speed), paneToMove);
+        slideUp.setToY(visiblePosition);
+        slideUp.setInterpolator(Interpolator.EASE_OUT);
+
+        Timeline jiggle = new Timeline(
+                new KeyFrame(Duration.millis(50), new KeyValue(paneToMove.translateYProperty(), visiblePosition - 5)),
+                new KeyFrame(Duration.millis(150), new KeyValue(paneToMove.translateYProperty(), visiblePosition))
+        );
+
+        slideUp.setOnFinished(event -> {
+            jiggle.play();
+            if (onFinished != null) {
+                onFinished.run();  // ✅ Run the callback AFTER the animation completes
+            }
+        });
+
+        slideUp.play();
+    }
+
+    private void deactivatePane(AnchorPane paneToMove, Runnable onFinished, double speed) {
+        TranslateTransition slideDown = new TranslateTransition(Duration.seconds(speed), paneToMove);
+        slideDown.setToY(this.initialYPos);
+        slideDown.setInterpolator(Interpolator.EASE_IN);
+
+        slideDown.setOnFinished(event -> {
+            isPaneActivated = false;
+            this.paneToMove.setVisible(false);
+            if (onFinished != null) {
+                onFinished.run(); // ✅ Run the callback AFTER the animation completes
+            }
+        });
+        slideDown.play();
+
+    }
+
+
 }

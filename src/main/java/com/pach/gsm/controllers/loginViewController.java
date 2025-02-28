@@ -154,13 +154,13 @@ public class loginViewController {
 
 
     private void openRegisterPane(TogglePane registerToggle) {
-        registerToggle.togglePane(registerPane,null);
+        registerToggle.togglePane(registerPane,null, 0.15);
         emailField1.requestFocus();
 
     }
 
     private void cancelRegistration(TogglePane registerToggle) {
-        registerToggle.togglePane(registerPane, null);
+        registerToggle.togglePane(registerPane,null, 0.15);
 
         // Clear email fields
         emailField1.clear();
