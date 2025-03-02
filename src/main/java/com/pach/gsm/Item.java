@@ -11,6 +11,8 @@ import java.util.UUID;
 
 public class Item implements Serializable {
     private String id;
+
+    private String userID;
     private String name;
     private String description;
     private byte[] imageData;
@@ -27,6 +29,7 @@ public class Item implements Serializable {
 
     public Item(String name, String description, byte[] imageData, int price, String currency, int priority) {
         this.id = makeUniqueID();
+        this.userID = storageManager.getInstance().getUserID();
         this.name = name;
         this.description = description;
         this.imageData = imageData;
@@ -188,4 +191,19 @@ public class Item implements Serializable {
             return null;
         }
     }
+
+    public String getUserID() {
+        return this.userID;
+    }
+
+
+
+    public void setUserID(String userID) {
+        this.userID = userID;
+    }
+
+    public LocalDate getUploadDate(){
+        return this.uploadDate;
+    }
+
 }

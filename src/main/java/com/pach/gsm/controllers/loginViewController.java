@@ -201,37 +201,26 @@ public class loginViewController {
         }
 
         new Thread(() -> {
-            try {
-                String registrationMessage = supabaseAuthentication.registerUser(email, password1);
+            String registrationMessage = supabaseAuthentication.registerUser(email, password1);
 
-                Platform.runLater(() -> {
-                    // Show the message in warningMessage1
+            Platform.runLater(() -> {
+                if (registrationMessage.equals("success")) {
+                    emailField1.clear();
+                    passwordField1.clear();
+                    passwordField2.clear();
+                    passwordTextField1.clear();
+                    passwordTextField2.clear();
+                    togglePassword1.setSelected(false);
+                    togglePassword2.setSelected(false);
+                    registerToggle.togglePane(registerPane, null);
+                } else {
                     warningMessage1.setText(registrationMessage);
+                    textEffects.vanishText(warningMessage1, 2);
+                }
 
-                    if (registrationMessage.startsWith("✅")) {
-                        // SUCCESS: Clear input fields
-                        emailField1.clear();
-                        passwordField1.clear();
-                        passwordField2.clear();
-                        passwordTextField1.clear();
-                        passwordTextField2.clear();
-                        togglePassword1.setSelected(false);
-                        togglePassword2.setSelected(false);
 
-                        // ✅ Only toggle the pane if registration was successful
-                        registerToggle.togglePane(registerPane, null);
-                    }
+            });
 
-                    textEffects.vanishText(warningMessage1, 2); // Make text fade out
-                });
-
-            } catch (IOException e) {
-                Platform.runLater(() -> {
-                    warningMessage1.setText("🚨 Error connecting to the server. Please try again.");
-                    textEffects.vanishText(warningMessage1);
-                });
-                e.printStackTrace();
-            }
         }).start();
     }
 
@@ -250,44 +239,34 @@ public class loginViewController {
 
 
         new Thread(() -> {
-            try {
-                String loginMessage = supabaseAuthentication.loginUser(email, password, rememberMe);
+            String loginMessage = supabaseAuthentication.loginUser(email, password, rememberMe);
 
-                Platform.runLater(() -> {
+            Platform.runLater(() -> {
+                if (loginMessage.equals("success")) {
+                    emailField.clear();
+                    passwordField.clear();
+                    passwordTextField.clear();
+                    togglePassword.setSelected(false);
 
-
-                    if (loginMessage.startsWith("✅")) {
-                        emailField.clear();
-                        passwordField.clear();
-                        passwordTextField.clear();
-                        togglePassword.setSelected(false);
-
-                        // Load the list view
-                        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/com/pach/gsm/views/listView.fxml"));
-                        Scene listViewScene = null;
-                        try {
-                            listViewScene = new Scene(fxmlLoader.load());
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-
-                        Stage stage = (Stage) loginButton.getScene().getWindow();
-                        stage.setTitle("GSM - ListView");
-                        stage.setResizable(true);
-                        stage.setScene(listViewScene);
-                        return;
+                    // Load the list view
+                    FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/com/pach/gsm/views/listView.fxml"));
+                    Scene listViewScene = null;
+                    try {
+                        listViewScene = new Scene(fxmlLoader.load());
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
                     }
-                    warningMessage.setText(loginMessage);
-                    textEffects.vanishText(warningMessage, 2); // Make text fade out
-                });
 
-            } catch (IOException e) {
-                Platform.runLater(() -> {
-                    warningMessage.setText("🚨 Error connecting to the server. Please try again.");
-                    textEffects.vanishText(warningMessage);
-                });
-                e.printStackTrace();
-            }
+                    Stage stage = (Stage) loginButton.getScene().getWindow();
+                    stage.setTitle("GSM - ListView");
+                    stage.setResizable(true);
+                    stage.setScene(listViewScene);
+                    return;
+                }
+                warningMessage.setText(loginMessage);
+                textEffects.vanishText(warningMessage, 2); // Make text fade out
+            });
+
         }).start();
     }
 

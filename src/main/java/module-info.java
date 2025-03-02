@@ -11,6 +11,9 @@ module com.pach.gsm {
     requires eu.hansolo.tilesfx;
     requires org.json;
     requires okhttp3;
+    requires com.google.gson;
+    requires java.prefs;
+    requires java.sql;
 
     opens com.pach.gsm to javafx.fxml;
     exports com.pach.gsm;

@@ -24,16 +24,16 @@
    <children>
       <BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="1000.0" styleClass="backgroundPane" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
          <center>
-            <TableView prefHeight="508.0" prefWidth="580.0" styleClass="column-header-background" BorderPane.alignment="CENTER">
+            <TableView fx:id="itemList" prefHeight="508.0" prefWidth="580.0" styleClass="column-header-background" BorderPane.alignment="CENTER">
                <columns>
-                  <TableColumn prefWidth="75.0" text="ID" />
-                  <TableColumn prefWidth="75.0" text="Name" />
-                  <TableColumn prefWidth="75.0" text="Description" />
-                  <TableColumn prefWidth="75.0" text="Price" />
-                  <TableColumn prefWidth="75.0" text="Reserved" />
-                  <TableColumn prefWidth="75.0" text="Sold" />
-                  <TableColumn prefWidth="75.0" text="Reservation" />
-                  <TableColumn prefWidth="75.0" text="Priority" />
+                  <TableColumn fx:id="itemColumnID" prefWidth="75.0" text="ID" />
+                  <TableColumn fx:id="itemColumnName" prefWidth="75.0" text="Name" />
+                  <TableColumn fx:id="itemColumnDescription" prefWidth="75.0" text="Description" />
+                  <TableColumn fx:id="itemColumnPrice" prefWidth="75.0" text="Price" />
+                  <TableColumn fx:id="itemColumnReserved" prefWidth="75.0" text="Reserved" />
+                  <TableColumn fx:id="itemColumnSold" prefWidth="75.0" text="Sold" />
+                  <TableColumn fx:id="itemColumnReservation" prefWidth="75.0" text="Reservation" />
+                  <TableColumn fx:id="itemColumnPriority" prefWidth="75.0" text="Priority" />
                </columns>
                <columnResizePolicy>
                   <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
@@ -183,36 +183,47 @@
                                     <Label text="Name:" />
                                     <Label text="Description:" GridPane.rowIndex="1" />
                                     <Label text="Price:" GridPane.rowIndex="2" />
-                                    <TextField fx:id="itemName" GridPane.columnIndex="1" />
-                                    <TextArea fx:id="itemDescription" prefHeight="0.0" prefWidth="411.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                                    <TextField fx:id="itemPrice" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                    <TextField fx:id="itemAddName" GridPane.columnIndex="1" />
+                                    <TextArea fx:id="itemAddDescription" prefHeight="0.0" prefWidth="411.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                    <TextField fx:id="itemAddPrice" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                                     <Label text="Currency:" GridPane.rowIndex="3" />
                                     <HBox alignment="CENTER_LEFT" prefHeight="100.0" prefWidth="200.0" spacing="10.0" GridPane.columnIndex="1" GridPane.rowIndex="3">
                                        <children>
-                                          <RadioButton fx:id="itemCurrencyUSD" mnemonicParsing="false" text="USD" />
-                                          <RadioButton fx:id="itemCurrencyMXN" mnemonicParsing="false" text="MXN" />
-                                          <RadioButton fx:id="itemCurrencyEUR" mnemonicParsing="false" text="EUR" />
+                                          <RadioButton fx:id="itemAddCurrencyUSD" mnemonicParsing="false" text="USD" />
+                                          <RadioButton fx:id="itemAddCurrencyMXN" mnemonicParsing="false" text="MXN" />
+                                          <RadioButton fx:id="itemAddCurrencyEUR" mnemonicParsing="false" text="EUR" />
                                        </children>
                                        <padding>
                                           <Insets left="5.0" />
                                        </padding>
                                     </HBox>
                                     <Label text="Image(s):" GridPane.rowIndex="4" />
-                                    <Button fx:id="itemImage" mnemonicParsing="false" text="Image" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                                    <Button fx:id="itemAddImage" mnemonicParsing="false" text="Image" GridPane.columnIndex="1" GridPane.rowIndex="4" />
                                     <Label text="Priority:" GridPane.rowIndex="5" />
                                     <HBox prefHeight="100.0" prefWidth="200.0" spacing="10.0" GridPane.columnIndex="1" GridPane.rowIndex="5">
                                        <children>
-                                          <ToggleButton fx:id="itemPriorityHigh" mnemonicParsing="false" text="High" />
-                                          <ToggleButton fx:id="itemPriorityMedium" mnemonicParsing="false" text="Medium" />
-                                          <ToggleButton fx:id="itemPriorityLow" mnemonicParsing="false" text="Low" />
+                                          <ToggleButton fx:id="itemAddPriorityHigh" mnemonicParsing="false" text="High" />
+                                          <ToggleButton fx:id="itemAddPriorityMedium" mnemonicParsing="false" text="Medium" />
+                                          <ToggleButton fx:id="itemAddPriorityLow" mnemonicParsing="false" text="Low" />
                                        </children>
                                     </HBox>
                                  </children>
                               </GridPane>
+                              <HBox alignment="CENTER" prefHeight="49.0" prefWidth="462.0">
+                                 <children>
+                                    <Label fx:id="warningAddMessage" styleClass="warningMessage" />
+                                 </children>
+                              </HBox>
                            </children>
                         </VBox>
                         <VBox prefHeight="529.0" prefWidth="502.0" />
                      </children></HBox>
+                  <HBox id="bottomMenu" alignment="CENTER" prefHeight="49.0" prefWidth="1000.0" spacing="20.0" styleClass="auxiliaryMenu">
+                     <children>
+                        <Button fx:id="confirmAddItem" mnemonicParsing="false" text="Add" />
+                        <Button fx:id="cancelAdditem" mnemonicParsing="false" text="Cancel" />
+                     </children>
+                  </HBox>
                </children>
             </VBox>
          </children>
