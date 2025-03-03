@@ -327,7 +327,6 @@ public class supabaseAuthentication {
                     return null;
                 }
             } else {
-                // System.out.println("❌ Failed to refresh token. Response code: " + response.code());
                 return null;
             }
         } catch (IOException e) {

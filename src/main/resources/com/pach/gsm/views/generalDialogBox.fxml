@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<AnchorPane fx:id="mainPane" prefHeight="200.0" prefWidth="400.0" styleClass="backgroundPane" stylesheets="@../../../../styles/dark.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.pach.gsm.controllers.generalDialogBoxController">
+   <children>
+      <VBox alignment="TOP_CENTER" prefHeight="200.0" prefWidth="400.0">
+         <children>
+            <HBox alignment="CENTER" prefHeight="43.0" prefWidth="400.0" styleClass="paneTitle">
+               <children>
+                  <Label fx:id="dialogTitle" />
+               </children>
+            </HBox>
+            <HBox alignment="CENTER" prefHeight="118.0" prefWidth="400.0" styleClass="dialogBody">
+               <children>
+                  <Label fx:id="dialogBody" />
+               </children>
+               <padding>
+                  <Insets left="50.0" right="50.0" />
+               </padding></HBox>
+            <HBox id="bottomMenu" alignment="CENTER" prefHeight="47.0" prefWidth="400.0" spacing="35.0" styleClass="auxiliaryMenu">
+               <children>
+                  <Button fx:id="dialogConfirmButton" mnemonicParsing="false" />
+                  <Button fx:id="dialogCancelButton" mnemonicParsing="false" />
+               </children>
+            </HBox>
+         </children>
+      </VBox>
+   </children>
+</AnchorPane>

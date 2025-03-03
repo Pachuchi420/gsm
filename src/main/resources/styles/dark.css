@@ -5,7 +5,32 @@
     -fx-text-fill: #ececec; /* White text */
 }
 
+.table-column {
+    -fx-alignment: CENTER;
+}
 
+.table-view .table-cell{
+    -fx-border-color: transparent;
+    -fx-padding: 2 0 2 10px;
+    -fx-text-fill: #dddddd;
+}
+.table-row-cell:hover {
+    -fx-background-color: rgba(179, 255, 208, 0.07);
+}
+.table-row-cell:odd{
+    -fx-background-color: #212120;
+    -fx-background-insets: 0, 0 0 1 0;
+    -fx-padding: 0.0em;
+}
+.table-row-cell:even{
+    -fx-background-color: #2b2b2a;
+    -fx-background-insets: 0, 0 0 1 0;
+    -fx-padding: 0.0em;
+}
+
+.table-row-cell:selected{
+    -fx-background-color: #45932b;
+}
 
 
 
@@ -265,4 +290,9 @@
     -fx-icon-code: "fas-circle"; /* Open eye icon */
     -fx-icon-size: 14px;
     -fx-icon-color: #439329;
+}
+
+
+.dialogBody{
+    -fx-font-size: 16px;
 }

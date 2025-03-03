@@ -7,7 +7,7 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 
-public class main extends Application {
+public class Main extends Application {
 
     @Override
     public void start(Stage stage) throws IOException {
@@ -18,14 +18,14 @@ public class main extends Application {
         if (supabaseAuthentication.autoLogin()){
             fxmlFile = "/com/pach/gsm/views/listView.fxml"; // Otherwise, show login
             stage.setTitle("GSM");
-            FXMLLoader fxmlLoader = new FXMLLoader(main.class.getResource(fxmlFile));
+            FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource(fxmlFile));
             Scene scene = new Scene(fxmlLoader.load(), 1000, 600);
             stage.setScene(scene);
             stage.show();
         } else {
             fxmlFile = "/com/pach/gsm/views/loginView.fxml"; // Otherwise, show login
             stage.setTitle("GSM - Login");
-            FXMLLoader fxmlLoader = new FXMLLoader(main.class.getResource(fxmlFile));
+            FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource(fxmlFile));
             Scene scene = new Scene(fxmlLoader.load(), 600, 400);
             stage.setResizable(false);
             stage.setScene(scene);

@@ -63,7 +63,6 @@ public class supabaseDB {
             return false;
         }
 
-        // ✅ Properly Construct JSON String Without Extra Commas
         StringBuilder jsonBuilder = new StringBuilder("{");
 
         jsonBuilder.append("\"id\":\"").append(item.getId()).append("\",");
@@ -71,7 +70,7 @@ public class supabaseDB {
         jsonBuilder.append("\"name\":\"").append(item.getName()).append("\",");
 
         if (item.getDescription() != null) {
-            jsonBuilder.append("\"description\":\"").append(item.getDescription().replace("\t", " ")).append("\","); // ✅ Fix: Remove tabs
+            jsonBuilder.append("\"description\":\"").append(item.getDescription().replace("\t", "    ")).append("\",");
         }
 
         jsonBuilder.append("\"price\":").append(item.getPrice()).append(",");
@@ -131,6 +130,13 @@ public class supabaseDB {
         }
     }
     public static boolean updateItem(String itemID, Item updatedItem) {
+        String accessToken = storageManager.getInstance().getAccessToken();
+
+        if (accessToken == null || accessToken.isEmpty()) {
+            System.out.println("❌ Error: No access token. Cannot sync item to Supabase.");
+            return false;
+        }
+
         String url = SUPABASE_URL + "/rest/v1/items?id=eq." + itemID;
 
         String jsonUpdate = gson.toJson(updatedItem);

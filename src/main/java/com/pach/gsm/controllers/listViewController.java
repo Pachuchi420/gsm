@@ -7,33 +7,44 @@ import com.pach.gsm.supabaseDB;
 import effects.TogglePane;
 import effects.textEffects;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.AnchorPane;
+import javafx.stage.FileChooser;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.time.LocalDate;
 import java.util.List;
 
 public class listViewController {
     @FXML
-    private Label warningAddMessage;
+    private Label warningAddMessage, itemListWarning, addItemTitle;
 
     @FXML
-    private Button logoutButton, addItem, closeAddItemPane, confirmAddItem, cancelAdditem;
+    private Button logoutButton, addItem, closeAddItemPane, confirmAddItem, cancelAdditem, itemAddImage, removeItem, editItem;
 
     @FXML
     private AnchorPane addItemPane, mainPane;
 
     @FXML
-    private TableView itemList;
+    private TableView<Item> itemList;
 
 
     @FXML
-    private TableColumn<Item, String> itemColumnID, itemColumnName, itemColumnDescription, itemColumnReservation;
+    private TableColumn<Item, String> itemColumnID, itemColumnName, itemColumnDescription, itemColumnReservationDate;
 
 
     @FXML
@@ -56,9 +67,17 @@ public class listViewController {
     @FXML
     private RadioButton itemAddCurrencyUSD, itemAddCurrencyMXN, itemAddCurrencyEUR;
 
+    @FXML
+    private ImageView itemAddImageView, imageThumbnail;
 
     private ToggleGroup currencyGroup;
     private ToggleGroup priorityGroup;
+    private byte[] itemAddImageData;
+
+    private long lastEnterPressTime = 0;
+    private final long DOUBLE_PRESS_THRESHOLD = 300;
+
+
 
 
     @FXML
@@ -72,7 +91,6 @@ public class listViewController {
 
 
         addItemPane.setVisible(false);
-
         TogglePane addItemToggle = new TogglePane(addItemPane, mainPane, true);
 
 
@@ -81,25 +99,34 @@ public class listViewController {
         itemAddCurrencyMXN.setToggleGroup(currencyGroup);
         itemAddCurrencyEUR.setToggleGroup(currencyGroup);
 
+        itemAddImage.setOnAction(event -> selectImage());
 
         priorityGroup = new ToggleGroup();
         itemAddPriorityHigh.setToggleGroup(priorityGroup);
         itemAddPriorityMedium.setToggleGroup(priorityGroup);
         itemAddPriorityLow.setToggleGroup(priorityGroup);
 
+        itemList.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+
 
         mainPane.setOnKeyPressed(event -> {
             switch (event.getCode()) {
-                case ENTER:
-                    if (!addItemPane.isVisible()) {
-                        openAddItemPane(addItemToggle);
+                case SHIFT:
+                    if(addItemPane.isVisible()){
+                        addItem(userID, addItemToggle);
                     }
+                    openEditItemPane(addItemToggle);
                     break;
                 case ESCAPE:
                     if (addItemPane.isVisible()) {
                         cancelAddItem(addItemToggle);
                     }
                     break;
+                case ENTER:
+                    openAddItemPane(addItemToggle);
+                    break;
+                case BACK_SPACE:
+                    openRemoveItemDialog();
                 default:
                     break;
             }
@@ -107,14 +134,31 @@ public class listViewController {
 
 
         addItem.setOnAction(event -> openAddItemPane(addItemToggle));
+        editItem.setOnAction(event -> openEditItemPane(addItemToggle));
+        removeItem.setOnAction(event -> openRemoveItemDialog());
         confirmAddItem.setOnAction(event -> addItem(userID, addItemToggle));
         closeAddItemPane.setOnAction(event -> cancelAddItem(addItemToggle));
         cancelAdditem.setOnAction(event -> cancelAddItem(addItemToggle));
-        logoutButton.setOnAction(event -> {
-            try {
-                logout();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+        logoutButton.setOnAction(event -> openLogoutDialog());
+
+        itemList.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                displayItemImage(newValue);
+            } else {
+                imageThumbnail.setImage(null); // Optionally, clear or set a default image when no item is selected
+            }
+        });
+
+
+        itemAddDescription.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.TAB && itemAddDescription.isFocused()) {
+                itemAddPrice.requestFocus();
+            }
+        });
+
+        itemAddDescription.focusedProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal) { // If focus is lost
+                itemAddDescription.setText(itemAddDescription.getText().replace("\t", ""));
             }
         });
 
@@ -122,9 +166,193 @@ public class listViewController {
 
 
 
+    }
+
+    private void openLogoutDialog() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/pach/gsm/views/generalDialogBox.fxml"));
+            Parent dialogRoot = loader.load();
+
+            generalDialogBoxController controller = loader.getController();
+            controller.setDialogTitle(" 🚨Log out? ");
+            controller.setDialogBody("Are you sure you want to logout?");
+            controller.setConfirmButtonText("Yes");
+            controller.setCancelButtonText("Not really.");
 
 
 
+            Stage dialogStage = new Stage();
+            dialogStage.setResizable(false);
+            dialogStage.setTitle("Log out?");
+            dialogStage.initModality(Modality.APPLICATION_MODAL);
+            dialogStage.setScene(new Scene(dialogRoot));
+            dialogStage.showAndWait();
+
+            if (controller.getGoAhead()){
+                logout();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private void openEditItemPane(TogglePane addItemToggle) {
+        Item selectedItem = itemList.getSelectionModel().getSelectedItem();
+
+        if (selectedItem == null){
+            itemListWarning.setText("Select an item to edit!");
+            textEffects.vanishText(itemListWarning, 2);
+            return;
+        }
+
+        addItemTitle.setText("Edit Item");
+        confirmAddItem.setText("Ok!");
+        itemAddName.setText(selectedItem.getName());
+        itemAddDescription.setText(selectedItem.getDescription());
+        itemAddPrice.setText(String.valueOf(selectedItem.getPrice()));
+
+        // Set currency selection
+        switch (selectedItem.getCurrency()) {
+            case "USD":
+                itemAddCurrencyUSD.setSelected(true);
+                break;
+            case "MXN":
+                itemAddCurrencyMXN.setSelected(true);
+                break;
+            case "EUR":
+                itemAddCurrencyEUR.setSelected(true);
+                break;
+        }
+
+        // Set priority selection
+        switch (selectedItem.getPriority()) {
+            case 1:
+                itemAddPriorityHigh.setSelected(true);
+                break;
+            case 2:
+                itemAddPriorityMedium.setSelected(true);
+                break;
+            case 3:
+                itemAddPriorityLow.setSelected(true);
+                break;
+        }
+
+        // Set image if available
+        if (selectedItem.getImageData() != null && selectedItem.getImageData().length > 0) {
+            Image image = new Image(new ByteArrayInputStream(selectedItem.getImageData()));
+            itemAddImageView.setImage(image);
+            itemAddImageData = selectedItem.getImageData();
+        } else {
+            itemAddImageView.setImage(null);
+            itemAddImageData = null;
+        }
+
+        // Open edit item pane
+        addItemToggle.togglePane(addItemPane, null, 0.35);
+        itemAddName.requestFocus();
+
+        // Change confirmation button action to "update" instead of "add"
+        confirmAddItem.setOnAction(event -> updateItem(selectedItem, addItemToggle));
+    }
+
+
+    private void updateItem(Item selectedItem, TogglePane addItemToggle) {
+        String name = itemAddName.getText();
+        String description = itemAddDescription.getText();
+        String priceAsString = itemAddPrice.getText();
+
+        if (name.isEmpty() || description.isEmpty() || priceAsString.isEmpty()) {
+            warningAddMessage.setText("All fields must be filled!");
+            textEffects.vanishText(warningAddMessage, 2);
+            return;
+        }
+
+        if (!containsNonNumeric(priceAsString)) {
+            int price = Integer.parseInt(priceAsString);
+            if (price <= 0) {
+                warningAddMessage.setText("Price must be positive!");
+                textEffects.vanishText(warningAddMessage, 2);
+                return;
+            }
+            selectedItem.setPrice(price);
+        } else {
+            warningAddMessage.setText("Price must be numeric!");
+            textEffects.vanishText(warningAddMessage, 2);
+            return;
+        }
+
+        // Update currency
+        if (itemAddCurrencyUSD.isSelected()) {
+            selectedItem.setCurrency("USD");
+        } else if (itemAddCurrencyMXN.isSelected()) {
+            selectedItem.setCurrency("MXN");
+        } else if (itemAddCurrencyEUR.isSelected()) {
+            selectedItem.setCurrency("EUR");
+        }
+
+        // Update priority
+        if (itemAddPriorityLow.isSelected()) {
+            selectedItem.setPriority(3);
+        } else if (itemAddPriorityMedium.isSelected()) {
+            selectedItem.setPriority(2);
+        } else if (itemAddPriorityHigh.isSelected()) {
+            selectedItem.setPriority(1);
+        }
+
+        // Update image
+        if (itemAddImageData != null) {
+            selectedItem.setImageData(itemAddImageData);
+        }
+
+        // Save changes locally
+        storageManager storage = storageManager.getInstance();
+        storage.updateItemLocal(selectedItem);
+        refreshTable(storage.getUserID());
+
+        // Close the pane after updating
+        addItemToggle.togglePane(addItemPane, () -> {
+            System.out.println("✅ Item updated successfully!");
+            updateItemOnSupabase(selectedItem);
+            clearAddItemFields();
+        });
+    }
+    private void openRemoveItemDialog() {
+
+        if (itemList.getSelectionModel().isEmpty()){
+            itemListWarning.setText("Select an item to remove!");
+            textEffects.vanishText(itemListWarning, 2);
+            return;
+        }
+
+        Item selectedItem = itemList.getSelectionModel().getSelectedItem();
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/pach/gsm/views/generalDialogBox.fxml"));
+            Parent dialogRoot = loader.load();
+
+            generalDialogBoxController controller = loader.getController();
+            controller.setDialogTitle("️🚨 You are removing an item!");
+            controller.setDialogBody("Are you sure you want to remove this item?");
+            controller.setConfirmButtonText("Yes");
+            controller.setCancelButtonText("Nevermind");
+
+
+
+            Stage dialogStage = new Stage();
+            dialogStage.setResizable(false);
+            dialogStage.setTitle("Remove Item");
+            dialogStage.initModality(Modality.APPLICATION_MODAL);
+            dialogStage.setScene(new Scene(dialogRoot));
+            dialogStage.showAndWait();
+
+            if (controller.getGoAhead()){
+                storageManager storage = storageManager.getInstance();
+                storage.deleteItem(selectedItem.getId());
+                refreshTable(storage.getUserID());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void refreshTable(String userID) {
@@ -168,7 +396,15 @@ public class listViewController {
         }
 
 
-        if (!containsNonNumeric(priceAsString)) {
+        if (priceAsString.contains(" ")) {
+            warningAddMessage.setText("Price can't contain space \"_\" characters!");
+            textEffects.vanishText(warningAddMessage, 2);
+            return;
+        }
+
+        priceAsString = priceAsString.trim();
+
+        if (priceAsString.matches("\\d+")) {
             price = Integer.parseInt(priceAsString);
             if (price <= 0) {
                 warningAddMessage.setText("Price can only be positive values.");
@@ -194,6 +430,14 @@ public class listViewController {
             return;
         }
 
+
+        if(itemAddImageView.getImage() == null){
+            warningAddMessage.setText("Select at least one image!");
+            textEffects.vanishText(warningAddMessage, 2);
+            return;
+        }
+
+
         int priority = 1;
         if (itemAddPriorityLow.isSelected()) {
             priority = 3;
@@ -204,14 +448,17 @@ public class listViewController {
         }
 
 
-        Item newItem = new Item(name, description, null, price, currency, priority);
+
+
+        Item newItem = new Item(name, description, itemAddImageData, price, currency, priority);
         storageManager storage = storageManager.getInstance();
         storage.addItemLocal(newItem);
         refreshTable(userID);
-        addItemToggle.togglePane(addItemPane, null);
 
-
-
+        addItemToggle.togglePane(addItemPane, () -> {
+            addItemToSupabase(newItem);
+            clearAddItemFields();
+        });
     }
 
 
@@ -220,7 +467,10 @@ public class listViewController {
         itemColumnID.setCellValueFactory(cellData -> new SimpleObjectProperty<>(cellData.getValue().getId()));
         itemColumnName.setCellValueFactory(cellData -> new SimpleObjectProperty<>(cellData.getValue().getName()));
         itemColumnDescription.setCellValueFactory(cellData -> new SimpleObjectProperty<>(cellData.getValue().getDescription()));
-        itemColumnReservation.setCellValueFactory(cellData -> new SimpleObjectProperty<>(cellData.getValue().getReservation() != null ? cellData.getValue().getReservation().toString() : "None"));
+        itemColumnReservationDate.setCellValueFactory(cellData -> {
+            LocalDate reservationDate = cellData.getValue().getReservationDate();
+            return new SimpleStringProperty(reservationDate != null ? reservationDate.toString() : "");
+        });
         itemColumnPrice.setCellValueFactory(cellData -> new SimpleObjectProperty<>(cellData.getValue().getPrice()));
         itemColumnPriority.setCellValueFactory(cellData -> new SimpleObjectProperty<>(cellData.getValue().getPriority()));
         itemColumnReserved.setCellValueFactory(cellData -> new SimpleObjectProperty<>(cellData.getValue().isReserved()));
@@ -248,7 +498,7 @@ public class listViewController {
     }
 
     private void cancelAddItem(TogglePane addItemToggle) {
-        addItemToggle.togglePane(addItemPane, null);
+        addItemToggle.togglePane(addItemPane, null,0.35);
         clearAddItemFields();
     }
 
@@ -258,10 +508,72 @@ public class listViewController {
         itemAddPrice.clear();
         currencyGroup.selectToggle(null);
         priorityGroup.selectToggle(null);
+        itemAddImageView.setImage(null);
+        itemAddImageData = null;
     }
 
 
     private void openAddItemPane(TogglePane addItemToggle) {
-        addItemToggle.togglePane(addItemPane, null);
+        itemList.getSelectionModel().clearSelection();
+        confirmAddItem.setOnAction(event -> addItem(storageManager.getInstance().getUserID(), addItemToggle));
+
+
+
+        addItemTitle.setText("Add Item");
+        confirmAddItem.setText("Add");
+        addItemToggle.togglePane(addItemPane, null, 0.35);
+        itemAddName.requestFocus();
+    }
+
+
+    public void selectImage() {
+        FileChooser fileChooser = new FileChooser();
+        FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("Image files (*.png, *.jpg, *.jpeg)", "*.png", "*.jpg", "*.jpeg");
+        fileChooser.getExtensionFilters().add(extFilter);
+
+        File file = fileChooser.showOpenDialog(null);
+        if (file != null) {
+            try (FileInputStream fis = new FileInputStream(file)) {
+                Image image = new Image(fis);
+                itemAddImageView.setImage(image);
+
+                itemAddImageData = Files.readAllBytes(file.toPath());
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
+
+    private void addItemToSupabase(Item givenItem){
+        if (supabaseAuthentication.checkIfOnline()) {
+            boolean success = supabaseDB.addItem(givenItem.getUserID(), givenItem);
+            if (success) {
+                System.out.println("✅ Item synced with Supabase.");
+            } else {
+                System.out.println("⚠️ Failed to sync item to Supabase.");
+            }
+        }
+    }
+
+
+    private void updateItemOnSupabase(Item givenItem){
+        if (supabaseAuthentication.checkIfOnline()) {
+            boolean success = supabaseDB.updateItem(givenItem.getUserID(),givenItem);
+            if (success) {
+                System.out.println("✅ Item synced with Supabase.");
+            } else {
+                System.out.println("⚠️ Failed to sync item to Supabase.");
+            }
+        }
+    }
+
+    private void displayItemImage(Item item) {
+        if (item != null && item.getImageData() != null) {
+            Image image = new Image(new ByteArrayInputStream(item.getImageData()));
+            imageThumbnail.setImage(image);
+        } else {
+            imageThumbnail.setImage(null);
+        }
+        itemList.refresh();
     }
 }

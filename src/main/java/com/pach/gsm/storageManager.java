@@ -34,7 +34,12 @@ public class storageManager {
 
     private storageManager() {
         prefs = Preferences.userRoot().node(this.getClass().getName());
-        initializeDatabase(getUserID());
+        String userID = getUserID();
+        if (userID == null) {
+            System.out.println("⚠️ Warning: UserID is null. Database initialization postponed.");
+        } else {
+            initializeDatabase(userID);
+        }
     }
 
 
@@ -210,19 +215,46 @@ public class storageManager {
 
             pstmt.executeUpdate();
             System.out.println("✅ Item added to local database!");
+        } catch (SQLException e) {
+            System.out.println("❌ Error adding item to local database: " + e.getMessage());
+        }
+    }
 
-            // 🔥 Sync to Supabase if online
-            if (supabaseAuthentication.checkIfOnline()) {
-                boolean success = supabaseDB.addItem(item.getUserID(), item);
-                if (success) {
-                    System.out.println("✅ Item synced with Supabase.");
-                } else {
-                    System.out.println("⚠️ Failed to sync item to Supabase.");
-                }
+    public void updateItemLocal(Item item) {
+        String sql = "UPDATE items SET name = ?, description = ?, imagedata = ?, price = ?, currency = ?, " +
+                "priority = ?, sold = ?, reservation_buyer = ?, reservation_place = ?, reservation_date = ?, " +
+                "reservation_reserved = ?, reservation_hour = ?, reservation_minute = ? WHERE id = ?";
+
+        try (Connection conn = DriverManager.getConnection(DATABASE_URL);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, item.getName());
+            pstmt.setString(2, item.getDescription());
+            pstmt.setBytes(3, item.getImageData());
+            pstmt.setInt(4, item.getPrice());
+            pstmt.setString(5, item.getCurrency());
+            pstmt.setInt(6, item.getPriority());
+            pstmt.setBoolean(7, item.getSold());
+
+            // Reservation details
+            pstmt.setString(8, item.getReservation().getBuyer());
+            pstmt.setString(9, item.getReservation().getPlace());
+            pstmt.setDate(10, item.getReservationDate() != null ? java.sql.Date.valueOf(item.getReservationDate()) : null);
+            pstmt.setBoolean(11, item.getReservation().getReserved());
+            pstmt.setInt(12, item.getReservation().getHour());
+            pstmt.setInt(13, item.getReservation().getMinute());
+
+            pstmt.setString(14, item.getId()); // WHERE id = ?
+
+            int rowsUpdated = pstmt.executeUpdate();
+            if (rowsUpdated > 0) {
+                System.out.println("✅ Item updated in local database.");
+            } else {
+                System.out.println("⚠️ No item found with ID: " + item.getId());
             }
 
         } catch (SQLException e) {
-            System.out.println("❌ Error adding item to local database: " + e.getMessage());
+            System.out.println("❌ Error updating item in local database: " + e.getMessage());
         }
     }
     public List<Item> getAllLocalItems(String userID) {
@@ -256,6 +288,9 @@ public class storageManager {
         }
         return items;
     }
+
+
+
     public void syncWithSupabase() {
         if (!supabaseAuthentication.checkIfOnline()) {
             System.out.println("⚠️ Not online. Sync postponed.");

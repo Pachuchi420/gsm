@@ -154,7 +154,7 @@
                         <!-- Default configuration for running with: mvn clean javafx:run -->
                         <id>default-cli</id>
                         <configuration>
-                            <mainClass>com.pach.gsm/com.pach.gsm.main</mainClass>
+                            <mainClass>com.pach.gsm/com.pach.gsm.Main</mainClass>
                             <launcher>app</launcher>
                             <jlinkZipName>app</jlinkZipName>
                             <jlinkImageName>app</jlinkImageName>
@@ -164,6 +164,20 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.2.0</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>com.pach.gsm.Main</mainClass> <!-- Update with your actual main class -->
+                        </manifest>
+                    </archive>
+                </configuration>
             </plugin>
         </plugins>
 

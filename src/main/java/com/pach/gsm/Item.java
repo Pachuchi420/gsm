@@ -47,7 +47,6 @@ public class Item implements Serializable {
 
     // Setters & Getters
 
-
     public String getId() {
         return id;
     }
