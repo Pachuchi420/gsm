@@ -95,14 +95,6 @@ public class listViewController {
 
         addItemPane.setVisible(false);
         TogglePane addItemToggle = new TogglePane(addItemPane, mainPane, true);
-        // Create text-only tooltips
-        Tooltip addTooltip = new Tooltip("Press ENTER to Add");
-        Tooltip editTooltip = new Tooltip("Press SHIFT to Edit");
-        Tooltip removeTooltip = new Tooltip("Press BACKSPACE to Remove");
-
-        addItem.setTooltip(addTooltip);
-        editItem.setTooltip(editTooltip);
-        removeItem.setTooltip(removeTooltip);
 
         currencyGroup = new ToggleGroup();
         itemAddCurrencyUSD.setToggleGroup(currencyGroup);
@@ -122,9 +114,6 @@ public class listViewController {
         mainPane.setOnKeyPressed(event -> {
             switch (event.getCode()) {
                 case SHIFT:
-                    if(addItemPane.isVisible()){
-                        addItem(userID, addItemToggle);
-                    }
                     openEditItemPane(addItemToggle);
                     break;
                 case ESCAPE:
@@ -133,6 +122,10 @@ public class listViewController {
                     }
                     break;
                 case ENTER:
+                    if(addItemPane.isVisible()){
+                        addItem(userID, addItemToggle);
+                        break;
+                    }
                     openAddItemPane(addItemToggle);
                     break;
                 case BACK_SPACE:
