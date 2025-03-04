@@ -4,8 +4,11 @@ import com.pach.gsm.Item;
 import com.pach.gsm.storageManager;
 import com.pach.gsm.supabaseAuthentication;
 import com.pach.gsm.supabaseDB;
-import effects.TogglePane;
-import effects.textEffects;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import tools.DBWorker;
+import tools.TogglePane;
+import tools.effects;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.fxml.FXML;
@@ -20,6 +23,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import tools.printTools;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -52,7 +56,7 @@ public class listViewController {
 
 
     @FXML
-    private TableColumn<Item, Boolean> itemColumnReserved, itemColumnSold;
+    private TableColumn<Item, Boolean> itemColumnReserved, itemColumnSold, itemColumnSync;
 
 
     @FXML
@@ -74,25 +78,31 @@ public class listViewController {
     private ToggleGroup priorityGroup;
     private byte[] itemAddImageData;
 
-    private long lastEnterPressTime = 0;
-    private final long DOUBLE_PRESS_THRESHOLD = 300;
+    private static DBWorker dbWorker = new DBWorker();
 
 
 
 
     @FXML
     public void initialize() throws IOException {
-
         storageManager storage = storageManager.getInstance();
         String userID = storage.getUserID();
         storage.initializeDatabase(userID);
         setupTableColumns();
         refreshTable(userID);
 
+        supabaseAuthentication.setRefreshTableCallback(() -> refreshTable(userID));
 
         addItemPane.setVisible(false);
         TogglePane addItemToggle = new TogglePane(addItemPane, mainPane, true);
+        // Create text-only tooltips
+        Tooltip addTooltip = new Tooltip("Press ENTER to Add");
+        Tooltip editTooltip = new Tooltip("Press SHIFT to Edit");
+        Tooltip removeTooltip = new Tooltip("Press BACKSPACE to Remove");
 
+        addItem.setTooltip(addTooltip);
+        editItem.setTooltip(editTooltip);
+        removeItem.setTooltip(removeTooltip);
 
         currencyGroup = new ToggleGroup();
         itemAddCurrencyUSD.setToggleGroup(currencyGroup);
@@ -202,7 +212,7 @@ public class listViewController {
 
         if (selectedItem == null){
             itemListWarning.setText("Select an item to edit!");
-            textEffects.vanishText(itemListWarning, 2);
+            effects.vanishText(itemListWarning, 2);
             return;
         }
 
@@ -264,7 +274,7 @@ public class listViewController {
 
         if (name.isEmpty() || description.isEmpty() || priceAsString.isEmpty()) {
             warningAddMessage.setText("All fields must be filled!");
-            textEffects.vanishText(warningAddMessage, 2);
+            effects.vanishText(warningAddMessage, 2);
             return;
         }
 
@@ -272,13 +282,13 @@ public class listViewController {
             int price = Integer.parseInt(priceAsString);
             if (price <= 0) {
                 warningAddMessage.setText("Price must be positive!");
-                textEffects.vanishText(warningAddMessage, 2);
+                effects.vanishText(warningAddMessage, 2);
                 return;
             }
             selectedItem.setPrice(price);
         } else {
             warningAddMessage.setText("Price must be numeric!");
-            textEffects.vanishText(warningAddMessage, 2);
+            effects.vanishText(warningAddMessage, 2);
             return;
         }
 
@@ -321,7 +331,7 @@ public class listViewController {
 
         if (itemList.getSelectionModel().isEmpty()){
             itemListWarning.setText("Select an item to remove!");
-            textEffects.vanishText(itemListWarning, 2);
+            effects.vanishText(itemListWarning, 2);
             return;
         }
 
@@ -357,13 +367,20 @@ public class listViewController {
 
     public void refreshTable(String userID) {
         storageManager storage = storageManager.getInstance();
-        List<Item> updatedItems = storage.getAllLocalItems(userID); // Fetch only current user's items
-        if (updatedItems != null) {
-            itemList.getItems().setAll(updatedItems);
-            System.out.println("✅ TableView updated with latest items for user: " + storage.getUserID());
-        } else {
-            System.out.println("⚠️ No items found for this user.");
-        }
+
+        storage.getAllLocalItems(userID, updatedItems -> {
+            if (updatedItems != null) {
+                ObservableList<Item> observableItems = FXCollections.observableArrayList(updatedItems);
+
+                // Ensure UI updates on JavaFX thread
+                javafx.application.Platform.runLater(() -> {
+                    itemList.setItems(observableItems);
+                    System.out.println("✅ TableView updated with latest items for user: " + storage.getUserID());
+                });
+            } else {
+                System.out.println("⚠️ No items found for this user.");
+            }
+        });
     }
 
     public boolean containsNonNumeric(String str) {
@@ -379,26 +396,26 @@ public class listViewController {
 
         if(name.isEmpty()){
             warningAddMessage.setText("Item name can't be empty!");
-            textEffects.vanishText(warningAddMessage, 2);
+            effects.vanishText(warningAddMessage, 2);
             return;
         }
 
         if(description.isEmpty()){
             warningAddMessage.setText("Item description can't be empty!");
-            textEffects.vanishText(warningAddMessage, 2);
+            effects.vanishText(warningAddMessage, 2);
             return;
         }
 
         if(priceAsString.isEmpty()){
             warningAddMessage.setText("Item price can't be empty!");
-            textEffects.vanishText(warningAddMessage, 2);
+            effects.vanishText(warningAddMessage, 2);
             return;
         }
 
 
         if (priceAsString.contains(" ")) {
             warningAddMessage.setText("Price can't contain space \"_\" characters!");
-            textEffects.vanishText(warningAddMessage, 2);
+            effects.vanishText(warningAddMessage, 2);
             return;
         }
 
@@ -408,12 +425,12 @@ public class listViewController {
             price = Integer.parseInt(priceAsString);
             if (price <= 0) {
                 warningAddMessage.setText("Price can only be positive values.");
-                textEffects.vanishText(warningAddMessage, 2);
+                effects.vanishText(warningAddMessage, 2);
                 return;
             }
         } else {
             warningAddMessage.setText("Price can only be digits.");
-            textEffects.vanishText(warningAddMessage, 2);
+            effects.vanishText(warningAddMessage, 2);
             return;
         }
 
@@ -426,14 +443,14 @@ public class listViewController {
             currency = "EUR";
         } else {
             warningAddMessage.setText("Select a currency!");
-            textEffects.vanishText(warningAddMessage, 2);
+            effects.vanishText(warningAddMessage, 2);
             return;
         }
 
 
         if(itemAddImageView.getImage() == null){
             warningAddMessage.setText("Select at least one image!");
-            textEffects.vanishText(warningAddMessage, 2);
+            effects.vanishText(warningAddMessage, 2);
             return;
         }
 
@@ -475,6 +492,7 @@ public class listViewController {
         itemColumnPriority.setCellValueFactory(cellData -> new SimpleObjectProperty<>(cellData.getValue().getPriority()));
         itemColumnReserved.setCellValueFactory(cellData -> new SimpleObjectProperty<>(cellData.getValue().isReserved()));
         itemColumnSold.setCellValueFactory(cellData -> new SimpleObjectProperty<>(cellData.getValue().getSold()));
+        itemColumnSync.setCellValueFactory(cellData -> new SimpleObjectProperty<>(cellData.getValue().getSupabaseSync()));
     }
 
     private void logout() throws IOException {
@@ -516,9 +534,6 @@ public class listViewController {
     private void openAddItemPane(TogglePane addItemToggle) {
         itemList.getSelectionModel().clearSelection();
         confirmAddItem.setOnAction(event -> addItem(storageManager.getInstance().getUserID(), addItemToggle));
-
-
-
         addItemTitle.setText("Add Item");
         confirmAddItem.setText("Add");
         addItemToggle.togglePane(addItemPane, null, 0.35);
@@ -544,11 +559,29 @@ public class listViewController {
         }
     }
 
-    private void addItemToSupabase(Item givenItem){
+    private void addItemToSupabase(Item givenItem) {
         if (supabaseAuthentication.checkIfOnline()) {
             boolean success = supabaseDB.addItem(givenItem.getUserID(), givenItem);
+
             if (success) {
                 System.out.println("✅ Item synced with Supabase.");
+
+                givenItem.setSupabaseSync(true); // Ensure item is marked as synced
+                storageManager storage = storageManager.getInstance();
+
+                // Use dbWorker to update item
+
+                dbWorker.submitTask(() -> {
+                    storage.updateItemLocal(givenItem);
+
+                    // Fetch items asynchronously and update UI
+                    storage.getAllLocalItems(givenItem.getUserID(), updatedItems -> {
+                        javafx.application.Platform.runLater(() -> {
+                            ObservableList<Item> observableItems = FXCollections.observableArrayList(updatedItems);
+                            itemList.setItems(observableItems);
+                        });
+                    });
+                });
             } else {
                 System.out.println("⚠️ Failed to sync item to Supabase.");
             }
@@ -558,12 +591,7 @@ public class listViewController {
 
     private void updateItemOnSupabase(Item givenItem){
         if (supabaseAuthentication.checkIfOnline()) {
-            boolean success = supabaseDB.updateItem(givenItem.getUserID(),givenItem);
-            if (success) {
-                System.out.println("✅ Item synced with Supabase.");
-            } else {
-                System.out.println("⚠️ Failed to sync item to Supabase.");
-            }
+            supabaseDB.updateItem(givenItem.getUserID(),givenItem);
         }
     }
 
@@ -576,4 +604,6 @@ public class listViewController {
         }
         itemList.refresh();
     }
+
+
 }

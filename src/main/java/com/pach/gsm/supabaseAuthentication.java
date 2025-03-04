@@ -22,6 +22,11 @@ public class supabaseAuthentication {
     private static supabaseAuthentication singletonInstance;
     private  boolean online;
     private boolean wasOnline;
+    private static Runnable refreshTableCallback;
+
+    public static void setRefreshTableCallback(Runnable callback) {
+        refreshTableCallback = callback;
+    }
 
 
 
@@ -33,31 +38,46 @@ public class supabaseAuthentication {
         return singletonInstance;
     }
 
-
-    public static void sessionManager(){
+    public static void sessionManager() {
         supabaseAuthentication auth = supabaseAuthentication.getInstance();
         auth.online = false;
         auth.wasOnline = false;
 
+        Thread checker = new Thread(() -> {
+            while (true) {
+                boolean isCurrentlyOnline = checkIfOnline();
 
-        Thread checker = new Thread( () -> {
-            while(true){
-
-                if(!checkIfOnline()){
+                if (!isCurrentlyOnline) {
                     auth.wasOnline = false;
-                } else if (!auth.wasOnline && auth.online){
+                } else if (!auth.wasOnline) {
                     storageManager localStorage = storageManager.getInstance();
                     auth.wasOnline = true;
                     String refreshToken = localStorage.getRefreshToken();
                     String accessToken = generateAccessToken(refreshToken);
-                    if (accessToken != null){
-                        System.out.println("✅ Generated a valid access token, logged in!");
+                    if (accessToken != null) {
+                        System.out.println("✅ Connection Restored: Access token refreshed!");
+
+                        // 🔄 Wait for any ongoing syncs to finish before reinitializing DB
+                        synchronized (storageManager.class) {
+                            System.out.println("🔄 Reinitializing local database...");
+                            localStorage.initializeDatabase(localStorage.getUserID());
+                        }
+
+                        // ✅ Only sync failed items AFTER database reinitialization
+                        localStorage.syncFailedItems();
+
+                        // ✅ Refresh TableView in UI
+                        if (refreshTableCallback != null) {
+                            javafx.application.Platform.runLater(() -> refreshTableCallback.run());
+                        }
                     }
                 }
+
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(5000);
                 } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+                    System.out.println("❌ Session thread interrupted: " + e.getMessage());
+                    break;
                 }
             }
         });

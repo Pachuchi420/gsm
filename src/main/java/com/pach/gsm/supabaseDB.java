@@ -94,8 +94,8 @@ public class supabaseDB {
 
         jsonBuilder.append("\"reservation_reserved\":").append(item.getReservation().getReserved()).append(",");
         jsonBuilder.append("\"reservation_hour\":").append(item.getReservation().getHour()).append(",");
-        jsonBuilder.append("\"reservation_minute\":").append(item.getReservation().getMinute());
-
+        jsonBuilder.append("\"reservation_minute\":").append(item.getReservation().getMinute()).append(",");
+        jsonBuilder.append("\"supabaseSync\":").append(item.getReservation().getMinute());
         jsonBuilder.append("}"); // ✅ Ensuring last field doesn't have a comma
 
         String jsonRequest = jsonBuilder.toString();
@@ -185,6 +185,30 @@ public class supabaseDB {
             }
         } catch (IOException e) {
             System.out.println("❌ Network error while deleting item: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public static boolean doesItemExist(String itemID) {
+        String url = SUPABASE_URL + "/rest/v1/items?id=eq." + itemID;
+
+        Request request = new Request.Builder()
+                .url(url)
+                .addHeader("apikey", SUPABASE_API_KEY)
+                .addHeader("Authorization", "Bearer " + SUPABASE_API_KEY)
+                .addHeader("Accept", "application/json")
+                .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            if (response.isSuccessful() && response.body() != null) {
+                String jsonResponse = response.body().string();
+                return !jsonResponse.equals("[]"); // If response is empty, item doesn't exist
+            } else {
+                System.out.println("❌ Error checking item existence: " + response.code());
+                return false;
+            }
+        } catch (IOException e) {
+            System.out.println("❌ Network error while checking item: " + e.getMessage());
             return false;
         }
     }

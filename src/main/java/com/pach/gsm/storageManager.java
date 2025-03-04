@@ -1,6 +1,7 @@
 package com.pach.gsm;
 
 import com.google.gson.Gson;
+import tools.DBWorker;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
@@ -10,6 +11,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Base64;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.prefs.Preferences;
 import java.sql.PreparedStatement;
 import java.sql.Connection;
@@ -29,6 +31,8 @@ public class storageManager {
     private final Gson gson = new Gson();
     private final Preferences prefs;
 
+    private Boolean dbReady = false;
+    private static DBWorker dbWorker = new DBWorker();
     private List<Item> itemList;
 
 
@@ -48,13 +52,14 @@ public class storageManager {
     public static synchronized storageManager getInstance() {
         if (instance == null) {
             instance = new storageManager();
+            dbWorker = new DBWorker();
         }
         return instance;
     }
 
 
 
-    // CREDENTIALS & REFRESH TOKEN STORAGE
+    // CREDENTIALS & REFRESH TOKEN STORAGE MANAGEMENT
     public void addCredential(String key, String value) {
         try {
             String encryptedValue = encrypt(value);
@@ -133,8 +138,8 @@ public class storageManager {
 
 
 
-    // FILE STORAGE CRUD OPERATIONS WITH SQLITE-3
 
+    // FILE STORAGE CRUD OPERATIONS WITH SQLITE-3
     public void initializeDatabase(String userID) {
         if (userID == null) {
             throw new IllegalStateException("❌ Cannot initialize database, userID is null.");
@@ -145,6 +150,12 @@ public class storageManager {
         try (Connection conn = DriverManager.getConnection(DATABASE_URL);
              Statement stmt = conn.createStatement()) {
 
+
+            // 🔄 Set timeout to allow SQLite to wait if locked
+            try (PreparedStatement timeoutStmt = conn.prepareStatement("PRAGMA busy_timeout = 5000;")) {
+                timeoutStmt.execute();
+            }
+
             String sql = "CREATE TABLE IF NOT EXISTS items (" +
                     "id TEXT PRIMARY KEY," +
                     "userID TEXT NOT NULL," +
@@ -154,22 +165,24 @@ public class storageManager {
                     "price INTEGER NOT NULL," +
                     "currency TEXT," +
                     "date TIMESTAMP DEFAULT CURRENT_TIMESTAMP," +
-                    "sold BOOLEAN DEFAULT FALSE," +
+                    "sold INTEGER DEFAULT 0," +  // 🔄 BOOLEAN → INTEGER (0 = false, 1 = true)
                     "uploaddate DATE," +
                     "priority INTEGER," +
                     "reservation_buyer TEXT," +
                     "reservation_place TEXT," +
                     "reservation_date DATE," +
-                    "reservation_reserved BOOLEAN DEFAULT FALSE," +
+                    "reservation_reserved INTEGER DEFAULT 0," +  // 🔄 BOOLEAN → INTEGER
                     "reservation_hour INTEGER," +
-                    "reservation_minute INTEGER);";
+                    "reservation_minute INTEGER," +
+                    "supabaseSync INTEGER DEFAULT 0);";
 
             stmt.execute(sql);
             System.out.println("✅ User-specific database initialized for: " + userID);
-
+            setDbReady(true);
         } catch (SQLException e) {
             e.printStackTrace();
             System.out.println("❌ Database initialization failed.");
+            setDbReady(false);
         }
     }
 
@@ -188,9 +201,10 @@ public class storageManager {
     }
 
     public void addItemLocal(Item item) {
+        dbWorker.submitTask(() -> {
         String sql = "INSERT INTO items (id, userID, name, description, imagedata, price, currency, date, sold, uploaddate, priority, " +
-                "reservation_buyer, reservation_place, reservation_date, reservation_reserved, reservation_hour, reservation_minute) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                "reservation_buyer, reservation_place, reservation_date, reservation_reserved, reservation_hour, reservation_minute, supabaseSync) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = DriverManager.getConnection(DATABASE_URL);
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -203,114 +217,113 @@ public class storageManager {
             pstmt.setInt(6, item.getPrice());
             pstmt.setString(7, item.getCurrency());
             pstmt.setTimestamp(8, java.sql.Timestamp.valueOf(item.getDate()));
-            pstmt.setBoolean(9, item.getSold());
+            pstmt.setInt(9, item.getSold() ? 1:0);
             pstmt.setDate(10, item.getUploadDate() != null ? java.sql.Date.valueOf(item.getUploadDate()) : null);
             pstmt.setInt(11, item.getPriority());
             pstmt.setString(12, item.getReservation().getBuyer());
             pstmt.setString(13, item.getReservation().getPlace());
             pstmt.setDate(14, item.getReservationDate() != null ? java.sql.Date.valueOf(item.getReservationDate()) : null);
-            pstmt.setBoolean(15, item.getReservation().getReserved());
+            pstmt.setInt(15, item.getReservation().getReserved()  ? 1:0);
             pstmt.setInt(16, item.getReservation().getHour());
             pstmt.setInt(17, item.getReservation().getMinute());
-
+            pstmt.setInt(18, item.getSupabaseSync() ? 1:0);
             pstmt.executeUpdate();
             System.out.println("✅ Item added to local database!");
         } catch (SQLException e) {
             System.out.println("❌ Error adding item to local database: " + e.getMessage());
         }
+        });
     }
 
     public void updateItemLocal(Item item) {
-        String sql = "UPDATE items SET name = ?, description = ?, imagedata = ?, price = ?, currency = ?, " +
-                "priority = ?, sold = ?, reservation_buyer = ?, reservation_place = ?, reservation_date = ?, " +
-                "reservation_reserved = ?, reservation_hour = ?, reservation_minute = ? WHERE id = ?";
+        dbWorker.submitTask(() -> {
+            String sql = "UPDATE items SET name = ?, description = ?, imagedata = ?, price = ?, currency = ?, date = ?, sold = ?, uploaddate = ?, priority = ?, " +
+                    "reservation_buyer = ?, reservation_place = ?, reservation_date = ?, reservation_reserved = ?, reservation_hour = ?, reservation_minute = ?, supabaseSync = ? " +
+                    "WHERE id = ? AND userID = ?";  // Ensure we update the correct item
 
-        try (Connection conn = DriverManager.getConnection(DATABASE_URL);
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            try (Connection conn = DriverManager.getConnection(DATABASE_URL);
+                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setString(1, item.getName());
-            pstmt.setString(2, item.getDescription());
-            pstmt.setBytes(3, item.getImageData());
-            pstmt.setInt(4, item.getPrice());
-            pstmt.setString(5, item.getCurrency());
-            pstmt.setInt(6, item.getPriority());
-            pstmt.setBoolean(7, item.getSold());
+                pstmt.setString(1, item.getName());
+                pstmt.setString(2, item.getDescription());
+                pstmt.setBytes(3, item.getImageData());
+                pstmt.setInt(4, item.getPrice());
+                pstmt.setString(5, item.getCurrency());
+                pstmt.setTimestamp(6, java.sql.Timestamp.valueOf(item.getDate()));
+                pstmt.setInt(7, item.getSold() ? 1 : 0);
+                pstmt.setDate(8, item.getUploadDate() != null ? java.sql.Date.valueOf(item.getUploadDate()) : null);
+                pstmt.setInt(9, item.getPriority());
 
-            // Reservation details
-            pstmt.setString(8, item.getReservation().getBuyer());
-            pstmt.setString(9, item.getReservation().getPlace());
-            pstmt.setDate(10, item.getReservationDate() != null ? java.sql.Date.valueOf(item.getReservationDate()) : null);
-            pstmt.setBoolean(11, item.getReservation().getReserved());
-            pstmt.setInt(12, item.getReservation().getHour());
-            pstmt.setInt(13, item.getReservation().getMinute());
+                // Reservation details
+                pstmt.setString(10, item.getReservation().getBuyer());
+                pstmt.setString(11, item.getReservation().getPlace());
+                pstmt.setDate(12, item.getReservationDate() != null ? java.sql.Date.valueOf(item.getReservationDate()) : null);
+                pstmt.setInt(13, item.getReservation().getReserved() ? 1 : 0);
+                pstmt.setInt(14, item.getReservation().getHour());
+                pstmt.setInt(15, item.getReservation().getMinute());
 
-            pstmt.setString(14, item.getId()); // WHERE id = ?
+                // Sync status
+                pstmt.setInt(16, item.getSupabaseSync() ? 1 : 0);
 
-            int rowsUpdated = pstmt.executeUpdate();
-            if (rowsUpdated > 0) {
-                System.out.println("✅ Item updated in local database.");
-            } else {
-                System.out.println("⚠️ No item found with ID: " + item.getId());
+                // Identify which item to update
+                pstmt.setString(17, item.getId());
+                pstmt.setString(18, item.getUserID());
+
+                int rowsUpdated = pstmt.executeUpdate();
+
+                if (rowsUpdated > 0) {
+                    System.out.println("✅ Item updated in local database: " + item.getId() + " | supabaseSync: " + item.getSupabaseSync());
+                } else {
+                    System.out.println("⚠️ No item found with ID: " + item.getId() + " | Update failed.");
+                }
+            } catch (SQLException e) {
+                System.out.println("❌ Error updating item in local database: " + e.getMessage());
             }
-
-        } catch (SQLException e) {
-            System.out.println("❌ Error updating item in local database: " + e.getMessage());
-        }
-    }
-    public List<Item> getAllLocalItems(String userID) {
-        List<Item> items = new ArrayList<>();
-        String sql = "SELECT * FROM items WHERE userID = ?";
-
-        try (Connection conn = DriverManager.getConnection(DATABASE_URL);
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            pstmt.setString(1, userID);
-            ResultSet rs = pstmt.executeQuery();
-
-            while (rs.next()) {
-                Item item = new Item(
-                        rs.getString("name"),
-                        rs.getString("description"),
-                        rs.getBytes("imagedata"),
-                        rs.getInt("price"),
-                        rs.getString("currency"),
-                        rs.getInt("priority")
-                );
-                item.setId(rs.getString("id"));
-                item.setSold(rs.getBoolean("sold"));
-                item.setUploadedDate();
-                items.add(item);
-            }
-            System.out.println("✅ Loaded " + items.size() + " items from local database for user: " + userID);
-
-        } catch (SQLException e) {
-            System.out.println("❌ Error fetching items for user: " + userID + " - " + e.getMessage());
-        }
-        return items;
+        });
     }
 
 
+    public void getAllLocalItems(String userID, Consumer<List<Item>> callback) {
+        dbWorker.submitTask(() -> {
+            List<Item> items = new ArrayList<>();
+            String sql = "SELECT * FROM items WHERE userID = ?";
 
-    public void syncWithSupabase() {
-        if (!supabaseAuthentication.checkIfOnline()) {
-            System.out.println("⚠️ Not online. Sync postponed.");
-            return;
-        }
+            try (Connection conn = DriverManager.getConnection(DATABASE_URL);
+                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-        List<Item> localItems = getAllLocalItems(getUserID());
+                pstmt.setString(1, userID);
+                ResultSet rs = pstmt.executeQuery();
 
-        for (Item item : localItems) {
-            boolean success = supabaseDB.addItem(item.getUserID(), item);
-            if (success) {
-                System.out.println("✅ Synced item: " + item.getName() + " with Supabase.");
-            } else {
-                System.out.println("❌ Failed to sync item: " + item.getName());
+                while (rs.next()) {
+                    Item item = new Item(
+                            rs.getString("name"),
+                            rs.getString("description"),
+                            rs.getBytes("imagedata"),
+                            rs.getInt("price"),
+                            rs.getString("currency"),
+                            rs.getInt("priority")
+                    );
+                    item.setId(rs.getString("id"));
+                    item.setSold(rs.getBoolean("sold"));
+                    item.setSupabaseSync(rs.getInt("supabaseSync") == 1);
+                    items.add(item);
+                }
+
+                System.out.println("✅ Retrieved " + items.size() + " items from local database.");
+
+            } catch (SQLException e) {
+                System.out.println("❌ Error fetching items for user: " + userID + " - " + e.getMessage());
             }
-        }
+
+            // Execute callback on JavaFX thread
+            javafx.application.Platform.runLater(() -> callback.accept(items));
+        });
     }
+
 
 
     public void deleteItem(String itemId) {
+        dbWorker.submitTask(() -> {
         String sql = "DELETE FROM items WHERE id = ?";
 
         try (Connection conn = DriverManager.getConnection(DATABASE_URL);
@@ -332,9 +345,55 @@ public class storageManager {
 
         } catch (SQLException e) {
             System.out.println("❌ Error deleting item from local database: " + e.getMessage());
-        }
+        }});
     }
 
 
+    public void syncFailedItems() {
+        String sql = "SELECT * FROM items WHERE supabaseSync = 0";
 
+        try (Connection conn = DriverManager.getConnection(DATABASE_URL);
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+
+            while (rs.next()) {
+                Item item = new Item(
+                        rs.getString("name"),
+                        rs.getString("description"),
+                        rs.getBytes("imagedata"),
+                        rs.getInt("price"),
+                        rs.getString("currency"),
+                        rs.getInt("priority")
+                );
+                item.setId(rs.getString("id"));
+
+                // Convert SQLite INTEGER to Java boolean
+                item.setSupabaseSync(false);
+
+                // 🔄 Attempt to sync with Supabase
+                boolean success = supabaseDB.addItem(item.getUserID(), item);
+
+                if (success) {
+                    System.out.println("✅ Successfully re-synced item: " + item.getId());
+
+                    // ✅ If successful, update local database
+                    item.setSupabaseSync(true);
+                    updateItemLocal(item);
+                } else {
+                    System.out.println("⚠️ Failed to sync item: " + item.getId());
+                }
+            }
+
+        } catch (SQLException e) {
+            System.out.println("❌ Error syncing failed items: " + e.getMessage());
+        }
+    }
+
+    public Boolean getDbReady() {
+        return dbReady;
+    }
+
+    public void setDbReady(Boolean dbReady) {
+        this.dbReady = dbReady;
+    }
 }

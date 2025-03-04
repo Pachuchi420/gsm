@@ -26,7 +26,7 @@
          <center>
             <TableView fx:id="itemList" prefHeight="618.0" prefWidth="648.0" styleClass="column-header-background" BorderPane.alignment="CENTER">
                <columns>
-                  <TableColumn id=".syncColumn" prefWidth="70.0" text="Sync" />
+                  <TableColumn id=".syncColumn" fx:id="itemColumnSync" prefWidth="70.0" text="Sync" />
                   <TableColumn fx:id="itemColumnID" prefWidth="62.0" text="ID" />
                   <TableColumn fx:id="itemColumnName" prefWidth="103.0" text="Name" />
                   <TableColumn fx:id="itemColumnDescription" text="Description" />

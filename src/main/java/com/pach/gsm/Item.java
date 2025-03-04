@@ -27,6 +27,8 @@ public class Item implements Serializable {
 
     private int priority;
 
+    private Boolean supabaseSync;
+
     public Item(String name, String description, byte[] imageData, int price, String currency, int priority) {
         this.id = makeUniqueID();
         this.userID = storageManager.getInstance().getUserID();
@@ -39,6 +41,7 @@ public class Item implements Serializable {
         this.sold = false;
         this.uploadDate = null;
         this.priority = priority;
+        this.supabaseSync = false;
     }
 
     private String makeUniqueID(){
@@ -195,8 +198,6 @@ public class Item implements Serializable {
         return this.userID;
     }
 
-
-
     public void setUserID(String userID) {
         this.userID = userID;
     }
@@ -205,4 +206,10 @@ public class Item implements Serializable {
         return this.uploadDate;
     }
 
+    public void setSupabaseSync(Boolean state){
+        this.supabaseSync = state;
+    }
+    public Boolean getSupabaseSync(){
+        return this.supabaseSync;
+    }
 }

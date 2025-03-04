@@ -1,15 +1,14 @@
 package com.pach.gsm.controllers;
 
 import com.pach.gsm.supabaseAuthentication;
-import effects.TogglePane;
-import effects.textEffects;
+import tools.TogglePane;
+import tools.effects;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -184,7 +183,7 @@ public class loginViewController {
                 || passwordField1.getText().isEmpty()
                 || passwordField2.getText().isEmpty()) {
             warningMessage1.setText("Please fill in all fields!");
-            textEffects.vanishText(warningMessage1, 2);
+            effects.vanishText(warningMessage1, 2);
             return;
         }
 
@@ -194,7 +193,7 @@ public class loginViewController {
 
         if (!password1.equals(password2)) {
             warningMessage1.setText("Passwords do not match!");
-            textEffects.vanishText(warningMessage1, 2);
+            effects.vanishText(warningMessage1, 2);
             passwordField1.clear();
             passwordField2.clear();
             return;
@@ -215,7 +214,7 @@ public class loginViewController {
                     registerToggle.togglePane(registerPane, null);
                 } else {
                     warningMessage1.setText(registrationMessage);
-                    textEffects.vanishText(warningMessage1, 2);
+                    effects.vanishText(warningMessage1, 2);
                 }
 
 
@@ -229,7 +228,7 @@ public class loginViewController {
     private void loginUser() throws IOException {
         if(emailField.getText().isEmpty() || passwordField.getText().isEmpty()) {
             warningMessage.setText("Please fill in all fields!");
-            textEffects.vanishText(warningMessage, 2);
+            effects.vanishText(warningMessage, 2);
             return;
         }
 
@@ -264,7 +263,7 @@ public class loginViewController {
                     return;
                 }
                 warningMessage.setText(loginMessage);
-                textEffects.vanishText(warningMessage, 2); // Make text fade out
+                effects.vanishText(warningMessage, 2); // Make text fade out
             });
 
         }).start();

@@ -1,8 +1,7 @@
-package effects;
+package tools;
 
 import javafx.animation.*;
 import javafx.scene.layout.AnchorPane;
-import javafx.stage.Stage;
 import javafx.util.Duration;
 
 public class TogglePane {

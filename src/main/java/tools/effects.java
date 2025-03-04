@@ -1,10 +1,9 @@
-package effects;
+package tools;
 import javafx.animation.FadeTransition;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
 import javafx.util.Duration;
 
-public class textEffects {
+public class effects {
     private static FadeTransition fadeOut; // Store transition globally
 
     public static void vanishText(Label chosenLabel) {
@@ -50,4 +49,6 @@ public class textEffects {
 
         fadeOut.play(); // Start the fade-out effect
     }
+
+
 }
