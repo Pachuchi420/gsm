@@ -29,17 +29,16 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.time.LocalDate;
-import java.util.List;
 
 public class listViewController {
     @FXML
     private Label warningAddMessage, itemListWarning, addItemTitle;
 
     @FXML
-    private Button logoutButton, addItem, closeAddItemPane, confirmAddItem, cancelAdditem, itemAddImage, removeItem, editItem;
+    private Button logoutButton, addItem, closeAddItemPane, confirmAddItem, cancelAdditem, itemAddImage, removeItem, editItem, whatsappPane, closeWhatsappPane;
 
     @FXML
-    private AnchorPane addItemPane, mainPane;
+    private AnchorPane addItemPane, whatsAppPane, mainPane;
 
     @FXML
     private TableView<Item> itemList;
@@ -95,7 +94,10 @@ public class listViewController {
         supabaseAuthentication.setRefreshTableCallback(() -> refreshTable(userID));
 
         addItemPane.setVisible(false);
-        TogglePane addItemToggle = new TogglePane(addItemPane, mainPane, true);
+        ToggleVerticalPane addItemToggle = new ToggleVerticalPane(addItemPane, mainPane, true);
+
+        whatsAppPane.setVisible(false);
+        ToggleHorizontalPane whatsAppToggle = new ToggleHorizontalPane(whatsAppPane, mainPane, true);
 
         currencyGroup = new ToggleGroup();
         itemAddCurrencyUSD.setToggleGroup(currencyGroup);
@@ -121,6 +123,9 @@ public class listViewController {
                     if (addItemPane.isVisible()) {
                         cancelAddItem(addItemToggle);
                     }
+                    if (whatsAppPane.isVisible()){
+                        closeWhatsappPane(whatsAppToggle);
+                    }
                     break;
                 case ENTER:
                     if(addItemPane.isVisible()){
@@ -140,6 +145,9 @@ public class listViewController {
         addItem.setOnAction(event -> openAddItemPane(addItemToggle));
         editItem.setOnAction(event -> openEditItemPane(addItemToggle));
         removeItem.setOnAction(event -> openRemoveItemDialog());
+
+        whatsappPane.setOnAction(event -> openWhatsappPane(whatsAppToggle));
+        closeWhatsappPane.setOnAction(event -> closeWhatsappPane(whatsAppToggle));
         confirmAddItem.setOnAction(event -> addItem(userID, addItemToggle));
         closeAddItemPane.setOnAction(event -> cancelAddItem(addItemToggle));
         cancelAdditem.setOnAction(event -> cancelAddItem(addItemToggle));
@@ -172,7 +180,10 @@ public class listViewController {
 
 
 
+
     }
+
+
 
     private void openLogoutDialog() {
         try {
@@ -203,7 +214,7 @@ public class listViewController {
 
     }
 
-    private void openEditItemPane(TogglePane addItemToggle) {
+    private void openEditItemPane(ToggleVerticalPane addItemToggle) {
         Item selectedItem = itemList.getSelectionModel().getSelectedItem();
 
         if (selectedItem == null){
@@ -263,7 +274,7 @@ public class listViewController {
     }
 
 
-    private void updateItem(Item selectedItem, TogglePane addItemToggle) {
+    private void updateItem(Item selectedItem, ToggleVerticalPane addItemToggle) {
         String name = itemAddName.getText();
         String description = itemAddDescription.getText();
         String priceAsString = itemAddPrice.getText();
@@ -337,7 +348,7 @@ public class listViewController {
             Parent dialogRoot = loader.load();
 
             generalDialogBoxController controller = loader.getController();
-            controller.setDialogTitle("️🚨 You are removing an item!");
+            controller.setDialogTitle("️You are removing an item!");
             controller.setDialogBody("Are you sure you want to remove this item?");
             controller.setConfirmButtonText("Yes");
             controller.setCancelButtonText("Nevermind");
@@ -396,7 +407,7 @@ public class listViewController {
         return str.matches(".*[a-zA-Z]+.*");
     }
 
-    private void addItem(String userID, TogglePane addItemToggle) {
+    private void addItem(String userID, ToggleVerticalPane addItemToggle) {
         String name = itemAddName.getText();
         String description = itemAddDescription.getText();
         String priceAsString = itemAddPrice.getText();
@@ -523,7 +534,7 @@ public class listViewController {
         }
     }
 
-    private void cancelAddItem(TogglePane addItemToggle) {
+    private void cancelAddItem(ToggleVerticalPane addItemToggle) {
         addItemToggle.togglePane(addItemPane, null,0.35);
         clearAddItemFields();
     }
@@ -539,7 +550,7 @@ public class listViewController {
     }
 
 
-    private void openAddItemPane(TogglePane addItemToggle) {
+    private void openAddItemPane(ToggleVerticalPane addItemToggle) {
         itemList.getSelectionModel().clearSelection();
         confirmAddItem.setOnAction(event -> addItem(storageManager.getInstance().getUserID(), addItemToggle));
         addItemTitle.setText("Add Item");
@@ -611,6 +622,15 @@ public class listViewController {
             imageThumbnail.setImage(null);
         }
         itemList.refresh();
+    }
+
+
+    private void openWhatsappPane(ToggleHorizontalPane whatsAppToggle) {
+        whatsAppToggle.togglePane(whatsAppPane, null);
+    }
+
+    private void closeWhatsappPane(ToggleHorizontalPane whatsAppToggle) {
+        whatsAppToggle.togglePane(whatsAppPane, null);
     }
 
 

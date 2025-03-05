@@ -4,14 +4,14 @@ import javafx.animation.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.util.Duration;
 
-public class TogglePane {
+public class ToggleVerticalPane {
 
     private boolean isPaneActivated;
     private AnchorPane mainPane, paneToMove;
 
     private double initialYPos;
 
-    public TogglePane(AnchorPane paneToMove, AnchorPane mainPane, boolean dynamic) {
+    public ToggleVerticalPane(AnchorPane paneToMove, AnchorPane mainPane, boolean dynamic) {
         this.paneToMove = paneToMove;
         this.initialYPos = paneToMove.getTranslateY();
         this.mainPane = mainPane;
@@ -96,7 +96,7 @@ public class TogglePane {
 
 
 
-    public TogglePane(AnchorPane paneToMove, AnchorPane mainPane, boolean dynamic, double speed) {
+    public ToggleVerticalPane(AnchorPane paneToMove, AnchorPane mainPane, boolean dynamic, double speed) {
         this.paneToMove = paneToMove;
         this.initialYPos = paneToMove.getTranslateY();
         this.mainPane = mainPane;

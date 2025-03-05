@@ -18,8 +18,8 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
-
 
 <AnchorPane fx:id="mainPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="1000.0" stylesheets="@../../../../styles/dark.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.pach.gsm.controllers.listViewController">
    <children>
@@ -65,7 +65,7 @@
             <VBox prefHeight="200.0" prefWidth="100.0" styleClass="sideMenus" BorderPane.alignment="CENTER" />
          </left>
          <bottom>
-            <HBox id="bottomMenu" alignment="CENTER" prefHeight="51.0" prefWidth="900.0" scaleShape="false" styleClass="auxiliaryMenu" BorderPane.alignment="CENTER">
+            <HBox id="bottomMenu" alignment="CENTER" prefHeight="50.0" prefWidth="900.0" scaleShape="false" styleClass="auxiliaryMenu" BorderPane.alignment="CENTER">
                <children>
                   <HBox alignment="CENTER_LEFT" prefHeight="49.0" prefWidth="285.0" spacing="20.0">
                      <children>
@@ -105,7 +105,11 @@
                   </HBox>
                   <HBox alignment="CENTER_RIGHT" prefHeight="49.0" prefWidth="340.0" spacing="20.0">
                      <children>
-                        <Button mnemonicParsing="false" text="Whatsapp" />
+                        <Button id="whatsappButton" fx:id="whatsappPane" mnemonicParsing="false">
+                           <graphic>
+                              <FontIcon id="whatsappIcon" iconLiteral="fab-whatsapp" styleClass="buttonIcon" />
+                           </graphic>
+                        </Button>
                         <Button mnemonicParsing="false" text="Settings" />
                      </children>
                      <padding>
@@ -133,7 +137,7 @@
             </HBox>
          </top>
       </BorderPane>
-      <AnchorPane fx:id="addItemPane" prefHeight="600.0" prefWidth="1000.0" styleClass="auxiliaryPane" translateY="600.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+      <AnchorPane fx:id="addItemPane" prefHeight="600.0" prefWidth="1000.0" styleClass="auxiliaryPaneVertical" translateY="600.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
          <children>
             <VBox alignment="TOP_CENTER" prefHeight="600.0" prefWidth="1000.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                <children>
@@ -229,7 +233,7 @@
                                  <children>
                                     <AnchorPane id="thumbnail" prefHeight="380.0" prefWidth="460.0" HBox.hgrow="ALWAYS">
                                        <children>
-                                          <ImageView fx:id="itemAddImageView" pickOnBounds="true" preserveRatio="true"/>
+                                          <ImageView fx:id="itemAddImageView" fitHeight="440.0" fitWidth="469.0" pickOnBounds="true" preserveRatio="true" />
                                        </children>
                                     </AnchorPane>
                                  </children>
@@ -252,5 +256,45 @@
             </VBox>
          </children>
       </AnchorPane>
+      <AnchorPane fx:id="whatsAppPane" prefHeight="600.0" prefWidth="1000.0" styleClass="auxiliaryPaneHorizontal" translateX="1000.0" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+         <children>
+            <VBox alignment="TOP_CENTER" prefHeight="600.0" prefWidth="1000.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+               <children>
+                  <HBox minHeight="-Infinity" prefHeight="41.0" prefWidth="999.0">
+                     <children>
+                        <Button id="closeWhatsappPane" fx:id="closeWhatsappPane" mnemonicParsing="false" prefHeight="24.0" prefWidth="52.0" styleClass="closePane" HBox.hgrow="ALWAYS">
+                           <graphic>
+                              <FontIcon id="closeWhatsappPaneIcon" />
+                           </graphic>
+                           <HBox.margin>
+                              <Insets top="4.0" />
+                           </HBox.margin>
+                        </Button>
+                     </children>
+                     <padding>
+                        <Insets left="10.0" top="5.0" />
+                     </padding>
+                  </HBox>
+                  <HBox alignment="TOP_CENTER" minHeight="-Infinity" prefHeight="40.0" prefWidth="1000.0" styleClass="paneTitle" VBox.vgrow="NEVER">
+                     <VBox.margin>
+                        <Insets />
+                     </VBox.margin>
+                     <children>
+                        <Label text="Whatsapp Settings">
+                           <font>
+                              <Font size="23.0" />
+                           </font></Label>
+                     </children>
+                  </HBox>
+                  <HBox prefHeight="445.0" prefWidth="999.0" spacing="10.0" VBox.vgrow="ALWAYS" />
+                  <HBox id="bottomMenu" alignment="CENTER" prefHeight="50.0" prefWidth="999.0" spacing="20.0" styleClass="auxiliaryMenu">
+                     <children>
+                        <Button fx:id="confirmWhatsapp" mnemonicParsing="false" text="Ok" />
+                        <Button fx:id="cancelWhatsapp" mnemonicParsing="false" text="Cancel" />
+                     </children>
+                  </HBox>
+               </children>
+            </VBox>
+         </children></AnchorPane>
    </children>
 </AnchorPane>

@@ -1,7 +1,7 @@
 package com.pach.gsm.controllers;
 
 import com.pach.gsm.supabaseAuthentication;
-import tools.TogglePane;
+import tools.ToggleVerticalPane;
 import tools.effects;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -41,7 +41,7 @@ public class loginViewController {
     public void initialize() throws IOException {
 
 
-        TogglePane registerToggle = new TogglePane(registerPane, mainPane, false);
+        ToggleVerticalPane registerToggle = new ToggleVerticalPane(registerPane, mainPane, false);
 
         mainPane.setOnKeyPressed(event -> {
             if (event.getCode() == javafx.scene.input.KeyCode.ESCAPE) {
@@ -152,13 +152,13 @@ public class loginViewController {
 
 
 
-    private void openRegisterPane(TogglePane registerToggle) {
+    private void openRegisterPane(ToggleVerticalPane registerToggle) {
         registerToggle.togglePane(registerPane,null, 0.15);
         emailField1.requestFocus();
 
     }
 
-    private void cancelRegistration(TogglePane registerToggle) {
+    private void cancelRegistration(ToggleVerticalPane registerToggle) {
         registerToggle.togglePane(registerPane,null, 0.15);
 
         // Clear email fields
@@ -178,7 +178,7 @@ public class loginViewController {
     }
 
 
-    private void registerUser(TogglePane registerToggle) {
+    private void registerUser(ToggleVerticalPane registerToggle) {
         if (emailField1.getText().isEmpty()
                 || passwordField1.getText().isEmpty()
                 || passwordField2.getText().isEmpty()) {
@@ -280,6 +280,9 @@ public class loginViewController {
             }
         });
     }
+
+
+
 
 
 }

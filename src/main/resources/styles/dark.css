@@ -242,11 +242,19 @@
     -fx-icon-color: #ececec;
 }
 
-.auxiliaryPane{
+.auxiliaryPaneVertical{
     -fx-background-color: #272828;
     -fx-text-fill: #ececec;
     -fx-border-color: #444545;
     -fx-border-width: 1px 0px 0px 0px;
+}
+
+
+.auxiliaryPaneHorizontal{
+    -fx-background-color: #272828;
+    -fx-text-fill: #ececec;
+    -fx-border-color: #444545;
+    -fx-border-width: 0px 0px 0px 1px;
 }
 
 #addItemLeftPanel{
@@ -298,4 +306,23 @@
 
 .dialogBody{
     -fx-font-size: 16px;
+}
+
+#whatsappButton #whatsappIcon{
+    -fx-icon-size: 20px;
+}
+
+#closeWhatsappPane{
+    -fx-border-radius: 50%;
+    -fx-background-radius: 50%;
+    -fx-min-width: 30px;
+    -fx-min-height: 30px;
+    -fx-max-width: 30px;
+    -fx-max-height: 30px;
+}
+
+#closeWhatsappPane #closeWhatsappPaneIcon{
+    -fx-icon-code: "fas-times";
+    -fx-icon-size: 17px;
+    -fx-icon-color: #ececec;
 }
