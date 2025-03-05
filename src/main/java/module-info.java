@@ -19,4 +19,7 @@ module com.pach.gsm {
     exports com.pach.gsm;
     exports com.pach.gsm.controllers;
     opens com.pach.gsm.controllers to javafx.fxml;
+
+    opens tools to javafx.fxml;
+    exports tools;
 }

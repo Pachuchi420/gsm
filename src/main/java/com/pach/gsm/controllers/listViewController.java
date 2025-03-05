@@ -6,9 +6,8 @@ import com.pach.gsm.supabaseAuthentication;
 import com.pach.gsm.supabaseDB;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import tools.DBWorker;
-import tools.TogglePane;
-import tools.effects;
+import javafx.collections.transformation.FilteredList;
+import tools.*;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.fxml.FXML;
@@ -23,7 +22,6 @@ import javafx.scene.layout.AnchorPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import tools.printTools;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -73,6 +71,9 @@ public class listViewController {
 
     @FXML
     private ImageView itemAddImageView, imageThumbnail;
+
+    @FXML
+    private ImageViewPane imageViewPane;
 
     private ToggleGroup currencyGroup;
     private ToggleGroup priorityGroup;
@@ -164,6 +165,8 @@ public class listViewController {
                 itemAddDescription.setText(itemAddDescription.getText().replace("\t", ""));
             }
         });
+
+
 
 
 
@@ -350,8 +353,18 @@ public class listViewController {
 
             if (controller.getGoAhead()){
                 storageManager storage = storageManager.getInstance();
-                storage.deleteItem(selectedItem.getId());
-                refreshTable(storage.getUserID());
+                if (supabaseAuthentication.checkIfOnline()){
+                    System.out.println("🚨Deleting item!");
+                    storage.deleteItem(selectedItem.getId());
+                    refreshTable(storage.getUserID());
+                } else {
+                    System.out.println("🚨Offline! Item set for deletion!");
+                    selectedItem.setToDelete(true);
+                    storage.updateItemLocal(selectedItem);
+                    refreshTable(storage.getUserID());
+                }
+
+
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -364,10 +377,12 @@ public class listViewController {
         storage.getAllLocalItems(userID, updatedItems -> {
             if (updatedItems != null) {
                 ObservableList<Item> observableItems = FXCollections.observableArrayList(updatedItems);
+                FilteredList<Item> filteredItems = new FilteredList<>(observableItems, item -> !item.getToDelete());
+
 
                 // Ensure UI updates on JavaFX thread
                 javafx.application.Platform.runLater(() -> {
-                    itemList.setItems(observableItems);
+                    itemList.setItems(filteredItems);
                     System.out.println("✅ TableView updated with latest items for user: " + storage.getUserID());
                 });
             } else {

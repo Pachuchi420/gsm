@@ -1,6 +1,8 @@
 package tools;
 import javafx.animation.FadeTransition;
 import javafx.scene.control.Label;
+import javafx.scene.image.ImageView;
+import javafx.scene.shape.Rectangle;
 import javafx.util.Duration;
 
 public class effects {
@@ -48,6 +50,16 @@ public class effects {
         });
 
         fadeOut.play(); // Start the fade-out effect
+    }
+
+    public static void applyRoundedCorners(ImageView imageView, double radius) {
+        Rectangle clip = new Rectangle(
+                imageView.getFitWidth(),
+                imageView.getFitHeight()
+        );
+        clip.setArcWidth(radius);
+        clip.setArcHeight(radius);
+        imageView.setClip(clip);
     }
 
 

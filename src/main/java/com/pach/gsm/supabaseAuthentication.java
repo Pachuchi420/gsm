@@ -63,8 +63,17 @@ public class supabaseAuthentication {
                             localStorage.initializeDatabase(localStorage.getUserID());
                         }
 
-                        // ✅ Only sync failed items AFTER database reinitialization
+                        // ✅ Delete items marked for deletion when offline
+                         try {
+                             localStorage.deleteToDeleteItems();
+                         } catch (Exception e){
+                             System.out.println("❌ Couldn't delete item: " + e);
+                         }
+
+                        // ✅ Sync failed items AFTER database reinitialization
                         localStorage.syncFailedItems();
+
+
 
                         // ✅ Refresh TableView in UI
                         if (refreshTableCallback != null) {

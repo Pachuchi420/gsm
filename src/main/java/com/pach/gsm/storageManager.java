@@ -174,7 +174,8 @@ public class storageManager {
                     "reservation_reserved INTEGER DEFAULT 0," +  // 🔄 BOOLEAN → INTEGER
                     "reservation_hour INTEGER," +
                     "reservation_minute INTEGER," +
-                    "supabaseSync INTEGER DEFAULT 0);";
+                    "supabaseSync INTEGER DEFAULT 0,"+
+                    "toDelete INTEGER DEFAULT 0);";
 
             stmt.execute(sql);
             System.out.println("✅ User-specific database initialized for: " + userID);
@@ -203,8 +204,8 @@ public class storageManager {
     public void addItemLocal(Item item) {
         dbWorker.submitTask(() -> {
         String sql = "INSERT INTO items (id, userID, name, description, imagedata, price, currency, date, sold, uploaddate, priority, " +
-                "reservation_buyer, reservation_place, reservation_date, reservation_reserved, reservation_hour, reservation_minute, supabaseSync) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                "reservation_buyer, reservation_place, reservation_date, reservation_reserved, reservation_hour, reservation_minute, supabaseSync, toDelete) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = DriverManager.getConnection(DATABASE_URL);
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -227,6 +228,7 @@ public class storageManager {
             pstmt.setInt(16, item.getReservation().getHour());
             pstmt.setInt(17, item.getReservation().getMinute());
             pstmt.setInt(18, item.getSupabaseSync() ? 1:0);
+            pstmt.setInt(19, item.getToDelete() ? 1:0);
             pstmt.executeUpdate();
             System.out.println("✅ Item added to local database!");
         } catch (SQLException e) {
@@ -238,7 +240,7 @@ public class storageManager {
     public void updateItemLocal(Item item) {
         dbWorker.submitTask(() -> {
             String sql = "UPDATE items SET name = ?, description = ?, imagedata = ?, price = ?, currency = ?, date = ?, sold = ?, uploaddate = ?, priority = ?, " +
-                    "reservation_buyer = ?, reservation_place = ?, reservation_date = ?, reservation_reserved = ?, reservation_hour = ?, reservation_minute = ?, supabaseSync = ? " +
+                    "reservation_buyer = ?, reservation_place = ?, reservation_date = ?, reservation_reserved = ?, reservation_hour = ?, reservation_minute = ?, supabaseSync = ?, toDelete = ? " +
                     "WHERE id = ? AND userID = ?";  // Ensure we update the correct item
 
             try (Connection conn = DriverManager.getConnection(DATABASE_URL);
@@ -265,9 +267,12 @@ public class storageManager {
                 // Sync status
                 pstmt.setInt(16, item.getSupabaseSync() ? 1 : 0);
 
+                // Delete status
+                pstmt.setInt(17, item.getToDelete() ? 1 : 0);
+
                 // Identify which item to update
-                pstmt.setString(17, item.getId());
-                pstmt.setString(18, item.getUserID());
+                pstmt.setString(18, item.getId());
+                pstmt.setString(19, item.getUserID());
 
                 int rowsUpdated = pstmt.executeUpdate();
 
@@ -306,6 +311,7 @@ public class storageManager {
                     item.setId(rs.getString("id"));
                     item.setSold(rs.getBoolean("sold"));
                     item.setSupabaseSync(rs.getInt("supabaseSync") == 1);
+                    item.setToDelete(rs.getInt("toDelete") == 1);
                     items.add(item);
                 }
 
@@ -395,5 +401,21 @@ public class storageManager {
 
     public void setDbReady(Boolean dbReady) {
         this.dbReady = dbReady;
+    }
+
+    public void deleteToDeleteItems() {
+        dbWorker.submitTask(() -> {
+            String sql = "DELETE FROM items WHERE toDelete = 1";
+
+            try (Connection conn = DriverManager.getConnection(DATABASE_URL);
+                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+                int rowsDeleted = pstmt.executeUpdate();
+                System.out.println("✅ Deleted " + rowsDeleted + " items marked for deletion.");
+
+            } catch (SQLException e) {
+                System.out.println("❌ Error deleting items marked for deletion: " + e.getMessage());
+            }
+        });
     }
 }

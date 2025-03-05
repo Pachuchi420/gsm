@@ -28,6 +28,7 @@ public class Item implements Serializable {
     private int priority;
 
     private Boolean supabaseSync;
+    private Boolean toDelete;
 
     public Item(String name, String description, byte[] imageData, int price, String currency, int priority) {
         this.id = makeUniqueID();
@@ -42,6 +43,7 @@ public class Item implements Serializable {
         this.uploadDate = null;
         this.priority = priority;
         this.supabaseSync = false;
+        this.toDelete = false;
     }
 
     private String makeUniqueID(){
@@ -212,4 +214,13 @@ public class Item implements Serializable {
     public Boolean getSupabaseSync(){
         return this.supabaseSync;
     }
+
+    public Boolean getToDelete() {
+        return toDelete;
+    }
+
+    public void setToDelete(Boolean setToDelete) {
+        this.toDelete = setToDelete;
+    }
+
 }
