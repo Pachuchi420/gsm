@@ -14,6 +14,7 @@ public class Main extends Application {
 
         supabaseAuthentication.sessionManager();
 
+
         String fxmlFile;
         if (supabaseAuthentication.autoLogin()){
             fxmlFile = "/com/pach/gsm/views/listView.fxml"; // Otherwise, show login

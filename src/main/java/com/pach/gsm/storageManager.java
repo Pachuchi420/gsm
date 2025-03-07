@@ -192,7 +192,7 @@ public class storageManager {
             throw new IllegalStateException("❌ Cannot determine database path, userID is null.");
         }
 
-        String baseDir = System.getProperty("user.home") + File.separator + "Documents" + File.separator + "GSM_DB";
+        String baseDir = System.getProperty("user.home") + File.separator + "Documents" + File.separator + "GSM" + File.separator +  "DB";
         File dir = new File(baseDir);
         if (!dir.exists()) {
             dir.mkdirs(); // Ensure directory exists

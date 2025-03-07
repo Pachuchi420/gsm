@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="f6b0af61-df03-44f2-9b6b-621fd867ff2a" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/pach/gsm/Chatbot.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/pach/gsm/Group.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.name" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/pach/gsm/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/pach/gsm/Main.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/pach/gsm/controllers/listViewController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/pach/gsm/controllers/listViewController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/pach/gsm/storageManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/pach/gsm/storageManager.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/pach/gsm/supabaseAuthentication.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/pach/gsm/supabaseAuthentication.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/module-info.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/com/pach/gsm/views/listView.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/com/pach/gsm/views/listView.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/styles/dark.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/styles/dark.css" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="CSS File" />
+        <option value="FxmlFile" />
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="MavenImportPreferences">
+    <option name="generalSettings">
+      <MavenGeneralSettings>
+        <option name="mavenHome" value="Use Maven wrapper" />
+      </MavenGeneralSettings>
+    </option>
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 6
+}</component>
+  <component name="ProjectId" id="2tDoNiKU0NlyFV4N2eX2cRogBko" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="flattenPackages" value="true" />
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Application.HelloApplication.executor": "Run",
+    "Application.Main.executor": "Run",
+    "Application.gsm.executor": "Run",
+    "Application.main.executor": "Run",
+    "Downloaded.Files.Path.Enabled": "false",
+    "Maven.gsm [javafx:jlink].executor": "Run",
+    "Repository.Attach.Annotations": "false",
+    "Repository.Attach.JavaDocs": "false",
+    "Repository.Attach.Sources": "false",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "git-widget-placeholder": "main",
+    "kotlin-language-version-configured": "true",
+    "list.type.of.created.stylesheet": "CSS",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "project.structure.last.edited": "Modules",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.43462247",
+    "settings.editor.selected.configurable": "reference.settings.project.maven.repository.indices",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CreateClassDialog.RecentsKey">
+      <recent name="com.pach.gsm" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src/main/resources" />
+      <recent name="$PROJECT_DIR$/src/main/resources/com/pach/gsm/views" />
+    </key>
+    <key name="MoveClassesOrPackagesDialog.RECENTS_KEY">
+      <recent name="com.pach.gsm.mainLogic" />
+      <recent name="com.pach.gsm" />
+    </key>
+  </component>
+  <component name="RunAnythingCache">
+    <option name="myCommands">
+      <command value="mvn javafx:jlink" />
+    </option>
+  </component>
+  <component name="RunManager">
+    <configuration name="gsm" type="Application" factoryName="Application">
+      <option name="ALTERNATIVE_JRE_PATH" value="liberica-full-23" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
+      <option name="MAIN_CLASS_NAME" value="com.pach.gsm.Main" />
+      <module name="gsm" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="f6b0af61-df03-44f2-9b6b-621fd867ff2a" name="Changes" comment="" />
+      <created>1739895967455</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1739895967455</updated>
+      <workItem from="1739895968525" duration="100000" />
+      <workItem from="1739896229044" duration="523000" />
+      <workItem from="1739978385496" duration="8910000" />
+      <workItem from="1740059738370" duration="2176000" />
+      <workItem from="1740070754810" duration="31000" />
+      <workItem from="1740070794358" duration="5298000" />
+      <workItem from="1740077364980" duration="947000" />
+      <workItem from="1740139327535" duration="5504000" />
+      <workItem from="1740145341007" duration="3818000" />
+      <workItem from="1740167388466" duration="6470000" />
+      <workItem from="1740179362745" duration="4703000" />
+      <workItem from="1740184241378" duration="137000" />
+      <workItem from="1740232414277" duration="341000" />
+      <workItem from="1740234456036" duration="4707000" />
+      <workItem from="1740315715000" duration="4882000" />
+      <workItem from="1740401476077" duration="7695000" />
+      <workItem from="1740409406434" duration="63000" />
+      <workItem from="1740410155441" duration="3104000" />
+      <workItem from="1740422507640" duration="898000" />
+      <workItem from="1740423481479" duration="5542000" />
+      <workItem from="1740432782997" duration="2808000" />
+      <workItem from="1740436926298" duration="624000" />
+      <workItem from="1740448263148" duration="719000" />
+      <workItem from="1740452041997" duration="9743000" />
+      <workItem from="1740506279446" duration="1413000" />
+      <workItem from="1740523465912" duration="48000" />
+      <workItem from="1740532606746" duration="54000" />
+      <workItem from="1740589900665" duration="6906000" />
+      <workItem from="1740599656967" duration="2941000" />
+      <workItem from="1740660485929" duration="9270000" />
+      <workItem from="1740674636936" duration="1722000" />
+      <workItem from="1740679019725" duration="1551000" />
+      <workItem from="1740680771439" duration="272000" />
+      <workItem from="1740742493060" duration="10349000" />
+      <workItem from="1740758871074" duration="12483000" />
+      <workItem from="1740781469897" duration="118000" />
+      <workItem from="1740782589611" duration="6861000" />
+      <workItem from="1740865822001" duration="9006000" />
+      <workItem from="1740914383834" duration="16091000" />
+      <workItem from="1740945866940" duration="421000" />
+      <workItem from="1741002943181" duration="914000" />
+      <workItem from="1741009313473" duration="1304000" />
+      <workItem from="1741010755886" duration="13571000" />
+      <workItem from="1741030264513" duration="801000" />
+      <workItem from="1741039398073" duration="2724000" />
+      <workItem from="1741042134305" duration="2894000" />
+      <workItem from="1741096250681" duration="11039000" />
+      <workItem from="1741110204035" duration="170000" />
+      <workItem from="1741116648214" duration="1386000" />
+      <workItem from="1741126880772" duration="1154000" />
+      <workItem from="1741177685638" duration="4220000" />
+      <workItem from="1741186522171" duration="1464000" />
+      <workItem from="1741188499174" duration="3874000" />
+      <workItem from="1741202328824" duration="320000" />
+      <workItem from="1741203397153" duration="2013000" />
+      <workItem from="1741231301184" duration="1786000" />
+      <workItem from="1741263669685" duration="3330000" />
+      <workItem from="1741294783012" duration="6501000" />
+      <workItem from="1741352342809" duration="942000" />
+      <workItem from="1741354256970" duration="1344000" />
+      <workItem from="1741355612121" duration="154000" />
+      <workItem from="1741355769962" duration="808000" />
+      <workItem from="1741356586779" duration="15338000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>

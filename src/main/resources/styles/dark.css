@@ -326,3 +326,152 @@
     -fx-icon-size: 17px;
     -fx-icon-color: #ececec;
 }
+
+
+.whatsAppLogoutButton .whatsApplogoutButtonIcon{
+    -fx-icon-color: #ececec;
+}
+
+.whatsAppStatusDisconnected {
+    -fx-icon-color: #ff6666;
+    -fx-icon-size: 12px;
+    -fx-effect: dropshadow(gaussian, rgba(255, 102, 102, 0.8), 10, 0.5, 0, 0);
+}
+
+.whatsAppStatusOnline {
+    -fx-icon-color: #ff6666;
+    -fx-icon-size: 12px;
+    -fx-effect: dropshadow(gaussian, rgba(255, 102, 102, 0.8), 10, 0.5, 0, 0);
+}
+
+.whatsAppStatusConnected {
+    -fx-icon-color: #02a402;
+    -fx-icon-size: 12px;
+    -fx-effect: dropshadow(gaussian, rgba(2, 164, 2, 0.8), 10, 0.5, 0, 0);
+}
+
+.whatsAppStatusLoggedIn {
+    -fx-icon-size: 12px;
+    -fx-icon-code: "fas-circle";
+    -fx-icon-color: #02a402;
+    -fx-effect: dropshadow(gaussian, rgba(2, 164, 2, 0.8), 10, 0.5, 0, 0);
+}
+
+#whatsAppGroupPane {
+    -fx-background-color: #404343;
+}
+
+.combo-box {
+    -fx-background-color: #393837; /* Background color */
+    -fx-border-color: #444442; /* Border color */
+    -fx-border-radius: 5px; /* Rounded corners */
+    -fx-background-radius: 5px;
+    -fx-text-fill: #dddddd; /* Text color */
+    -fx-padding: 1px;
+}
+
+/* ComboBox when focused */
+.combo-box:focused {
+    -fx-border-color: #45932b; /* Green border when focused */
+}
+
+/* Text inside the selected ComboBox cell */
+.combo-box .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #dddddd; /* Light text color */
+}
+
+/* Dropdown list (popup) */
+.combo-box-popup .list-view {
+    -fx-background-color: #2b2b2a; /* Background for dropdown */
+    -fx-border-color: #444442; /* Border color */
+}
+
+/* Items inside the dropdown */
+.combo-box-popup .list-cell {
+    -fx-background-color: #2b2b2a; /* Background color */
+    -fx-text-fill: #dddddd; /* Light text */
+    -fx-padding: 5px;
+}
+
+/* Hover effect for dropdown items */
+.combo-box-popup .list-cell:hover {
+    -fx-background-color: rgba(179, 255, 208, 0.07); /* Light hover effect */
+}
+
+/* Selected item inside the dropdown */
+.combo-box-popup .list-cell:selected {
+    -fx-background-color: #45932b; /* Green background when selected */
+    -fx-text-fill: white;
+}
+
+/* Arrow button (the part that opens the dropdown) */
+.combo-box .arrow-button {
+    -fx-background-color: #545453; /* Button background */
+    -fx-border-radius: 5px; /* Rounded corners */
+}
+
+/* Arrow icon inside the button */
+.combo-box .arrow {
+    -fx-background-color: #dddddd; /* Light arrow color */
+}
+
+/* Arrow button hover effect */
+.combo-box .arrow-button:hover {
+    -fx-background-color: #6c6b69; /* Slightly lighter on hover */
+    -fx-cursor: hand;
+}
+
+/* Arrow button when pressed */
+.combo-box .arrow-button:pressed {
+    -fx-background-color: #7b7b7b; /* Darker when pressed */
+}
+
+/* Scrollbar track (the background of the scrollbar) */
+.combo-box-popup .scroll-bar {
+    -fx-background-color: #2b2b2a; /* Dark background */
+}
+
+/* Scrollbar thumb (the draggable part) */
+.combo-box-popup .scroll-bar .thumb {
+    -fx-background-color: #545453; /* Medium gray for the scrollbar thumb */
+    -fx-background-radius: 5px;
+}
+
+/* Scrollbar thumb when hovered */
+.combo-box-popup .scroll-bar .thumb:hover {
+    -fx-background-color: #696969; /* Lighter gray when hovered */
+}
+
+/* Scrollbar thumb when pressed */
+.combo-box-popup .scroll-bar .thumb:pressed {
+    -fx-background-color: #7b7b7b; /* Even lighter when pressed */
+}
+
+/* Buttons on the scrollbar (arrows at the top and bottom) */
+.combo-box-popup .scroll-bar .increment-button,
+.combo-box-popup .scroll-bar .decrement-button {
+    -fx-background-color: #393837; /* Background color */
+    -fx-border-radius: 5px;
+}
+
+/* Buttons on hover */
+.combo-box-popup .scroll-bar .increment-button:hover,
+.combo-box-popup .scroll-bar .decrement-button:hover {
+    -fx-background-color: #545453; /* Slightly lighter on hover */
+}
+
+/* Scrollbar track (the space where the thumb moves) */
+.combo-box-popup .scroll-bar .track {
+    -fx-background-color: #212120; /* Darker background for contrast */
+    -fx-background-radius: 5px;
+}
+
+/* Hide scrollbar when not needed */
+.combo-box-popup .scroll-bar:vertical {
+    -fx-pref-width: 8px; /* Slim scrollbar */
+}
+
+.combo-box-popup .scroll-bar:horizontal {
+    -fx-pref-height: 8px; /* Slim scrollbar */
+}

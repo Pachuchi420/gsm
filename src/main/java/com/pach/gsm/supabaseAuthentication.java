@@ -90,7 +90,6 @@ public class supabaseAuthentication {
                 }
             }
         });
-
         checker.setDaemon(true);
         checker.start();
     }

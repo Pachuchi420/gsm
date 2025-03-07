@@ -1,12 +1,10 @@
 package com.pach.gsm.controllers;
 
-import com.pach.gsm.Item;
-import com.pach.gsm.storageManager;
-import com.pach.gsm.supabaseAuthentication;
-import com.pach.gsm.supabaseDB;
+import com.pach.gsm.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
+import org.kordamp.ikonli.javafx.FontIcon;
 import tools.*;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -32,10 +30,10 @@ import java.time.LocalDate;
 
 public class listViewController {
     @FXML
-    private Label warningAddMessage, itemListWarning, addItemTitle;
+    private Label warningAddMessage, itemListWarning, addItemTitle, warningMessageWhatsAppLogout;
 
     @FXML
-    private Button logoutButton, addItem, closeAddItemPane, confirmAddItem, cancelAdditem, itemAddImage, removeItem, editItem, whatsappPane, closeWhatsappPane;
+    private Button logoutButton, addItem, closeAddItemPane, confirmAddItem, cancelAdditem, itemAddImage, removeItem, editItem, whatsappPane, closeWhatsappPane, refreshQR, whatsAppLogout;
 
     @FXML
     private AnchorPane addItemPane, whatsAppPane, mainPane;
@@ -43,6 +41,8 @@ public class listViewController {
     @FXML
     private TableView<Item> itemList;
 
+    @FXML
+    private FontIcon whatsAppStatus;
 
     @FXML
     private TableColumn<Item, String> itemColumnID, itemColumnName, itemColumnDescription, itemColumnReservationDate;
@@ -69,8 +69,7 @@ public class listViewController {
     private RadioButton itemAddCurrencyUSD, itemAddCurrencyMXN, itemAddCurrencyEUR;
 
     @FXML
-    private ImageView itemAddImageView, imageThumbnail;
-
+    private ImageView itemAddImageView, imageThumbnail, qrCodeImageView;
     @FXML
     private ImageViewPane imageViewPane;
 
@@ -85,11 +84,16 @@ public class listViewController {
 
     @FXML
     public void initialize() throws IOException {
+        Chatbot chatBotInstance = Chatbot.getInstance();
+        chatBotInstance.initializeChatbot(qrCodeImageView);
         storageManager storage = storageManager.getInstance();
         String userID = storage.getUserID();
         storage.initializeDatabase(userID);
+        startChatBotThread();
         setupTableColumns();
         refreshTable(userID);
+
+        itemList.requestFocus();
 
         supabaseAuthentication.setRefreshTableCallback(() -> refreshTable(userID));
 
@@ -98,6 +102,8 @@ public class listViewController {
 
         whatsAppPane.setVisible(false);
         ToggleHorizontalPane whatsAppToggle = new ToggleHorizontalPane(whatsAppPane, mainPane, true);
+
+
 
         currencyGroup = new ToggleGroup();
         itemAddCurrencyUSD.setToggleGroup(currencyGroup);
@@ -145,9 +151,10 @@ public class listViewController {
         addItem.setOnAction(event -> openAddItemPane(addItemToggle));
         editItem.setOnAction(event -> openEditItemPane(addItemToggle));
         removeItem.setOnAction(event -> openRemoveItemDialog());
-
         whatsappPane.setOnAction(event -> openWhatsappPane(whatsAppToggle));
         closeWhatsappPane.setOnAction(event -> closeWhatsappPane(whatsAppToggle));
+        whatsAppLogout.setOnAction(event -> openWhatsAppLogoutDialog());
+        refreshQR.setOnAction(event -> refreshQRImage());
         confirmAddItem.setOnAction(event -> addItem(userID, addItemToggle));
         closeAddItemPane.setOnAction(event -> cancelAddItem(addItemToggle));
         cancelAdditem.setOnAction(event -> cancelAddItem(addItemToggle));
@@ -174,16 +181,69 @@ public class listViewController {
             }
         });
 
+    }
+
+    private void openWhatsAppLogoutDialog() {
+        if (!Chatbot.getInstance().isLoggedIn()){
+            warningMessageWhatsAppLogout.setText("No session to log out of!");
+            effects.vanishText(warningMessageWhatsAppLogout, 2);
+            return;
+        }
+
+
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/pach/gsm/views/generalDialogBox.fxml"));
+            Parent dialogRoot = loader.load();
+
+            generalDialogBoxController controller = loader.getController();
+            controller.setDialogTitle(" 🚨Log out from WhatsApp? ");
+            controller.setDialogBody("Are you sure you want to logout from your Whatsapp session?");
+            controller.setConfirmButtonText("Yes");
+            controller.setCancelButtonText("Actually, no");
 
 
 
+            Stage dialogStage = new Stage();
+            dialogStage.setResizable(false);
+            dialogStage.setTitle("Log out from WhatsApp?");
+            dialogStage.initModality(Modality.APPLICATION_MODAL);
+            dialogStage.setScene(new Scene(dialogRoot));
+            dialogStage.showAndWait();
+
+            if (controller.getGoAhead()){
+                Chatbot chatbotInstance = Chatbot.getInstance();
+                chatbotInstance.logout();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void startChatBotThread() {
+        Thread chatBotThread = new Thread(() -> {
+            while(true){
+                Chatbot chatBotInstance = Chatbot.getInstance();
+                if(chatBotInstance.isLoggedIn()){
+                    whatsAppStatus.getStyleClass().add("whatsAppStatusLoggedIn");
+                    qrCodeImageView.setImage(null);
+                } try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    System.out.println("❌ Session thread interrupted: " + e.getMessage());
+                    break;
+                }
+            }
+        });
 
 
-
+        chatBotThread.setDaemon(true);
+        chatBotThread.start();
 
     }
 
+    public void refreshQRImage(){
 
+    }
 
     private void openLogoutDialog() {
         try {
@@ -517,8 +577,10 @@ public class listViewController {
     private void logout() throws IOException {
         supabaseAuthentication instance = supabaseAuthentication.getInstance();
         if (instance.logoutUser()) {
+            if(Chatbot.getInstance().isLoggedIn()){
+                Chatbot.getInstance().logout();
+            }
             System.out.println("🔑 User logged out. Redirecting to loginView.fxml...");
-
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/com/pach/gsm/views/loginView.fxml"));
             Parent root = fxmlLoader.load();
 
