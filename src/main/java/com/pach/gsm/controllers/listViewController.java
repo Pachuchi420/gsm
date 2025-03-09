@@ -92,7 +92,7 @@ public class listViewController {
     private ComboBox<Integer> groupStartHour, groupStartMinute, groupEndHour, groupEndMinute;
 
     @FXML
-    private Button addGroup, removeGroup;
+    private Button addGroup, removeGroup, updateGroup;
 
     @FXML
     private TableView<Group> groupList;
@@ -181,7 +181,8 @@ public class listViewController {
         whatsAppLogout.setOnAction(event -> openWhatsAppLogoutDialog());
         refreshQR.setOnAction(event -> refreshQRImage());
         addGroup.setOnAction(event -> addGroup(userID));
-        removeGroup.setOnAction(event -> openRemoveGroupDialog());
+        removeGroup.setOnAction(event -> removeGroup());
+        updateGroup.setOnAction(event -> updateGroup());
 
         itemList.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue != null) {
@@ -204,8 +205,44 @@ public class listViewController {
             }
         });
 
+
+
+        groupName.textProperty().addListener((obs, oldText, newText) -> {
+            if (newText == null || newText.isEmpty()) {
+                groupList.getSelectionModel().clearSelection();
+                return;
+            }
+
+            for (Group group : groupList.getItems()) {
+                if (group.getName().equalsIgnoreCase(newText.trim())) {
+                    groupList.getSelectionModel().select(group);
+                    populateGroupFields(group);
+                    return;
+                }
+            }
+
+            groupList.getSelectionModel().clearSelection();
+        });
+
+        groupList.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) {
+                groupName.setText(newVal.getName());
+                populateGroupFields(newVal);
+            }
+        });
+
+
     }
 
+
+
+    private void populateGroupFields(Group group) {
+        groupInterval.setText(String.valueOf(group.getInterval()));
+        groupStartHour.setValue(group.getStartHour());
+        groupStartMinute.setValue(group.getStartMinute());
+        groupEndHour.setValue(group.getEndHour());
+        groupEndMinute.setValue(group.getEndMinute());
+    }
 
     private void openWhatsAppLogoutDialog() {
         if (!Chatbot.getInstance().isLoggedIn()){
@@ -213,7 +250,6 @@ public class listViewController {
             effects.vanishText(warningMessageWhatsAppLogout, 2);
             return;
         }
-
 
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/pach/gsm/views/generalDialogBox.fxml"));
@@ -767,6 +803,13 @@ public class listViewController {
             effects.vanishText(groupWarningMessage, 2);
         }
 
+        if(storageManager.getInstance().getGroupByName(name) != null){
+            groupWarningMessage.setText("Group already added!");
+            effects.vanishText(groupWarningMessage, 2);
+            groupName.clear();
+            return;
+        }
+
         if(Chatbot.getApi().store().findChatByName(name).isEmpty()){
             groupWarningMessage.setText("No contact or group found with that name!");
             effects.vanishText(groupWarningMessage, 2);
@@ -803,8 +846,7 @@ public class listViewController {
 
     }
 
-    private void openRemoveGroupDialog() {
-
+    private void removeGroup() {
         if (groupList.getSelectionModel().isEmpty()){
             groupWarningMessage.setText("Select an item to remove!");
             effects.vanishText(groupWarningMessage, 2);
@@ -812,35 +854,61 @@ public class listViewController {
         }
 
         Group selectedGroup = groupList.getSelectionModel().getSelectedItem();
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/pach/gsm/views/generalDialogBox.fxml"));
-            Parent dialogRoot = loader.load();
-
-            generalDialogBoxController controller = loader.getController();
-            controller.setDialogTitle("️You are removing a group!");
-            controller.setDialogBody("Are you sure you want to remove this group?");
-            controller.setConfirmButtonText("Yes");
-            controller.setCancelButtonText("Nevermind");
-
-
-
-            Stage dialogStage = new Stage();
-            dialogStage.setResizable(false);
-            dialogStage.setTitle("Remove Group");
-            dialogStage.initModality(Modality.APPLICATION_MODAL);
-            dialogStage.setScene(new Scene(dialogRoot));
-            dialogStage.showAndWait();
-
-            if (controller.getGoAhead()){
-                String groupID = selectedGroup.getId();
-                System.out.println("🚨Deleting group!");
-                storageManager.getInstance().deleteGroup(selectedGroup.getId());
-                refreshTable(groupID);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        storageManager storage = storageManager.getInstance();
+        String userID = storage.getUserID();
+        System.out.println("🚨Deleting item!");
+        storage.deleteGroup(selectedGroup.getId());
+        refreshTable(userID);
     }
 
+
+    private void updateGroup() {
+        Group selectedGroup = groupList.getSelectionModel().getSelectedItem();
+
+        if (selectedGroup == null) {
+            groupWarningMessage.setText("Select a group to update!");
+            effects.vanishText(groupWarningMessage, 2);
+            return;
+        }
+
+        // Read updated values from UI
+        String updatedName = groupName.getText();
+        String updatedIntervalStr = groupInterval.getText();
+        Integer updatedStartHour = groupStartHour.getValue();
+        Integer updatedStartMinute = groupStartMinute.getValue();
+        Integer updatedEndHour = groupEndHour.getValue();
+        Integer updatedEndMinute = groupEndMinute.getValue();
+
+        if (updatedName.isEmpty() || updatedIntervalStr.isEmpty() ||
+                updatedStartHour == null || updatedStartMinute == null ||
+                updatedEndHour == null || updatedEndMinute == null) {
+            groupWarningMessage.setText("Please fill in all fields to update!");
+            effects.vanishText(groupWarningMessage, 2);
+            return;
+        }
+
+        int updatedInterval;
+        try {
+            updatedInterval = Integer.parseInt(updatedIntervalStr);
+        } catch (NumberFormatException e) {
+            groupWarningMessage.setText("Interval must be a valid number!");
+            effects.vanishText(groupWarningMessage, 2);
+            return;
+        }
+
+        // Apply updated values to the selected group
+        selectedGroup.setName(updatedName);
+        selectedGroup.setInterval(updatedInterval);
+        selectedGroup.setStartHour(updatedStartHour);
+        selectedGroup.setStartMinute(updatedStartMinute);
+        selectedGroup.setEndHour(updatedEndHour);
+        selectedGroup.setEndMinute(updatedEndMinute);
+
+        // Save updated group to DB
+        storageManager.getInstance().updateGroup(selectedGroup);
+        refreshTable(storageManager.getInstance().getUserID());
+
+        System.out.println("✅ Group updated from UI action!");
+    }
 
 }

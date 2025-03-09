@@ -505,7 +505,9 @@ public class storageManager {
                             rs.getInt("endHour"),
                             rs.getInt("endMinute")
                     );
+                    group.setId(rs.getString("id"));
                     groups.add(group);
+
                 }
                 System.out.println("✅ Retrieved " + groups.size() + " groups from local database.");
             } catch (SQLException e) {
@@ -515,6 +517,47 @@ public class storageManager {
         });
     }
 
+
+    public Group getGroupByName(String name) {
+        String sql = "SELECT * FROM groups WHERE name = ? AND userID = ?";
+        String userID = getUserID();  // Retrieve current user's ID
+
+        if (userID == null) {
+            System.out.println("⚠️ No userID available. Cannot fetch group.");
+            return null;
+        }
+
+        try (Connection conn = DriverManager.getConnection(DATABASE_URL);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, name);
+            pstmt.setString(2, userID);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                Group group = new Group(
+                        rs.getString("name"),
+                        rs.getInt("interval"),
+                        rs.getInt("startHour"),
+                        rs.getInt("startMinute"),
+                        rs.getInt("endHour"),
+                        rs.getInt("endMinute")
+                );
+                group.setId(rs.getString("id"));
+                return group;
+            } else {
+                System.out.println("⚠️ No group found with name: " + name);
+            }
+
+        } catch (SQLException e) {
+            System.out.println("❌ Error fetching group: " + e.getMessage());
+        }
+
+        return null;
+    }
+
+
+
     public void deleteGroup(String groupId) {
         dbWorker.submitTask(() -> {
             String sql = "DELETE FROM groups WHERE id = ?";
@@ -523,14 +566,18 @@ public class storageManager {
                  PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
                 pstmt.setString(1, groupId);
-                pstmt.executeUpdate();
-                System.out.println("✅ Group deleted from local database.");
+                int rows = pstmt.executeUpdate();
+
+                if (rows > 0) {
+                    System.out.println("✅ Group deleted from local database.");
+                } else {
+                    System.out.println("⚠️ No group found with ID: " + groupId + " (nothing deleted).");
+                }
+
             } catch (SQLException e) {
                 System.out.println("❌ Error deleting group from local database: " + e.getMessage());
             }
         });
     }
-
-
 
 }

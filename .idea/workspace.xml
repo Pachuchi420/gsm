@@ -6,11 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="f6b0af61-df03-44f2-9b6b-621fd867ff2a" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/pach/gsm/Chatbot.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/pach/gsm/Chatbot.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/pach/gsm/Group.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/pach/gsm/Group.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/pach/gsm/controllers/listViewController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/pach/gsm/controllers/listViewController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/pach/gsm/storageManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/pach/gsm/storageManager.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/pach/gsm/supabaseAuthentication.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/pach/gsm/supabaseAuthentication.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/com/pach/gsm/views/listView.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/com/pach/gsm/views/listView.fxml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
