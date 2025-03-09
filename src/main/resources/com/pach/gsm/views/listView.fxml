@@ -356,12 +356,12 @@
                                     <Label text="Interval:" GridPane.rowIndex="1" />
                                     <Label text="Start Time:" GridPane.rowIndex="2" />
                                     <Label text="End Time: " GridPane.rowIndex="3" />
-                                    <TextField GridPane.columnIndex="1" />
-                                    <TextField GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                    <TextField fx:id="groupName" GridPane.columnIndex="1" />
+                                    <TextField fx:id="groupInterval" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                                     <HBox prefHeight="100.0" prefWidth="200.0" spacing="10.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
                                        <children>
-                                          <ComboBox fx:id="startHour" prefHeight="37.0" prefWidth="101.0" promptText="Hour" />
-                                          <ComboBox fx:id="startMinute" prefHeight="37.0" prefWidth="118.0" promptText="Minutes" />
+                                          <ComboBox fx:id="groupStartHour" prefHeight="37.0" prefWidth="101.0" promptText="Hour" />
+                                          <ComboBox fx:id="groupStartMinute" prefHeight="37.0" prefWidth="118.0" promptText="Minutes" />
                                        </children>
                                        <GridPane.margin>
                                           <Insets />
@@ -369,14 +369,15 @@
                                     </HBox>
                                     <HBox prefHeight="100.0" prefWidth="200.0" spacing="10.0" GridPane.columnIndex="1" GridPane.rowIndex="3">
                                        <children>
-                                          <ComboBox fx:id="startHour1" prefHeight="37.0" prefWidth="101.0" promptText="Hour" />
-                                          <ComboBox fx:id="startMinute1" prefHeight="37.0" prefWidth="118.0" promptText="Minutes" />
+                                          <ComboBox fx:id="groupEndHour" prefHeight="37.0" prefWidth="101.0" promptText="Hour" />
+                                          <ComboBox fx:id="groupEndMinute" prefHeight="37.0" prefWidth="118.0" promptText="Minutes" />
                                        </children>
                                     </HBox>
                                     <HBox alignment="CENTER_LEFT" prefHeight="100.0" prefWidth="200.0" spacing="15.0" GridPane.columnIndex="1" GridPane.rowIndex="4">
                                        <children>
-                                          <Button mnemonicParsing="false" text="Add" />
-                                          <Button mnemonicParsing="false" text="Remove" />
+                                          <Button fx:id="addGroup" mnemonicParsing="false" text="Add" />
+                                          <Button fx:id="removeGroup" mnemonicParsing="false" text="Remove" />
+                                          <Label fx:id="groupWarningMessage" styleClass="warningMessage" />
                                        </children>
                                        <GridPane.margin>
                                           <Insets />
@@ -387,12 +388,12 @@
                                     <Insets bottom="10.0" right="20.0" top="10.0" />
                                  </VBox.margin>
                               </GridPane>
-                              <TableView prefHeight="256.0" prefWidth="568.0" styleClass="column-header-background">
+                              <TableView fx:id="groupList" prefHeight="256.0" prefWidth="568.0" styleClass="column-header-background">
                                 <columns>
-                                  <TableColumn prefWidth="75.0" text="Group Name" />
-                                  <TableColumn prefWidth="75.0" text="Interval" />
-                                    <TableColumn prefWidth="75.0" text="Start Time" />
-                                    <TableColumn prefWidth="75.0" text="End Time" />
+                                  <TableColumn fx:id="groupNameColumn" prefWidth="75.0" text="Group Name" />
+                                  <TableColumn fx:id="groupIntervalColumn" prefWidth="75.0" text="Interval" />
+                                    <TableColumn fx:id="groupStartTimeColumn" prefWidth="75.0" text="Start Time" />
+                                    <TableColumn fx:id="groupEndTimeColumn" prefWidth="75.0" text="End Time" />
                                 </columns>
                                  <columnResizePolicy>
                                     <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />

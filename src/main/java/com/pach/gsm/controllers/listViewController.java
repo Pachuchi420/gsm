@@ -81,17 +81,37 @@ public class listViewController {
 
 
 
+    // Group Management
+    @FXML
+    private Label groupWarningMessage;
+
+    @FXML
+    private TextField groupName, groupInterval;
+
+    @FXML
+    private ComboBox<Integer> groupStartHour, groupStartMinute, groupEndHour, groupEndMinute;
+
+    @FXML
+    private Button addGroup, removeGroup;
+
+    @FXML
+    private TableView<Group> groupList;
+
+    @FXML
+    private TableColumn<Group, String> groupNameColumn, groupIntervalColumn, groupStartTimeColumn, groupEndTimeColumn;
+
+
 
     @FXML
     public void initialize() throws IOException {
-        Chatbot chatBotInstance = Chatbot.getInstance();
-        chatBotInstance.initializeChatbot(qrCodeImageView);
+
         storageManager storage = storageManager.getInstance();
         String userID = storage.getUserID();
         storage.initializeDatabase(userID);
         startChatBotThread();
         setupTableColumns();
         refreshTable(userID);
+        populateGroupComboBoxes();
 
         itemList.requestFocus();
 
@@ -151,14 +171,17 @@ public class listViewController {
         addItem.setOnAction(event -> openAddItemPane(addItemToggle));
         editItem.setOnAction(event -> openEditItemPane(addItemToggle));
         removeItem.setOnAction(event -> openRemoveItemDialog());
-        whatsappPane.setOnAction(event -> openWhatsappPane(whatsAppToggle));
-        closeWhatsappPane.setOnAction(event -> closeWhatsappPane(whatsAppToggle));
-        whatsAppLogout.setOnAction(event -> openWhatsAppLogoutDialog());
-        refreshQR.setOnAction(event -> refreshQRImage());
         confirmAddItem.setOnAction(event -> addItem(userID, addItemToggle));
         closeAddItemPane.setOnAction(event -> cancelAddItem(addItemToggle));
         cancelAdditem.setOnAction(event -> cancelAddItem(addItemToggle));
         logoutButton.setOnAction(event -> openLogoutDialog());
+
+        whatsappPane.setOnAction(event -> openWhatsappPane(whatsAppToggle));
+        closeWhatsappPane.setOnAction(event -> closeWhatsappPane(whatsAppToggle));
+        whatsAppLogout.setOnAction(event -> openWhatsAppLogoutDialog());
+        refreshQR.setOnAction(event -> refreshQRImage());
+        addGroup.setOnAction(event -> addGroup(userID));
+        removeGroup.setOnAction(event -> openRemoveGroupDialog());
 
         itemList.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue != null) {
@@ -182,6 +205,7 @@ public class listViewController {
         });
 
     }
+
 
     private void openWhatsAppLogoutDialog() {
         if (!Chatbot.getInstance().isLoggedIn()){
@@ -460,6 +484,19 @@ public class listViewController {
                 System.out.println("⚠️ No items found for this user.");
             }
         });
+
+        storage.getAllGroups(userID, updatedGroups -> {
+            if (updatedGroups != null) {
+                ObservableList<Group> observableGroups = FXCollections.observableArrayList(updatedGroups);
+
+                javafx.application.Platform.runLater(() -> {
+                    groupList.setItems(observableGroups);
+                    System.out.println("✅ TableView updated with latest groups for user: " + storage.getUserID());
+                });
+            } else {
+                System.out.println("⚠️ No groups found for this user.");
+            }
+        });
     }
 
     public boolean containsNonNumeric(String str) {
@@ -572,6 +609,11 @@ public class listViewController {
         itemColumnReserved.setCellValueFactory(cellData -> new SimpleObjectProperty<>(cellData.getValue().isReserved()));
         itemColumnSold.setCellValueFactory(cellData -> new SimpleObjectProperty<>(cellData.getValue().getSold()));
         itemColumnSync.setCellValueFactory(cellData -> new SimpleObjectProperty<>(cellData.getValue().getSupabaseSync()));
+
+        groupNameColumn.setCellValueFactory(cellData -> new SimpleObjectProperty<>(cellData.getValue().getName()));
+        groupIntervalColumn.setCellValueFactory(cellData -> new SimpleStringProperty(String.valueOf(cellData.getValue().getInterval())));
+        groupStartTimeColumn.setCellValueFactory(cellData -> new SimpleObjectProperty<>(cellData.getValue().getStartTime()));
+        groupEndTimeColumn.setCellValueFactory(cellData -> new SimpleObjectProperty<>(cellData.getValue().getEndTime()));
     }
 
     private void logout() throws IOException {
@@ -693,6 +735,111 @@ public class listViewController {
 
     private void closeWhatsappPane(ToggleHorizontalPane whatsAppToggle) {
         whatsAppToggle.togglePane(whatsAppPane, null);
+    }
+
+
+    private void populateGroupComboBoxes(){
+        for (int i = 0; i < 24; i++) {
+            groupStartHour.getItems().add(i);
+            groupEndHour.getItems().add(i);
+        }
+
+        for (int i = 0; i < 60; i += 5) {
+            groupStartMinute.getItems().add(i);
+            groupEndMinute.getItems().add(i);
+        }
+
+
+
+    }
+
+    private void addGroup(String userID) {
+        String name = groupName.getText();
+        String intervalString = groupInterval.getText();
+        Integer startHour = groupStartHour.getValue();
+        Integer startMinute = groupStartMinute.getValue();
+        Integer endHour = groupEndHour.getValue();
+        Integer endMinute = groupEndMinute.getValue();
+
+        if(name.isEmpty() || intervalString.isEmpty() || startHour == null ||
+           startMinute == null || endHour == null || endMinute == null) {
+            groupWarningMessage.setText("Please fill in all fields!");
+            effects.vanishText(groupWarningMessage, 2);
+        }
+
+        if(Chatbot.getApi().store().findChatByName(name).isEmpty()){
+            groupWarningMessage.setText("No contact or group found with that name!");
+            effects.vanishText(groupWarningMessage, 2);
+            groupName.clear();
+            return;
+        }
+
+        int interval;
+        if (intervalString.contains(" ")) {
+            groupWarningMessage.setText("Price can't contain space \"_\" characters!");
+            effects.vanishText(groupWarningMessage, 2);
+            return;
+        }
+
+        intervalString = intervalString.trim();
+
+        if (intervalString.matches("\\d+")) {
+            interval = Integer.parseInt(intervalString);
+            if (interval <= 0) {
+                groupWarningMessage.setText("Price can only be positive values.");
+                effects.vanishText(groupWarningMessage, 2);
+                return;
+            }
+        } else {
+            groupWarningMessage.setText("Price can only be digits.");
+            effects.vanishText(groupWarningMessage, 2);
+            return;
+        }
+
+        // Create and add the group
+        Group newGroup = new Group(name, interval, startHour, startMinute, endHour, endMinute);
+        storageManager.getInstance().addGroup(newGroup);
+        refreshTable(userID);
+
+    }
+
+    private void openRemoveGroupDialog() {
+
+        if (groupList.getSelectionModel().isEmpty()){
+            groupWarningMessage.setText("Select an item to remove!");
+            effects.vanishText(groupWarningMessage, 2);
+            return;
+        }
+
+        Group selectedGroup = groupList.getSelectionModel().getSelectedItem();
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/pach/gsm/views/generalDialogBox.fxml"));
+            Parent dialogRoot = loader.load();
+
+            generalDialogBoxController controller = loader.getController();
+            controller.setDialogTitle("️You are removing a group!");
+            controller.setDialogBody("Are you sure you want to remove this group?");
+            controller.setConfirmButtonText("Yes");
+            controller.setCancelButtonText("Nevermind");
+
+
+
+            Stage dialogStage = new Stage();
+            dialogStage.setResizable(false);
+            dialogStage.setTitle("Remove Group");
+            dialogStage.initModality(Modality.APPLICATION_MODAL);
+            dialogStage.setScene(new Scene(dialogRoot));
+            dialogStage.showAndWait();
+
+            if (controller.getGoAhead()){
+                String groupID = selectedGroup.getId();
+                System.out.println("🚨Deleting group!");
+                storageManager.getInstance().deleteGroup(selectedGroup.getId());
+                refreshTable(groupID);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 

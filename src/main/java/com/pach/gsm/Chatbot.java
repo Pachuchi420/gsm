@@ -2,6 +2,7 @@ package com.pach.gsm;
 
 import it.auties.whatsapp.api.QrHandler;
 import it.auties.whatsapp.api.Whatsapp;
+import javafx.application.Platform;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
@@ -56,14 +57,13 @@ public class Chatbot {
     }
 
 
-    public void initializeChatbot(ImageView qrCodeImage){
+    public void initializeChatbot(){
                 String baseDir = System.getProperty("user.home") + File.separator + "Documents" + File.separator + "GSM" + File.separator + "qr.png";
                 api = Whatsapp.webBuilder() // Use the Web api
                         .lastConnection()
                         .name("GSM")
                         .unregistered(QrHandler.toFile(Path.of(baseDir), file -> {
                             System.out.println("✅ QR Code saved at: " + file.toAbsolutePath());
-                            qrCodeImage.setImage(new Image(file.toUri().toString()));
                         }))
                         .addLoggedInListener(api -> {
                             System.out.println("✅ Whatsapp logged in:");
@@ -75,11 +75,36 @@ public class Chatbot {
                         })
                         .connect()
                         .join();
-
-
-
     }
 
+    public void qrImageThread(ImageView qrImageView) {
+        Thread checker = new Thread(() -> {
+            String baseDir = System.getProperty("user.home") + File.separator + "Documents" + File.separator + "GSM" + File.separator + "qr.png";
+            File qrFile = new File(baseDir);
+
+            while (true) {
+                if (supabaseAuthentication.checkIfOnline()) {
+                    if (!isLoggedIn() && qrFile.exists()) { // Ensure the QR image exists
+                        Platform.runLater(() -> {
+                            qrImageView.setImage(new Image(qrFile.toURI().toString()));
+                            System.out.println("✅ QR Code Image updated!");
+                        });
+                    } else if (isLoggedIn()){
+                        qrImageView.setImage(null);
+                    }
+                }
+                try {
+                    Thread.sleep(2000); // Avoid infinite loop hogging CPU
+                } catch (InterruptedException e) {
+                    System.out.println("❌ QR Image thread interrupted: " + e.getMessage());
+                    break;
+                }
+            }
+        });
+
+        checker.setDaemon(true);
+        checker.start();
+    }
 
     public void logout(){
         if (isLoggedIn()){

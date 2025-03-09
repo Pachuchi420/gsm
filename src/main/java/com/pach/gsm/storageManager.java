@@ -156,7 +156,7 @@ public class storageManager {
                 timeoutStmt.execute();
             }
 
-            String sql = "CREATE TABLE IF NOT EXISTS items (" +
+            String sqlItem = "CREATE TABLE IF NOT EXISTS items (" +
                     "id TEXT PRIMARY KEY," +
                     "userID TEXT NOT NULL," +
                     "name TEXT NOT NULL," +
@@ -177,7 +177,18 @@ public class storageManager {
                     "supabaseSync INTEGER DEFAULT 0,"+
                     "toDelete INTEGER DEFAULT 0);";
 
-            stmt.execute(sql);
+            String sqlGroup = "CREATE TABLE IF NOT EXISTS groups (" +
+                    "id TEXT PRIMARY KEY," +
+                    "userID TEXT NOT NULL," +
+                    "name TEXT NOT NULL," +
+                    "interval INTEGER," +
+                    "startHour INTEGER," +
+                    "startMinute INTEGER," +
+                    "endHour INTEGER," +
+                    "endMinute INTEGER);";
+
+            stmt.execute(sqlItem);
+            stmt.execute(sqlGroup);
             System.out.println("✅ User-specific database initialized for: " + userID);
             setDbReady(true);
         } catch (SQLException e) {
@@ -418,4 +429,108 @@ public class storageManager {
             }
         });
     }
+
+
+    public void addGroup(Group group) {
+        dbWorker.submitTask(() -> {
+            String sql = "INSERT INTO groups (id, userID, name, interval, startHour, startMinute, endHour, endMinute) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+
+            try (Connection conn = DriverManager.getConnection(DATABASE_URL);
+                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+                pstmt.setString(1, group.getId());
+                pstmt.setString(2, group.getUserID());
+                pstmt.setString(3, group.getName());
+                pstmt.setInt(4, group.getInterval());
+                pstmt.setInt(5, group.getStartHour());
+                pstmt.setInt(6, group.getStartMinute());
+                pstmt.setInt(7, group.getEndHour());
+                pstmt.setInt(8, group.getEndMinute());
+
+                pstmt.executeUpdate();
+                System.out.println("✅ Group added to local database!");
+            } catch (SQLException e) {
+                System.out.println("❌ Error adding group to local database: " + e.getMessage());
+            }
+        });
+    }
+
+    public void updateGroup(Group group) {
+        dbWorker.submitTask(() -> {
+            String sql = "UPDATE groups SET name = ?, interval = ?, startHour = ?, startMinute = ?, endHour = ?, endMinute = ? " +
+                    "WHERE id = ? AND userID = ?";
+
+            try (Connection conn = DriverManager.getConnection(DATABASE_URL);
+                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+                pstmt.setString(1, group.getName());
+                pstmt.setInt(2, group.getInterval());
+                pstmt.setInt(3, group.getStartHour());
+                pstmt.setInt(4, group.getStartMinute());
+                pstmt.setInt(5, group.getEndHour());
+                pstmt.setInt(6, group.getEndMinute());
+                pstmt.setString(7, group.getId());
+                pstmt.setString(8, group.getUserID());
+
+                int rowsUpdated = pstmt.executeUpdate();
+                if (rowsUpdated > 0) {
+                    System.out.println("✅ Group updated in local database!");
+                } else {
+                    System.out.println("⚠️ No group found with ID: " + group.getId());
+                }
+            } catch (SQLException e) {
+                System.out.println("❌ Error updating group in local database: " + e.getMessage());
+            }
+        });
+    }
+
+    public void getAllGroups(String userID, Consumer<List<Group>> callback) {
+        dbWorker.submitTask(() -> {
+            List<Group> groups = new ArrayList<>();
+            String sql = "SELECT * FROM groups WHERE userID = ?";
+
+            try (Connection conn = DriverManager.getConnection(DATABASE_URL);
+                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+                pstmt.setString(1, userID);
+                ResultSet rs = pstmt.executeQuery();
+
+                while (rs.next()) {
+                    Group group = new Group(
+                            rs.getString("name"),
+                            rs.getInt("interval"),
+                            rs.getInt("startHour"),
+                            rs.getInt("startMinute"),
+                            rs.getInt("endHour"),
+                            rs.getInt("endMinute")
+                    );
+                    groups.add(group);
+                }
+                System.out.println("✅ Retrieved " + groups.size() + " groups from local database.");
+            } catch (SQLException e) {
+                System.out.println("❌ Error fetching groups for user: " + userID + " - " + e.getMessage());
+            }
+            javafx.application.Platform.runLater(() -> callback.accept(groups));
+        });
+    }
+
+    public void deleteGroup(String groupId) {
+        dbWorker.submitTask(() -> {
+            String sql = "DELETE FROM groups WHERE id = ?";
+
+            try (Connection conn = DriverManager.getConnection(DATABASE_URL);
+                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+                pstmt.setString(1, groupId);
+                pstmt.executeUpdate();
+                System.out.println("✅ Group deleted from local database.");
+            } catch (SQLException e) {
+                System.out.println("❌ Error deleting group from local database: " + e.getMessage());
+            }
+        });
+    }
+
+
+
 }

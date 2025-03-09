@@ -74,6 +74,12 @@ public class supabaseAuthentication {
                         localStorage.syncFailedItems();
 
 
+                        javafx.application.Platform.runLater(() -> {
+                            System.out.println("🔄 Reinitializing WhatsApp session...");
+                            Chatbot.getInstance().initializeChatbot();
+                        });
+
+
 
                         // ✅ Refresh TableView in UI
                         if (refreshTableCallback != null) {
