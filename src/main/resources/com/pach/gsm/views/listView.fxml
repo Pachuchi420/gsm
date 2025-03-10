@@ -321,30 +321,36 @@
                      <children>
                         <VBox prefHeight="450.0" prefWidth="366.0" HBox.hgrow="ALWAYS">
                            <children>
-                              <HBox alignment="TOP_CENTER" prefHeight="371.0" prefWidth="398.0">
+                              <HBox alignment="TOP_CENTER" prefHeight="263.0" prefWidth="371.0" VBox.vgrow="ALWAYS">
                                  <children>
-                                    <AnchorPane id="thumbnail" prefHeight="231.0" prefWidth="389.0" HBox.hgrow="ALWAYS">
+                                    <AnchorPane id="thumbnail" prefHeight="145.0" prefWidth="333.0" HBox.hgrow="ALWAYS">
                                        <HBox.margin>
                                           <Insets bottom="10.0" left="20.0" right="20.0" top="10.0" />
                                        </HBox.margin>
                                        <children>
-                                          <ImageView fx:id="qrCodeImageView" fitHeight="300.0" fitWidth="300.0" layoutX="31.0" layoutY="21.0" pickOnBounds="true" preserveRatio="true" />
+                                          <ImageView fx:id="qrCodeImageView" fitHeight="300.0" fitWidth="300.0" layoutX="16.0" layoutY="21.0" pickOnBounds="true" preserveRatio="true" />
+                                          <HBox prefHeight="351.0" prefWidth="331.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                             <children>
+                                                <VBox alignment="CENTER" prefHeight="175.0" prefWidth="340.0" spacing="20.0" HBox.hgrow="ALWAYS">
+                                                   <children>
+                                                      <FontIcon id="whatsAppOnline" fx:id="whatsAppOnline" iconLiteral="fas-wifi" VBox.vgrow="ALWAYS" />
+                                                   </children>
+                                                </VBox>
+                                             </children>
+                                          </HBox>
                                        </children>
-                                       <padding>
-                                          <Insets bottom="15.0" top="15.0" />
-                                       </padding>
                                     </AnchorPane>
                                  </children>
                                  <VBox.margin>
-                                    <Insets bottom="10.0" />
+                                    <Insets />
                                  </VBox.margin>
                               </HBox>
-                              <HBox alignment="CENTER" prefHeight="33.0" prefWidth="401.0" spacing="10.0">
+                              <HBox alignment="CENTER" prefHeight="0.0" prefWidth="371.0" spacing="10.0">
                                  <children>
-                                    <Button fx:id="refreshQR" mnemonicParsing="false" text="Refresh" />
+                                    <ToggleButton id="enableChatbot" fx:id="enableChatbot" mnemonicParsing="false" />
                                  </children>
                                  <VBox.margin>
-                                    <Insets bottom="5.0" />
+                                    <Insets bottom="20.0" top="50.0" />
                                  </VBox.margin>
                               </HBox>
                            </children>
@@ -426,7 +432,6 @@
                   <HBox id="bottomMenu" alignment="CENTER" prefHeight="50.0" prefWidth="999.0" spacing="20.0" styleClass="auxiliaryMenu">
                      <children>
                         <Button fx:id="confirmWhatsapp" mnemonicParsing="false" text="Ok" />
-                        <Button fx:id="cancelWhatsapp" mnemonicParsing="false" text="Cancel" />
                      </children>
                   </HBox>
                </children>

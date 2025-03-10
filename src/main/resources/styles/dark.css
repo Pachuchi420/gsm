@@ -389,7 +389,9 @@
 
 /* Hover effect for dropdown items */
 .combo-box-popup .list-cell:hover {
-    -fx-background-color: rgba(179, 255, 208, 0.07); /* Light hover effect */
+    -fx-cursor: hand;
+    -fx-background-color: green;
+
 }
 
 /* Selected item inside the dropdown */
@@ -541,6 +543,7 @@
 /* ✅ Checkbox label */
 .check-box {
     -fx-text-fill: #dddddd;
+    -fx-cursor: hand;
 }
 
 /* ✅ Checkbox box */
@@ -550,6 +553,7 @@
     -fx-border-radius: 3px;
     -fx-background-radius: 3px;
     -fx-padding: 2px;
+    -fx-cursor: hand;
 }
 
 /* ✅ Only show green checkmark when selected */
@@ -622,3 +626,30 @@
 }
 
 
+#whatsAppOnline{
+    -fx-icon-size: 150px;
+    -fx-icon-color: #0b84ff;
+    -fx-effect: dropshadow(gaussian, rgba(11, 132, 255, 0.7), 10, 0.5, 0, 0);
+}
+
+#enableChatbot {
+    -fx-background-color: #5c2b2b;
+    -fx-border-color: #cc4c4c;
+    -fx-text-fill: #ff6666;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+    -fx-cursor: hand;
+    -fx-transition: all 0.15s ease-in-out;
+}
+
+#enableChatbot:pressed {
+    -fx-translate-y: 1px;
+    -fx-effect: innershadow(gaussian, rgba(0, 0, 0, 0.4), 8, 0.3, 0, 1);
+}
+
+#enableChatbot:selected {
+    -fx-background-color: #2d5c2b;
+    -fx-border-color: #45932b;
+    -fx-text-fill: #91e291;
+    -fx-effect: dropshadow(gaussian, rgba(69, 147, 43, 0.7), 10, 0.5, 0, 0);
+}

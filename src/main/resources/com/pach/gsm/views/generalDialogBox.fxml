@@ -13,12 +13,12 @@
          <children>
             <HBox alignment="CENTER" prefHeight="43.0" prefWidth="400.0" styleClass="paneTitle">
                <children>
-                  <Label fx:id="dialogTitle" />
+                  <Label fx:id="dialogTitle" wrapText="true" />
                </children>
             </HBox>
             <HBox alignment="CENTER" prefHeight="118.0" prefWidth="400.0" styleClass="dialogBody">
                <children>
-                  <Label fx:id="dialogBody" />
+                  <Label fx:id="dialogBody" wrapText="true" />
                </children>
                <padding>
                   <Insets left="50.0" right="50.0" />

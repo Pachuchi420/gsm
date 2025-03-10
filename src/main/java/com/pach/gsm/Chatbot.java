@@ -6,6 +6,7 @@ import javafx.application.Platform;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
+import javax.swing.*;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.NoSuchElementException;
@@ -24,6 +25,7 @@ public class Chatbot {
 
 
 
+    private boolean enabled;
     private boolean disconnected;
 
 
@@ -122,9 +124,11 @@ public class Chatbot {
     public void logout(){
         if (isLoggedIn()){
             api.logout();
-            System.out.println("✅ WhatsApp session disconnected successfully!");
+            api.store().deleteSession();
+            System.out.println("✅ WhatsApp session disconnected successfully & session deleted!");
             setLoggedIn(false);
             setDisconnected(true);
+            Chatbot.getInstance().initializeChatbot();
         } else {
             System.out.println("❌ Not connected, can't log out! ");
         }
@@ -139,6 +143,14 @@ public class Chatbot {
         Chatbot.getApi().sendMessage(chat, "Hello there I'm using Garage Sale Manager 🤓");
     }
 
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
 
 
 

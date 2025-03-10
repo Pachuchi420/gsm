@@ -1,11 +1,14 @@
 package com.pach.gsm;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 public class Group {
     private String userID;
     private String name;
     private String id;
+
+    private LocalDateTime lastUpload;
 
 
     private int interval, startHour, startMinute, endHour, endMinute;
@@ -20,6 +23,7 @@ public class Group {
         this.startMinute = startMinute;
         this.endHour = endHour;
         this.endMinute = endMinute;
+        this.lastUpload = null;
     }
 
 
@@ -100,4 +104,11 @@ public class Group {
     }
 
 
+    public LocalDateTime getLastUpload() {
+        return this.lastUpload;
+    }
+
+    public void setLastUpload(LocalDateTime givenDateTime){
+        this.lastUpload = givenDateTime;
+    }
 }

@@ -6,16 +6,11 @@ import tools.DBWorker;
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.File;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.Base64;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.prefs.Preferences;
-import java.sql.PreparedStatement;
-import java.sql.Connection;
-import java.sql.ResultSet;
 import java.util.ArrayList;
 
 
@@ -185,11 +180,13 @@ public class storageManager {
                     "startHour INTEGER," +
                     "startMinute INTEGER," +
                     "endHour INTEGER," +
-                    "endMinute INTEGER);";
+                    "endMinute INTEGER," +
+                    "last_uploaded TIMESTAMP);";
 
             String sqlItemGroup = "CREATE TABLE IF NOT EXISTS item_groups (" +
                     "itemID TEXT NOT NULL, " +
                     "groupID TEXT NOT NULL, " +
+                    "last_uploaded TIMESTAMP, " +
                     "FOREIGN KEY(itemID) REFERENCES items(id), " +
                     "FOREIGN KEY(groupID) REFERENCES groups(id), " +
                     "PRIMARY KEY (itemID, groupID));";
@@ -443,8 +440,8 @@ public class storageManager {
 
     public void addGroup(Group group) {
         dbWorker.submitTask(() -> {
-            String sql = "INSERT INTO groups (id, userID, name, interval, startHour, startMinute, endHour, endMinute) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            String sql = "INSERT INTO groups (id, userID, name, interval, startHour, startMinute, endHour, endMinute, last_uploaded) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             try (Connection conn = DriverManager.getConnection(DATABASE_URL);
                  PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -457,6 +454,7 @@ public class storageManager {
                 pstmt.setInt(6, group.getStartMinute());
                 pstmt.setInt(7, group.getEndHour());
                 pstmt.setInt(8, group.getEndMinute());
+                pstmt.setTimestamp(9, group.getLastUpload() != null ? Timestamp.valueOf(group.getLastUpload()) : null);
 
                 pstmt.executeUpdate();
                 System.out.println("✅ Group added to local database!");
@@ -468,7 +466,7 @@ public class storageManager {
 
     public void updateGroup(Group group) {
         dbWorker.submitTask(() -> {
-            String sql = "UPDATE groups SET name = ?, interval = ?, startHour = ?, startMinute = ?, endHour = ?, endMinute = ? " +
+            String sql = "UPDATE groups SET name = ?, interval = ?, startHour = ?, startMinute = ?, endHour = ?, endMinute = ? , last_uploaded = ? " +
                     "WHERE id = ? AND userID = ?";
 
             try (Connection conn = DriverManager.getConnection(DATABASE_URL);
@@ -480,8 +478,9 @@ public class storageManager {
                 pstmt.setInt(4, group.getStartMinute());
                 pstmt.setInt(5, group.getEndHour());
                 pstmt.setInt(6, group.getEndMinute());
-                pstmt.setString(7, group.getId());
-                pstmt.setString(8, group.getUserID());
+                pstmt.setTimestamp(7, group.getLastUpload() != null ? Timestamp.valueOf(group.getLastUpload()) : null);
+                pstmt.setString(8, group.getId());
+                pstmt.setString(9, group.getUserID());
 
                 int rowsUpdated = pstmt.executeUpdate();
                 if (rowsUpdated > 0) {
@@ -516,6 +515,10 @@ public class storageManager {
                             rs.getInt("endMinute")
                     );
                     group.setId(rs.getString("id"));
+                    Timestamp ts = rs.getTimestamp("last_uploaded");
+                    if (ts != null) {
+                        group.setLastUpload(ts.toLocalDateTime());
+                    }
                     groups.add(group);
 
                 }
@@ -554,6 +557,10 @@ public class storageManager {
                         rs.getInt("endMinute")
                 );
                 group.setId(rs.getString("id"));
+                Timestamp lastUploadedts = rs.getTimestamp("last_uploaded");
+                if (lastUploadedts != null) {
+                    group.setLastUpload(lastUploadedts.toLocalDateTime());
+                }
                 return group;
             } else {
                 System.out.println("⚠️ No group found with name: " + name);
@@ -593,14 +600,14 @@ public class storageManager {
 
     public void linkItemToGroups(String itemID, List<String> groupIDs) {
         dbWorker.submitTask(() -> {
-            String sql = "INSERT OR IGNORE INTO item_groups (itemID, groupID) VALUES (?, ?)";
-
+            String sql = "INSERT OR IGNORE INTO item_groups (itemID, groupID, last_uploaded) VALUES (?, ?, ?)";
             try (Connection conn = DriverManager.getConnection(DATABASE_URL);
                  PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
                 for (String groupID : groupIDs) {
                     pstmt.setString(1, itemID);
                     pstmt.setString(2, groupID);
+                    pstmt.setTimestamp(3, null);
                     pstmt.addBatch();
                 }
 
@@ -642,12 +649,16 @@ public class storageManager {
                     deleteStmt.executeUpdate();
                 }
 
+
+
+
                 // 2. Insert new ones
-                String insertSQL = "INSERT INTO item_groups (itemID, groupID) VALUES (?, ?)";
+                String insertSQL = "INSERT INTO item_groups (itemID, groupID, last_uploaded) VALUES (?, ?, ?)";
                 try (PreparedStatement insertStmt = conn.prepareStatement(insertSQL)) {
                     for (String groupID : newGroupIDs) {
                         insertStmt.setString(1, itemID);
                         insertStmt.setString(2, groupID);
+                        insertStmt.setTimestamp(3, java.sql.Timestamp.valueOf(java.time.LocalDateTime.now()));
                         insertStmt.addBatch();
                     }
                     insertStmt.executeBatch();
@@ -660,4 +671,118 @@ public class storageManager {
         });
     }
 
+
+
+    public List<Group> getGroupsForItem(String itemId) {
+        List<Group> groups = new ArrayList<>();
+        String sql = "SELECT g.* FROM groups g " +
+                "JOIN item_groups ig ON g.id = ig.groupID " +
+                "WHERE ig.itemID = ?";
+
+        try (Connection conn = DriverManager.getConnection(DATABASE_URL);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, itemId);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                Group group = new Group(
+                        rs.getString("name"),
+                        rs.getInt("interval"),
+                        rs.getInt("startHour"),
+                        rs.getInt("startMinute"),
+                        rs.getInt("endHour"),
+                        rs.getInt("endMinute")
+                );
+                group.setId(rs.getString("id"));
+                groups.add(group);
+            }
+        } catch (SQLException e) {
+            System.out.println("❌ Error fetching groups for item: " + e.getMessage());
+        }
+
+        return groups;
+    }
+
+    public java.time.LocalDateTime getLastUploadTime(String itemId, String groupId) {
+        String sql = "SELECT last_uploaded FROM item_groups WHERE itemID = ? AND groupID = ?";
+
+        try (Connection conn = DriverManager.getConnection(DATABASE_URL);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, itemId);
+            pstmt.setString(2, groupId);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                java.sql.Timestamp ts = rs.getTimestamp("last_uploaded");
+                return (ts != null) ? ts.toLocalDateTime() : null;
+            }
+        } catch (SQLException e) {
+            System.out.println("❌ Error getting last_uploaded time: " + e.getMessage());
+        }
+
+        return null;
+    }
+
+    public void updateItemGroupLastUploaded(String itemId, String groupId, java.time.LocalDateTime time) {
+        dbWorker.submitTask(() -> {
+            String sql = "UPDATE item_groups SET last_uploaded = ? WHERE itemID = ? AND groupID = ?";
+
+            try (Connection conn = DriverManager.getConnection(DATABASE_URL);
+                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+                pstmt.setTimestamp(1, java.sql.Timestamp.valueOf(time));
+                pstmt.setString(2, itemId);
+                pstmt.setString(3, groupId);
+                pstmt.executeUpdate();
+
+                System.out.println("✅ Updated last_uploaded for itemID " + itemId + " and groupID " + groupId);
+            } catch (SQLException e) {
+                System.out.println("❌ Failed to update last_uploaded: " + e.getMessage());
+            }
+        });
+    }
+
+    public List<Item> getEligibleItems() {
+        List<Item> eligibleItems = new ArrayList<>();
+        String userID = getUserID();
+
+        if (userID == null) {
+            System.out.println("⚠️ No user ID available. Cannot fetch eligible items.");
+            return eligibleItems;
+        }
+
+        String sql = "SELECT * FROM items WHERE userID = ? AND sold = 0 AND reservation_reserved = 0 AND toDelete = 0";
+
+        try (Connection conn = DriverManager.getConnection(DATABASE_URL);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, userID);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                Item item = new Item(
+                        rs.getString("name"),
+                        rs.getString("description"),
+                        rs.getBytes("imagedata"),
+                        rs.getInt("price"),
+                        rs.getString("currency"),
+                        rs.getInt("priority")
+                );
+
+                item.setId(rs.getString("id"));
+                item.setSold(false);  // already filtered
+                item.setSupabaseSync(rs.getInt("supabaseSync") == 1);
+                item.setToDelete(false);
+                eligibleItems.add(item);
+            }
+
+            System.out.println("✅ Retrieved " + eligibleItems.size() + " eligible items.");
+        } catch (SQLException e) {
+            System.out.println("❌ Error fetching eligible items: " + e.getMessage());
+        }
+
+        return eligibleItems;
+    }
 }
