@@ -21,6 +21,8 @@ public class Main extends Application {
             stage.setTitle("GSM");
             FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource(fxmlFile));
             Scene scene = new Scene(fxmlLoader.load(), 1000, 600);
+            stage.setMinWidth(1000);
+            stage.setMinHeight(600);
             stage.setScene(scene);
             stage.show();
         } else {

@@ -187,8 +187,18 @@ public class storageManager {
                     "endHour INTEGER," +
                     "endMinute INTEGER);";
 
+            String sqlItemGroup = "CREATE TABLE IF NOT EXISTS item_groups (" +
+                    "itemID TEXT NOT NULL, " +
+                    "groupID TEXT NOT NULL, " +
+                    "FOREIGN KEY(itemID) REFERENCES items(id), " +
+                    "FOREIGN KEY(groupID) REFERENCES groups(id), " +
+                    "PRIMARY KEY (itemID, groupID));";
+
+
+
             stmt.execute(sqlItem);
             stmt.execute(sqlGroup);
+            stmt.execute(sqlItemGroup);
             System.out.println("✅ User-specific database initialized for: " + userID);
             setDbReady(true);
         } catch (SQLException e) {
@@ -576,6 +586,76 @@ public class storageManager {
 
             } catch (SQLException e) {
                 System.out.println("❌ Error deleting group from local database: " + e.getMessage());
+            }
+        });
+    }
+
+
+    public void linkItemToGroups(String itemID, List<String> groupIDs) {
+        dbWorker.submitTask(() -> {
+            String sql = "INSERT OR IGNORE INTO item_groups (itemID, groupID) VALUES (?, ?)";
+
+            try (Connection conn = DriverManager.getConnection(DATABASE_URL);
+                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+                for (String groupID : groupIDs) {
+                    pstmt.setString(1, itemID);
+                    pstmt.setString(2, groupID);
+                    pstmt.addBatch();
+                }
+
+                pstmt.executeBatch();
+                System.out.println("✅ Linked item to selected groups.");
+            } catch (SQLException e) {
+                System.out.println("❌ Error linking item to groups: " + e.getMessage());
+            }
+        });
+    }
+
+    public List<String> getGroupIDsForItem(String itemID) {
+        List<String> groupIDs = new ArrayList<>();
+        String sql = "SELECT groupID FROM item_groups WHERE itemID = ?";
+
+        try (Connection conn = DriverManager.getConnection(DATABASE_URL);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, itemID);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                groupIDs.add(rs.getString("groupID"));
+            }
+        } catch (SQLException e) {
+            System.out.println("❌ Error fetching group IDs for item: " + e.getMessage());
+        }
+
+        return groupIDs;
+    }
+
+    public void updateItemGroupLinks(String itemID, List<String> newGroupIDs) {
+        dbWorker.submitTask(() -> {
+            try (Connection conn = DriverManager.getConnection(DATABASE_URL)) {
+                // 1. Delete existing links
+                String deleteSQL = "DELETE FROM item_groups WHERE itemID = ?";
+                try (PreparedStatement deleteStmt = conn.prepareStatement(deleteSQL)) {
+                    deleteStmt.setString(1, itemID);
+                    deleteStmt.executeUpdate();
+                }
+
+                // 2. Insert new ones
+                String insertSQL = "INSERT INTO item_groups (itemID, groupID) VALUES (?, ?)";
+                try (PreparedStatement insertStmt = conn.prepareStatement(insertSQL)) {
+                    for (String groupID : newGroupIDs) {
+                        insertStmt.setString(1, itemID);
+                        insertStmt.setString(2, groupID);
+                        insertStmt.addBatch();
+                    }
+                    insertStmt.executeBatch();
+                }
+
+                System.out.println("✅ Item-group links updated for item: " + itemID);
+            } catch (SQLException e) {
+                System.out.println("❌ Failed to update item-group links: " + e.getMessage());
             }
         });
     }

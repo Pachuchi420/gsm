@@ -6,9 +6,12 @@
   <component name="ChangeListManager">
     <list default="true" id="f6b0af61-df03-44f2-9b6b-621fd867ff2a" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/pach/gsm/Chatbot.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/pach/gsm/Chatbot.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/pach/gsm/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/pach/gsm/Main.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/pach/gsm/controllers/listViewController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/pach/gsm/controllers/listViewController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/pach/gsm/storageManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/pach/gsm/storageManager.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/com/pach/gsm/views/listView.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/com/pach/gsm/views/listView.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/styles/dark.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/styles/dark.css" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -174,6 +177,7 @@
       <workItem from="1741355769962" duration="808000" />
       <workItem from="1741356586779" duration="15338000" />
       <workItem from="1741523419942" duration="4674000" />
+      <workItem from="1741562052380" duration="5028000" />
     </task>
     <servers />
   </component>

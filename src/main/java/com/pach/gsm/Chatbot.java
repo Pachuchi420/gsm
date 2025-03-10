@@ -8,6 +8,7 @@ import javafx.scene.image.ImageView;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.NoSuchElementException;
 
 public class Chatbot {
     private static Chatbot instance;
@@ -21,6 +22,9 @@ public class Chatbot {
     private boolean loggedIn;
     private boolean turnedOn;
 
+
+
+    private boolean disconnected;
 
 
     public static Chatbot getInstance() {
@@ -56,6 +60,14 @@ public class Chatbot {
         Chatbot.api = api;
     }
 
+    public boolean isDisconnected() {
+        return disconnected;
+    }
+
+    public void setDisconnected(boolean disconnected) {
+        this.disconnected = disconnected;
+    }
+
 
     public void initializeChatbot(){
                 String baseDir = System.getProperty("user.home") + File.separator + "Documents" + File.separator + "GSM" + File.separator + "qr.png";
@@ -68,9 +80,11 @@ public class Chatbot {
                         .addLoggedInListener(api -> {
                             System.out.println("✅ Whatsapp logged in:");
                             setLoggedIn(true);
+                            setDisconnected(false);
                         })
                         .addDisconnectedListener(reason -> {
                             System.out.printf("❌ Whatsapp disconnected ", reason);
+                            setDisconnected(true);
                             setLoggedIn(false);
                         })
                         .connect()
@@ -87,14 +101,13 @@ public class Chatbot {
                     if (!isLoggedIn() && qrFile.exists()) { // Ensure the QR image exists
                         Platform.runLater(() -> {
                             qrImageView.setImage(new Image(qrFile.toURI().toString()));
-                            System.out.println("✅ QR Code Image updated!");
                         });
                     } else if (isLoggedIn()){
                         qrImageView.setImage(null);
                     }
                 }
                 try {
-                    Thread.sleep(2000); // Avoid infinite loop hogging CPU
+                    Thread.sleep(5000);
                 } catch (InterruptedException e) {
                     System.out.println("❌ QR Image thread interrupted: " + e.getMessage());
                     break;
@@ -110,10 +123,20 @@ public class Chatbot {
         if (isLoggedIn()){
             api.logout();
             System.out.println("✅ WhatsApp session disconnected successfully!");
+            setLoggedIn(false);
+            setDisconnected(true);
         } else {
             System.out.println("❌ Not connected, can't log out! ");
         }
 
+    }
+
+
+    public void sendTestMessage(String groupName){
+        var chat = Chatbot.getApi().store()
+                .findChatByName(groupName)
+                .orElseThrow(() -> new NoSuchElementException("❌ Chat not found!"));
+        Chatbot.getApi().sendMessage(chat, "Hello there I'm using Garage Sale Manager 🤓");
     }
 
 

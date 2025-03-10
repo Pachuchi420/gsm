@@ -27,6 +27,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 public class listViewController {
     @FXML
@@ -73,9 +75,13 @@ public class listViewController {
     @FXML
     private ImageViewPane imageViewPane;
 
+    @FXML
+    private ListView<CheckBox> itemAddGroupsList;
+
     private ToggleGroup currencyGroup;
     private ToggleGroup priorityGroup;
     private byte[] itemAddImageData;
+
 
     private static DBWorker dbWorker = new DBWorker();
 
@@ -110,8 +116,10 @@ public class listViewController {
         storage.initializeDatabase(userID);
         startChatBotThread();
         setupTableColumns();
+        addTestMessageColumn();
         refreshTable(userID);
         populateGroupComboBoxes();
+        Chatbot.getInstance().qrImageThread(qrCodeImageView);
 
         itemList.requestFocus();
 
@@ -154,6 +162,10 @@ public class listViewController {
                     }
                     break;
                 case ENTER:
+                    if(whatsAppPane.isVisible()){
+                        addGroup(userID);
+                        break;
+                    }
                     if(addItemPane.isVisible()){
                         addItem(userID, addItemToggle);
                         break;
@@ -161,7 +173,13 @@ public class listViewController {
                     openAddItemPane(addItemToggle);
                     break;
                 case BACK_SPACE:
+                    if(whatsAppPane.isVisible()){
+                        removeGroup();
+                        break;
+                    }
+
                     openRemoveItemDialog();
+
                 default:
                     break;
             }
@@ -281,13 +299,33 @@ public class listViewController {
 
     private void startChatBotThread() {
         Thread chatBotThread = new Thread(() -> {
-            while(true){
-                Chatbot chatBotInstance = Chatbot.getInstance();
-                if(chatBotInstance.isLoggedIn()){
-                    whatsAppStatus.getStyleClass().add("whatsAppStatusLoggedIn");
-                    qrCodeImageView.setImage(null);
-                } try {
-                    Thread.sleep(1000);
+            boolean lastOnlineStatus = false;
+            boolean lastLoginStatus = false;
+
+
+            while (true) {
+                boolean isOnline = supabaseAuthentication.checkIfOnline();
+                boolean isLoggedIn = Chatbot.getInstance().isLoggedIn();
+                boolean isDisconnected = Chatbot.getInstance().isDisconnected();
+
+                // Run UI updates on JavaFX thread
+                javafx.application.Platform.runLater(() -> {
+                    whatsAppStatus.getStyleClass().removeAll("whatsAppStatusDisconnected", "whatsAppStatusOnline", "whatsAppStatusLoggedIn");
+
+                    if (!isOnline) {
+                        whatsAppStatus.getStyleClass().add("whatsAppStatusDisconnected");
+                        qrCodeImageView.setImage(null);
+                    } else {
+                        whatsAppStatus.getStyleClass().add("whatsAppStatusOnline");
+                        if (isLoggedIn) {
+                            whatsAppStatus.getStyleClass().add("whatsAppStatusLoggedIn");
+                            qrCodeImageView.setImage(null);
+                        }
+                    }
+                });
+
+                try {
+                    Thread.sleep(1000); // Check every second
                 } catch (InterruptedException e) {
                     System.out.println("❌ Session thread interrupted: " + e.getMessage());
                     break;
@@ -295,10 +333,8 @@ public class listViewController {
             }
         });
 
-
         chatBotThread.setDaemon(true);
         chatBotThread.start();
-
     }
 
     public void refreshQRImage(){
@@ -346,6 +382,14 @@ public class listViewController {
         addItemTitle.setText("Edit Item");
         confirmAddItem.setText("Ok!");
         itemAddName.setText(selectedItem.getName());
+
+        List<String> linkedGroupIDs = storageManager.getInstance().getGroupIDsForItem(selectedItem.getId());
+
+        for (CheckBox checkBox : itemAddGroupsList.getItems()) {
+            Group group = (Group) checkBox.getUserData();
+            checkBox.setSelected(linkedGroupIDs.contains(group.getId()));
+        }
+
         itemAddDescription.setText(selectedItem.getDescription());
         itemAddPrice.setText(String.valueOf(selectedItem.getPrice()));
 
@@ -445,6 +489,17 @@ public class listViewController {
         // Save changes locally
         storageManager storage = storageManager.getInstance();
         storage.updateItemLocal(selectedItem);
+
+        // Update linked groups
+        List<String> selectedGroupIDs = new ArrayList<>();
+        for (CheckBox checkBox : itemAddGroupsList.getItems()) {
+            if (checkBox.isSelected()) {
+                Group group = (Group) checkBox.getUserData();
+                selectedGroupIDs.add(group.getId());
+            }
+        }
+        storageManager.getInstance().updateItemGroupLinks(selectedItem.getId(), selectedGroupIDs);
+
         refreshTable(storage.getUserID());
 
         // Close the pane after updating
@@ -527,12 +582,15 @@ public class listViewController {
 
                 javafx.application.Platform.runLater(() -> {
                     groupList.setItems(observableGroups);
+                    populateAddItemGroupList();
                     System.out.println("✅ TableView updated with latest groups for user: " + storage.getUserID());
                 });
             } else {
                 System.out.println("⚠️ No groups found for this user.");
             }
         });
+
+
     }
 
     public boolean containsNonNumeric(String str) {
@@ -622,6 +680,15 @@ public class listViewController {
         Item newItem = new Item(name, description, itemAddImageData, price, currency, priority);
         storageManager storage = storageManager.getInstance();
         storage.addItemLocal(newItem);
+
+        List<String> selectedGroupIDs = new ArrayList<>();
+        for (CheckBox checkBox : itemAddGroupsList.getItems()) {
+            if (checkBox.isSelected()) {
+                Group group = (Group) checkBox.getUserData();
+                selectedGroupIDs.add(group.getId());
+            }
+        }
+        storage.linkItemToGroups(newItem.getId(), selectedGroupIDs);
         refreshTable(userID);
 
         addItemToggle.togglePane(addItemPane, () -> {
@@ -629,6 +696,8 @@ public class listViewController {
             clearAddItemFields();
         });
     }
+
+
 
 
 
@@ -687,6 +756,10 @@ public class listViewController {
         priorityGroup.selectToggle(null);
         itemAddImageView.setImage(null);
         itemAddImageData = null;
+
+        for (CheckBox checkBox : itemAddGroupsList.getItems()) {
+            checkBox.setSelected(false);
+        }
     }
 
 
@@ -910,5 +983,54 @@ public class listViewController {
 
         System.out.println("✅ Group updated from UI action!");
     }
+
+    private void addTestMessageColumn() {
+        TableColumn<Group, Void> testMessageCol = new TableColumn<>("Test");
+
+        testMessageCol.setCellFactory(param -> new TableCell<>() {
+            private final Button sendButton = new Button("Send");
+
+            {
+                sendButton.getStyleClass().add("sendTestButton"); // optional CSS styling
+                sendButton.setOnAction(event -> {
+                    Group group = getTableView().getItems().get(getIndex());
+
+                    if (Chatbot.getInstance().isLoggedIn()) {
+                        Chatbot.getInstance().sendTestMessage(group.getName());
+                        System.out.println("📨 Test message sent to: " + group.getName());
+                    } else {
+                        groupWarningMessage.setText("You must be logged into WhatsApp!");
+                        effects.vanishText(groupWarningMessage, 2);
+                    }
+                });
+            }
+
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) {
+                    setGraphic(null);
+                } else {
+                    setGraphic(sendButton);
+                }
+            }
+        });
+
+        groupList.getColumns().add(testMessageCol); // 👈 adds it to your table
+    }
+
+    private void populateAddItemGroupList() {
+        ObservableList<CheckBox> groupCheckboxes = FXCollections.observableArrayList();
+
+        for (Group group : groupList.getItems()) {
+            CheckBox checkBox = new CheckBox(group.getName());
+            checkBox.setUserData(group); // so we can get the group later
+            groupCheckboxes.add(checkBox);
+        }
+
+        itemAddGroupsList.setItems(groupCheckboxes);
+    }
+
+
 
 }

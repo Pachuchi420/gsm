@@ -339,19 +339,12 @@
 }
 
 .whatsAppStatusOnline {
-    -fx-icon-color: #ff6666;
-    -fx-icon-size: 12px;
-    -fx-effect: dropshadow(gaussian, rgba(255, 102, 102, 0.8), 10, 0.5, 0, 0);
-}
-
-.whatsAppStatusConnected {
     -fx-icon-color: #02a402;
-    -fx-icon-size: 12px;
     -fx-effect: dropshadow(gaussian, rgba(2, 164, 2, 0.8), 10, 0.5, 0, 0);
 }
 
+
 .whatsAppStatusLoggedIn {
-    -fx-icon-size: 12px;
     -fx-icon-code: "fas-circle";
     -fx-icon-color: #02a402;
     -fx-effect: dropshadow(gaussian, rgba(2, 164, 2, 0.8), 10, 0.5, 0, 0);
@@ -475,3 +468,157 @@
 .combo-box-popup .scroll-bar:horizontal {
     -fx-pref-height: 8px; /* Slim scrollbar */
 }
+
+.list-view {
+    -fx-background-color: #2b2b2a;
+    -fx-border-color: #444545;
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+    -fx-padding: 5px;
+    -fx-control-inner-background: #2b2b2a;
+    -fx-cell-size: 28px;
+}
+
+.list-view .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #dddddd;
+    -fx-padding: 4px 8px;
+    -fx-alignment: CENTER_LEFT;
+}
+
+/* ✅ Disable hover highlight */
+.list-view .list-cell:hover {
+    -fx-background-color: transparent;
+}
+
+/* ✅ Optional: keep selected row green if you want */
+.list-view .list-cell:selected {
+    -fx-background-color: transparent;
+    -fx-text-fill: #dddddd;
+}
+
+/* === Apple-style Scrollbar for ListView === */
+
+/* Make the scroll bar slim */
+.list-view .scroll-bar:vertical {
+    -fx-pref-width: 6px;
+    -fx-background-color: transparent;
+}
+
+/* Scroll track - transparent so only thumb is visible */
+.list-view .scroll-bar .track {
+    -fx-background-color: transparent;
+}
+
+/* Scroll thumb - subtle, rounded */
+.list-view .scroll-bar .thumb {
+    -fx-background-color: #6c6b69;
+    -fx-background-radius: 6px;
+}
+
+/* Hover effect for thumb */
+.list-view .scroll-bar .thumb:hover {
+    -fx-background-color: #8c8c8c;
+}
+
+/* Pressed thumb */
+.list-view .scroll-bar .thumb:pressed {
+    -fx-background-color: #aaaaaa;
+}
+
+/* Remove arrows (increment/decrement buttons) */
+.list-view .scroll-bar .increment-button,
+.list-view .scroll-bar .decrement-button {
+    -fx-padding: 0;
+    -fx-shape: ""; /* Removes the default arrow shape */
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-max-height: 0;
+    -fx-pref-height: 0;
+    -fx-min-height: 0;
+}
+
+/* ✅ Checkbox label */
+.check-box {
+    -fx-text-fill: #dddddd;
+}
+
+/* ✅ Checkbox box */
+.check-box .box {
+    -fx-background-color: #363737;
+    -fx-border-color: #444545;
+    -fx-border-radius: 3px;
+    -fx-background-radius: 3px;
+    -fx-padding: 2px;
+}
+
+/* ✅ Only show green checkmark when selected */
+.check-box .mark {
+    -fx-background-color: transparent;
+}
+
+/* ✅ When selected: green + glow */
+.check-box:selected .mark {
+    -fx-background-color: #45932b;
+    -fx-effect: dropshadow(gaussian, rgba(69, 147, 43, 0.8), 6, 0.5, 0, 0);
+}
+
+
+#itemAddPriorityHigh {
+    -fx-background-color: #2d5c2b;
+    -fx-border-color: #45932b;
+    -fx-text-fill: #91e291;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+    -fx-cursor: hand;
+    -fx-transition: all 0.15s ease-in-out;
+}
+
+#itemAddPriorityHigh:pressed {
+    -fx-translate-y: 1px;
+    -fx-effect: innershadow(gaussian, rgba(0, 0, 0, 0.4), 8, 0.3, 0, 1);
+}
+
+#itemAddPriorityHigh:selected {
+    -fx-effect: dropshadow(gaussian, rgba(69, 147, 43, 0.7), 10, 0.5, 0, 0);
+}
+
+#itemAddPriorityMedium {
+    -fx-background-color: #5c4a2b;
+    -fx-border-color: #d6a431;
+    -fx-text-fill: #ffd369;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+    -fx-cursor: hand;
+    -fx-transition: all 0.15s ease-in-out;
+}
+
+#itemAddPriorityMedium:pressed {
+    -fx-translate-y: 1px;
+    -fx-effect: innershadow(gaussian, rgba(0, 0, 0, 0.4), 8, 0.3, 0, 1);
+}
+
+#itemAddPriorityMedium:selected {
+    -fx-effect: dropshadow(gaussian, rgba(255, 211, 105, 0.7), 10, 0.5, 0, 0);
+}
+
+#itemAddPriorityLow {
+    -fx-background-color: #5c2b2b;
+    -fx-border-color: #cc4c4c;
+    -fx-text-fill: #ff6666;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+    -fx-cursor: hand;
+    -fx-transition: all 0.15s ease-in-out;
+}
+
+#itemAddPriorityLow:pressed {
+    -fx-translate-y: 1px;
+    -fx-effect: innershadow(gaussian, rgba(0, 0, 0, 0.4), 8, 0.3, 0, 1);
+}
+
+#itemAddPriorityLow:selected {
+    -fx-effect: dropshadow(gaussian, rgba(255, 102, 102, 0.7), 10, 0.5, 0, 0);
+}
+
+
