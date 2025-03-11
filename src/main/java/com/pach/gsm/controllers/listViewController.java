@@ -118,7 +118,6 @@ public class listViewController {
 
     @FXML
     public void initialize() throws IOException {
-
         storageManager storage = storageManager.getInstance();
         String userID = storage.getUserID();
         storage.initializeDatabase(userID);

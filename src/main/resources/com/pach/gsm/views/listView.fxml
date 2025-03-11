@@ -98,7 +98,11 @@
                   </HBox>
                   <HBox alignment="CENTER" prefHeight="49.0" prefWidth="243.0" spacing="20.0" HBox.hgrow="ALWAYS">
                      <children>
-                        <Button fx:id="sellItem" mnemonicParsing="false" text="Sell" />
+                        <Button fx:id="sellItem" mnemonicParsing="false">
+                           <graphic>
+                              <FontIcon iconLiteral="fas-dollar-sign" iconSize="15" styleClass="buttonIcon" />
+                           </graphic>
+                        </Button>
                         <Button fx:id="reserveItem" mnemonicParsing="false" text="Reserve" />
                      </children>
                      <padding>

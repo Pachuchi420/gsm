@@ -173,6 +173,8 @@ public class supabaseAuthentication {
     }
 
     public static String loginUser(String email, String password, boolean rememberMe) {
+
+
         String jsonRequest = "{"
                 + "\"email\":" + "\"" + email + "\""
                 + ",\"password\":" + "\"" + password + "\","
@@ -212,6 +214,7 @@ public class supabaseAuthentication {
                     localStorage.saveUserID("userID", userID);
 
                     List<Item> supabaseItems = supabaseDB.fetchItems(userID);
+
                     if (supabaseItems != null) {
                         for (Item item : supabaseItems) {
                             localStorage.addItemLocal(item); // Store in local SQLite
@@ -259,7 +262,21 @@ public class supabaseAuthentication {
     }
 
 
-
+    private static void populateDB(){
+        storageManager storage = storageManager.getInstance();
+        String userID = storage.getUserID();
+        storage.initializeDatabase(userID);
+        supabaseDB.fetchItems(userID);
+        List<Item> supabaseItems = supabaseDB.fetchItems(userID);
+        if (supabaseItems != null) {
+            for (Item item : supabaseItems) {
+                storage.addItemLocal(item); // Store in local SQLite
+            }
+            System.out.println("✅ Synced items from Supabase to local database.");
+        } else {
+            System.out.println("🚨 No items to sync found in supabase!");
+        }
+    }
 
     public static boolean autoLogin(){
         storageManager localStorage = storageManager.getInstance();
@@ -271,6 +288,7 @@ public class supabaseAuthentication {
 
         if (!supabaseAuthentication.getInstance().online) {
             System.out.println("☑️ Auto-login pending, entering session...");
+            populateDB();
             return true;
         }
 
@@ -292,8 +310,9 @@ public class supabaseAuthentication {
                 return false;
             }
 
-            localStorage.addCredential("accessToken", accessToken); // 🔥 Store accessToken
+            localStorage.addCredential("accessToken", accessToken);
             System.out.println("✅ Auto-login successful.");
+            populateDB();
             return true;
         } else{
             System.out.println("❌ Auto-login failed. Redirecting to login.");

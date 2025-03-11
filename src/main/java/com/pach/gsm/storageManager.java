@@ -41,6 +41,10 @@ public class storageManager {
         }
     }
 
+    public void submitToDBWorker(Runnable task) {
+        dbWorker.submitTask(task);
+    }
+
 
 
 
@@ -255,6 +259,7 @@ public class storageManager {
         });
     }
 
+
     public void updateItemLocal(Item item) {
         dbWorker.submitTask(() -> {
             String sql = "UPDATE items SET name = ?, description = ?, imagedata = ?, price = ?, currency = ?, date = ?, sold = ?, uploaddate = ?, priority = ?, " +
@@ -370,6 +375,50 @@ public class storageManager {
         } catch (SQLException e) {
             System.out.println("❌ Error deleting item from local database: " + e.getMessage());
         }});
+    }
+
+    public void getItemByName(String name, Consumer<Item> callback) {
+        dbWorker.submitTask(() -> {
+            String sql = "SELECT * FROM items WHERE name = ? AND userID = ?";
+            String userID = getUserID();
+
+            if (userID == null) {
+                System.out.println("⚠️ No user ID available. Cannot fetch item.");
+                return;
+            }
+
+            try (Connection conn = DriverManager.getConnection(DATABASE_URL);
+                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+                pstmt.setString(1, name);
+                pstmt.setString(2, userID);
+                ResultSet rs = pstmt.executeQuery();
+
+                if (rs.next()) {
+                    Item item = new Item(
+                            rs.getString("name"),
+                            rs.getString("description"),
+                            rs.getBytes("imagedata"),
+                            rs.getInt("price"),
+                            rs.getString("currency"),
+                            rs.getInt("priority")
+                    );
+                    item.setId(rs.getString("id"));
+                    item.setSold(rs.getBoolean("sold"));
+                    item.setSupabaseSync(rs.getInt("supabaseSync") == 1);
+                    item.setToDelete(rs.getInt("toDelete") == 1);
+
+                    javafx.application.Platform.runLater(() -> callback.accept(item));
+                } else {
+                    System.out.println("❌ No item found with name: " + name);
+                    javafx.application.Platform.runLater(() -> callback.accept(null));
+                }
+
+            } catch (SQLException e) {
+                System.out.println("❌ Error fetching item by name: " + e.getMessage());
+                javafx.application.Platform.runLater(() -> callback.accept(null));
+            }
+        });
     }
 
 

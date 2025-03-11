@@ -19,16 +19,15 @@ public class Item implements Serializable {
     private int price;
     private String currency;
     private final LocalDateTime date;
-    private Boolean sold;
 
     private Reservation reservation = new Reservation(null, null, null, false);
 
     private LocalDate uploadDate;
 
     private int priority;
-
-    private Boolean supabaseSync;
-    private Boolean toDelete;
+    private Boolean sold = false;
+    private Boolean toDelete = false;
+    private Boolean supabaseSync = false;
 
     public Item(String name, String description, byte[] imageData, int price, String currency, int priority) {
         this.id = makeUniqueID();
