@@ -13,6 +13,7 @@ public class Main extends Application {
     public void start(Stage stage) throws IOException {
 
         supabaseAuthentication.sessionManager();
+        System.out.println("Access Token: " + storageManager.getInstance().getAccessToken());
 
 
         String fxmlFile;

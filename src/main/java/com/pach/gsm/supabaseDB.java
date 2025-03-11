@@ -29,12 +29,20 @@ public class supabaseDB {
     }
 
     public static List<Item> fetchItems(String userID) {
+        String accessToken = storageManager.getInstance().getAccessToken();
+
+        if (accessToken == null || accessToken.isEmpty()) {
+            System.out.println("❌ Error: No access token. Cannot fetch items from Supabase.");
+            return null;
+        }
+
+
         String url = SUPABASE_URL + "/rest/v1/items?userid=eq." + userID;
 
         Request request = new Request.Builder()
                 .url(url)
                 .addHeader("apikey", SUPABASE_API_KEY)
-                .addHeader("Authorization", "Bearer " + SUPABASE_API_KEY)
+                .addHeader("Authorization", "Bearer " + accessToken )
                 .addHeader("Accept", "application/json")
                 .build();
 
@@ -59,7 +67,7 @@ public class supabaseDB {
         String accessToken = storageManager.getInstance().getAccessToken();
 
         if (accessToken == null || accessToken.isEmpty()) {
-            System.out.println("❌ Error: No access token. Cannot sync item to Supabase.");
+            System.out.println("❌ Error: No access token. Cannot add item to Supabase.");
             return false;
         }
 
@@ -95,7 +103,7 @@ public class supabaseDB {
         jsonBuilder.append("\"reservation_reserved\":").append(item.getReservation().getReserved()).append(",");
         jsonBuilder.append("\"reservation_hour\":").append(item.getReservation().getHour()).append(",");
         jsonBuilder.append("\"reservation_minute\":").append(item.getReservation().getMinute()).append(",");
-        jsonBuilder.append("\"supabaseSync\":").append(item.getReservation().getMinute());
+        jsonBuilder.append("\"supabaseSync\":").append(item.getSupabaseSync());
         jsonBuilder.append("}"); // ✅ Ensuring last field doesn't have a comma
 
         String jsonRequest = jsonBuilder.toString();
@@ -115,7 +123,7 @@ public class supabaseDB {
 
         try (Response response = client.newCall(request).execute()) {
             if (response.isSuccessful()) {
-                System.out.println("✅ Item successfully synced to Supabase.");
+                System.out.println("✅ Item successfully added to Supabase.");
                 return true;
             } else {
                 // ✅ Log full Supabase error response
@@ -125,11 +133,95 @@ public class supabaseDB {
                 return false;
             }
         } catch (IOException e) {
-            System.out.println("❌ Network error while syncing item: " + e.getMessage());
+            System.out.println("❌ Network error while adding item: " + e.getMessage());
             return false;
         }
     }
-    public static boolean updateItem(String itemID, Item updatedItem) {
+
+    public static boolean updateItem(String userID, Item item) {
+        String accessToken = storageManager.getInstance().getAccessToken();
+        if (accessToken == null || accessToken.isEmpty()) {
+            System.out.println("❌ Error: No access token. Cannot update item in Supabase.");
+            return false;
+        }
+
+
+        StringBuilder jsonBuilder = new StringBuilder("{");
+
+        jsonBuilder.append("\"id\":\"").append(item.getId()).append("\",");
+        jsonBuilder.append("\"userid\":\"").append(userID).append("\",");
+        jsonBuilder.append("\"name\":\"").append(item.getName()).append("\",");
+
+        if (item.getDescription() != null) {
+            jsonBuilder.append("\"description\":\"").append(item.getDescription().replace("\t", "    ")).append("\",");
+        }
+
+        jsonBuilder.append("\"price\":").append(item.getPrice()).append(",");
+        jsonBuilder.append("\"currency\":\"").append(item.getCurrency()).append("\",");
+        jsonBuilder.append("\"priority\":").append(item.getPriority()).append(",");
+        jsonBuilder.append("\"sold\":").append(item.getSold()).append(",");
+        jsonBuilder.append("\"date\":\"").append(item.getDate()).append("\",");
+
+        if (item.getUploadDate() != null) {
+            jsonBuilder.append("\"uploaddate\":\"").append(item.getUploadDate()).append("\",");
+        }
+        if (item.getReservation().getBuyer() != null) {
+            jsonBuilder.append("\"reservation_buyer\":\"").append(item.getReservation().getBuyer()).append("\",");
+        }
+        if (item.getReservation().getPlace() != null) {
+            jsonBuilder.append("\"reservation_place\":\"").append(item.getReservation().getPlace()).append("\",");
+        }
+        if (item.getReservationDate() != null) {
+            jsonBuilder.append("\"reservation_date\":\"").append(item.getReservationDate()).append("\",");
+        }
+
+        jsonBuilder.append("\"reservation_reserved\":").append(item.getReservation().getReserved()).append(",");
+        jsonBuilder.append("\"reservation_hour\":").append(item.getReservation().getHour()).append(",");
+        jsonBuilder.append("\"reservation_minute\":").append(item.getReservation().getMinute()).append(",");
+        jsonBuilder.append("\"supabaseSync\":").append(item.getSupabaseSync());
+        jsonBuilder.append("}"); // ✅ Ensuring last field doesn't have a comma
+
+        String jsonRequest = jsonBuilder.toString();
+        RequestBody body = RequestBody.create(jsonRequest, MediaType.get("application/json"));
+
+
+        Request request = new Request.Builder()
+                .url(SUPABASE_URL + "/rest/v1/items?id=eq." + item.getId())
+                .patch(body)
+                .addHeader("Content-Type", "application/json")
+                .addHeader("apikey", SUPABASE_API_KEY)
+                .addHeader("Authorization", "Bearer " + accessToken)
+                .addHeader("Prefer", "return=representation")
+                .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            if (response.isSuccessful()) {
+                System.out.println("✅ Item successfully updated with Supabase.");
+                return true;
+            } else {
+                // ✅ Log full Supabase error response
+                String errorBody = response.body() != null ? response.body().string() : "No response body";
+                System.out.println("❌ Error updating item: " + response.code());
+                System.out.println("🔍 Supabase Error Response: " + errorBody);
+                return false;
+            }
+        } catch (IOException e) {
+            System.out.println("❌ Network error while updating item: " + e.getMessage());
+            return false;
+        }
+
+
+    }
+    private static String escapeJson(String input) {
+        return input.replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r")
+                .replace("\t", "    ");
+    }
+
+    public static boolean deleteItem(String itemID) {
+
         String accessToken = storageManager.getInstance().getAccessToken();
 
         if (accessToken == null || accessToken.isEmpty()) {
@@ -139,39 +231,11 @@ public class supabaseDB {
 
         String url = SUPABASE_URL + "/rest/v1/items?id=eq." + itemID;
 
-        String jsonUpdate = gson.toJson(updatedItem);
-        RequestBody body = RequestBody.create(jsonUpdate, MediaType.get("application/json"));
-
-        Request request = new Request.Builder()
-                .url(url)
-                .patch(body) // PATCH request to update
-                .addHeader("apikey", SUPABASE_API_KEY)
-                .addHeader("Authorization", "Bearer " + SUPABASE_API_KEY)
-                .addHeader("Content-Type", "application/json")
-                .build();
-
-        try (Response response = client.newCall(request).execute()) {
-            if (response.isSuccessful()) {
-                System.out.println("✅ Item updated in Supabase: " + updatedItem.getName());
-                return true;
-            } else {
-                System.out.println("❌ Error updating item: " + response.code());
-                return false;
-            }
-        } catch (IOException e) {
-            System.out.println("❌ Network error while updating item: " + e.getMessage());
-            return false;
-        }
-    }
-
-    public static boolean deleteItem(String itemID) {
-        String url = SUPABASE_URL + "/rest/v1/items?id=eq." + itemID;
-
         Request request = new Request.Builder()
                 .url(url)
                 .delete()
                 .addHeader("apikey", SUPABASE_API_KEY)
-                .addHeader("Authorization", "Bearer " + SUPABASE_API_KEY)
+                .addHeader("Authorization", "Bearer " + accessToken)
                 .addHeader("Content-Type", "application/json")
                 .build();
 
@@ -190,12 +254,19 @@ public class supabaseDB {
     }
 
     public static boolean doesItemExist(String itemID) {
+        String accessToken = storageManager.getInstance().getAccessToken();
+
+        if (accessToken == null || accessToken.isEmpty()) {
+            System.out.println("❌ Error: No access token. Cannot sync item to Supabase.");
+            return false;
+        }
+
         String url = SUPABASE_URL + "/rest/v1/items?id=eq." + itemID;
 
         Request request = new Request.Builder()
                 .url(url)
                 .addHeader("apikey", SUPABASE_API_KEY)
-                .addHeader("Authorization", "Bearer " + SUPABASE_API_KEY)
+                .addHeader("Authorization", "Bearer " + accessToken)
                 .addHeader("Accept", "application/json")
                 .build();
 

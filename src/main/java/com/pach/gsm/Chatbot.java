@@ -5,6 +5,7 @@ import it.auties.whatsapp.api.Whatsapp;
 import javafx.application.Platform;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import tools.SalesListener;
 
 import javax.swing.*;
 import java.io.File;
@@ -89,8 +90,14 @@ public class Chatbot {
                             setDisconnected(true);
                             setLoggedIn(false);
                         })
+                        .addListener(new SalesListener())
                         .connect()
                         .join();
+
+
+
+
+
     }
 
     public void qrImageThread(ImageView qrImageView) {

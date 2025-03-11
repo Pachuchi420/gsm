@@ -193,7 +193,11 @@ public class listViewController {
                     }
 
                     openRemoveItemDialog();
-
+                    break;
+                case W:
+                    if(!addItemPane.isVisible()){
+                        openWhatsappPane(whatsAppToggle);
+                    }
                 default:
                     break;
             }
@@ -487,6 +491,9 @@ public class listViewController {
             return;
         }
 
+        selectedItem.setName(name);
+        selectedItem.setDescription(description);
+
         if (!containsNonNumeric(priceAsString)) {
             int price = Integer.parseInt(priceAsString);
             if (price <= 0) {
@@ -539,11 +546,10 @@ public class listViewController {
         storageManager.getInstance().updateItemGroupLinks(selectedItem.getId(), selectedGroupIDs);
 
         refreshTable(storage.getUserID());
-
+        updateItemOnSupabase(selectedItem);
         // Close the pane after updating
         addItemToggle.togglePane(addItemPane, () -> {
             System.out.println("✅ Item updated successfully!");
-            updateItemOnSupabase(selectedItem);
             clearAddItemFields();
         });
     }
@@ -858,6 +864,10 @@ public class listViewController {
                         });
                     });
                 });
+
+                updateItemOnSupabase(givenItem);
+
+
             } else {
                 System.out.println("⚠️ Failed to sync item to Supabase.");
             }
@@ -867,7 +877,7 @@ public class listViewController {
 
     private void updateItemOnSupabase(Item givenItem){
         if (supabaseAuthentication.checkIfOnline()) {
-            supabaseDB.updateItem(givenItem.getUserID(),givenItem);
+            supabaseDB.updateItem(storageManager.getInstance().getUserID(), givenItem);
         }
     }
 
@@ -1089,6 +1099,7 @@ public class listViewController {
 
 
     public void startSendingMessages() {
+
         if (botThread != null && botThread.isAlive()) {
             System.out.println("⚠️ Bot is already running.");
             return;
@@ -1097,6 +1108,7 @@ public class listViewController {
         botThread = new Thread(() -> {
             while (Chatbot.getInstance().isEnabled()) {
                 try {
+                    printTools.disablePrints();
                     List<Item> items = storageManager.getInstance().getEligibleItems();
                     if (items.isEmpty()) {
                         System.out.println("No items available to send.");
@@ -1196,6 +1208,7 @@ public class listViewController {
                     }
 
                     System.out.println("------------------------------------");
+                    printTools.enablePrints();
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
                     System.out.println("🛑 Bot thread was interrupted and is stopping gracefully.");
