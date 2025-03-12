@@ -1,6 +1,7 @@
 package com.pach.gsm;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.UUID;
 
 public class Group {
@@ -110,5 +111,34 @@ public class Group {
 
     public void setLastUpload(LocalDateTime givenDateTime){
         this.lastUpload = givenDateTime;
+    }
+
+    public boolean isNowWithinTimeWindow() {
+        LocalTime start = LocalTime.of(startHour, startMinute);
+        LocalTime end = LocalTime.of(endHour, endMinute);
+        LocalTime now = LocalTime.now();
+
+        if (end.isBefore(start)) {
+            return now.isAfter(start) || now.isBefore(end); // Overnight case
+        } else {
+            return !now.isBefore(start) && !now.isAfter(end);
+        }
+    }
+
+    public boolean hasIntervalPassed() {
+        if (lastUpload == null) {
+            System.out.println("⏱️ No last upload recorded — passing interval check by default.");
+            return true; // Never uploaded → allow sending
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        long minutesSince = java.time.Duration.between(lastUpload, now).toMinutes();
+
+        if (minutesSince >= interval) {
+            return true;
+        } else {
+            System.out.println("⏳ Only " + minutesSince + " minutes since last upload. Required: " + interval + " minutes.");
+            return false;
+        }
     }
 }

@@ -30,10 +30,8 @@ import java.nio.file.Files;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 public class listViewController {
     @FXML
@@ -181,7 +179,7 @@ public class listViewController {
                     break;
                 case BACK_SPACE:
                     if(whatsAppPane.isVisible()){
-                        removeGroup();
+                        deleteGroup();
                         break;
                     }
 
@@ -231,7 +229,7 @@ public class listViewController {
         confirmWhatsapp.setOnAction(event -> closeWhatsappPane(whatsAppToggle));
         whatsAppLogout.setOnAction(event -> openWhatsAppLogoutDialog());
         addGroup.setOnAction(event -> addGroup(userID));
-        removeGroup.setOnAction(event -> removeGroup());
+        removeGroup.setOnAction(event -> deleteGroup());
         updateGroup.setOnAction(event -> updateGroup());
 
         itemList.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
@@ -322,6 +320,7 @@ public class listViewController {
 
             if (controller.getGoAhead()){
                 Chatbot chatbotInstance = Chatbot.getInstance();
+                deleteAllGroups();
                 chatbotInstance.logout();
                 setChatBot(false);
                 enableChatbot.setText("Disabled ");
@@ -972,7 +971,7 @@ public class listViewController {
 
     }
 
-    private void removeGroup() {
+    private void deleteGroup() {
         if (groupList.getSelectionModel().isEmpty()){
             groupWarningMessage.setText("Select an item to remove!");
             effects.vanishText(groupWarningMessage, 2);
@@ -986,6 +985,21 @@ public class listViewController {
         storage.deleteGroup(selectedGroup.getId());
         refreshTable(userID);
     }
+
+
+    private void deleteAllGroups() {
+        ObservableList<Group> allGroups = groupList.getItems();
+        storageManager storage = storageManager.getInstance();
+        String userID = storage.getUserID();
+
+        for (Group group : new ArrayList<>(allGroups)) { // clone to avoid concurrent modification
+            storage.deleteGroup(group.getId());
+        }
+
+        refreshTable(userID);
+    }
+
+
 
 
     private void updateGroup() {
@@ -1098,133 +1112,112 @@ public class listViewController {
 
 
     public void startSendingMessages() {
-
         if (botThread != null && botThread.isAlive()) {
             System.out.println("⚠️ Bot is already running.");
             return;
         }
 
         botThread = new Thread(() -> {
+            int consecutiveFails = 0;
+
             while (Chatbot.getInstance().isEnabled()) {
+                boolean somethingWasSent = false;
+
                 try {
-                    printTools.disablePrints();
                     List<Item> items = storageManager.getInstance().getEligibleItems();
+
                     if (items.isEmpty()) {
-                        System.out.println("No items available to send.");
+                        System.out.println("⏳ No eligible items available to send. Retrying in 30s...");
+                        consecutiveFails++;
+                        if (consecutiveFails >= 5) break;
                         Thread.sleep(30_000);
                         continue;
                     }
 
-                    Item item = items.get(new Random().nextInt(items.size()));
-                    List<Group> linkedGroups = storageManager.getInstance().getGroupsForItem(item.getId());
-                    System.out.println("------------------------------------");
-                    System.out.println("\nSelected item: " + item.getName());
-                    System.out.println("------------------------------------");
-                    for (Group group : linkedGroups) {
-                        LocalTime now = LocalTime.now();
-                        LocalTime start = LocalTime.of(group.getStartHour(), group.getStartMinute());
-                        LocalTime end = LocalTime.of(group.getEndHour(), group.getEndMinute());
+                    for (Item item : items) {
+                        System.out.println("\n📦 Selected item: " + item.getName());
 
-                        System.out.println("\nCurrent group: " + group.getName());
-                        System.out.println("Current local time: " + now + "\nGroup start time: " + start + "\nGroup end time: " + end);
+                        List<Group> groups = storageManager.getInstance().getEligibleGroupsForItem(item);
 
+                        for (Group group : groups){
+                            System.out.println("👥 Group: " + group.getName());
 
-                        // Case 1: Outside time constraints!
-                        if (now.isBefore(start) || now.isAfter(end)) {
-                            System.out.println("❌ Outside time window for " + group.getName());
-                            continue;
-                        } else {
-                            System.out.println("✅ First vibe check passed!");
-                        }
-
-
-                        // Case 2: Group based interval constraint
-                        var groupFromDb = storageManager.getInstance().getGroupByName(group.getName());
-                        var lastUploadToGroup = groupFromDb.getLastUpload();
-                        if (lastUploadToGroup != null) {
-                            long diff = Duration.between(lastUploadToGroup, LocalDateTime.now()).toMinutes();
-                            if (diff < group.getInterval()) {
-                                System.out.println("⏳ Group " + group.getName() + " not ready. Only " + diff + " mins passed. Needs " + group.getInterval());
+                            // ✅ Check 1: Time frame
+                            if(!group.isNowWithinTimeWindow()){
+                                System.out.println("❌ Outside our group's start and end times!");
                                 continue;
+                            }
+
+                            // ✅ Check 2: Group-wide Interval
+                            LocalDateTime groupLastSent = storageManager.getInstance().getGroupWideLastUpload(group.getId());
+                            if (groupLastSent != null) {
+                                long minsSinceLast = Duration.between(groupLastSent, LocalDateTime.now()).toMinutes();
+                                if (minsSinceLast < group.getInterval()) {
+                                    System.out.println("⏱️ Last message to group was " + minsSinceLast + " min ago. Need " + group.getInterval() + " min.");
+                                    continue;
+                                }
                             } else {
-                                System.out.println("✅ Second vibe check passed!");
+                                System.out.println("⏱️ Group has never received a message. Passing interval.");
                             }
-                        } else {
-                            System.out.println("✅ Second vibe check passed!, first-time sending to the group:" + group.getName());
+
+                            // ✅ Send Message
+                            var chat = Chatbot.getApi().store().findChatByName(group.getName()).orElseThrow();
+                            var msg = new ImageMessageSimpleBuilder()
+                                    .media(item.getImageData())
+                                    .caption(item.getName() + "\n" + item.getDescription() + "\n" + item.getPrice() + " " + item.getCurrency())
+                                    .build();
+
+                            Chatbot.getApi().sendMessage(chat, msg);
+                            System.out.println("📤 Sent '" + item.getName() + "' to " + group.getName());
+
+                            // ✅ Update timestamps
+                            LocalDateTime now = LocalDateTime.now();
+                            group.setLastUpload(now);
+                            storageManager.getInstance().updateGroup(group);
+                            storageManager.getInstance().updateItemGroupLastUploaded(item.getId(), group.getId(), now);
+
+                            somethingWasSent = true;
+                            Thread.sleep(2500); // avoid spamming
                         }
 
-                        // Case 3: Item based priority constraint
-                        var lastUploadForItem = storageManager.getInstance().getLastUploadTime(item.getId(), group.getId());
-                        if (lastUploadForItem != null) {
-                            long hoursSince = Duration.between(lastUploadForItem, LocalDateTime.now()).toHours();
-                            if (hoursSince < 24) {
-                                System.out.println("⏳ Cannot send " + item.getName() + " to " + group.getName() + " again within 24 hours. Only " + hoursSince + "h passed.");
-                                continue;
-                            }
-
-                            long daysSince = Duration.between(lastUploadForItem, LocalDateTime.now()).toDays();
-
-                            int requiredDays;
-                            switch (item.getPriority()) {
-                                case 1:
-                                    requiredDays = 1;
-                                    break;
-                                case 2:
-                                    requiredDays = 2;
-                                    break;
-                                case 3:
-                                    requiredDays = 7;
-                                    break;
-                                default:
-                                    requiredDays = 1;
-                            }
-
-                            if (daysSince < requiredDays) {
-                                System.out.println("⏳ Priority block: " + item.getName() + " (P" + item.getPriority() + ") needs " + requiredDays + " days. Only " + daysSince + " days passed.");
-                                continue;
-                            }
-
-                            System.out.println("✅ Third vibe check passed, priority interval satisfied (" + daysSince + " days since last send)");
-                        } else {
-                            System.out.println("✅ Third vibe check passed, first-time sending " + item.getName() + " to " + group.getName());
-                        }
-
-
-                        // Send if we pass all vibe checks!
-                        var chat = Chatbot.getApi().store()
-                                .findChatByName(group.getName()).orElseThrow();
-                        var msg = new ImageMessageSimpleBuilder()
-                                .media(item.getImageData())
-                                .caption(item.getName() + "\n" + item.getDescription() + "\n" + item.getPrice() + " " + item.getCurrency())
-                                .build();
-
-                        Chatbot.getApi().sendMessage(chat, msg);
-                        System.out.println("📤 Sent to " + group.getName());
-                        group.setLastUpload(LocalDateTime.now());
-                        storageManager.getInstance().updateGroup(group);
-                        storageManager.getInstance().updateItemGroupLastUploaded(item.getId(), group.getId(), java.time.LocalDateTime.now());
-                        Thread.sleep(500);
+                        Thread.sleep(2500); // between items
                     }
 
-                    System.out.println("------------------------------------");
-                    printTools.enablePrints();
-                    Thread.sleep(1000);
+                    if (somethingWasSent) {
+                        consecutiveFails = 0;
+                    } else {
+                        consecutiveFails++;
+                        System.out.println("⚠️ Nothing was sent this round. Consecutive fails: " + consecutiveFails);
+                    }
+
+                    if (consecutiveFails >= 2) {
+                        System.out.println("❌ Stopping bot after 5 consecutive failed runs.");
+                        javafx.application.Platform.runLater(() -> {
+                            enableChatbot.setText("Disabled ");
+                            enableChatbot.setSelected(false);
+                            stopSendingMessages();
+                        });
+
+                        break;
+                    }
+
+                    Thread.sleep(5000); // before next full round
                 } catch (InterruptedException e) {
-                    System.out.println("🛑 Bot thread was interrupted and is stopping gracefully.");
-                    Thread.currentThread().interrupt(); // Optional: reset the interrupted flag
-                    break; // exit the while loop
+                    System.out.println("🛑 Bot thread interrupted. Stopping...");
+                    Thread.currentThread().interrupt();
+                    break;
                 } catch (Exception e) {
-                    e.printStackTrace(); // Handle other errors
+                    e.printStackTrace();
                 }
             }
 
+            Chatbot.getInstance().setEnabled(false); // make sure flag reflects stopped state
             System.out.println("🛑 Bot thread has stopped.");
         });
 
         botThread.setDaemon(true);
         botThread.start();
     }
-
 
 
     public void stopSendingMessages() {

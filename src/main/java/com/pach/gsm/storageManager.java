@@ -7,11 +7,13 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.File;
 import java.sql.*;
-import java.util.Base64;
-import java.util.List;
+import java.sql.Date;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.prefs.Preferences;
-import java.util.ArrayList;
 
 
 public class storageManager {
@@ -774,6 +776,26 @@ public class storageManager {
         return null;
     }
 
+    public LocalDateTime getGroupWideLastUpload(String groupId) {
+        String sql = "SELECT MAX(last_uploaded) AS latest FROM item_groups WHERE groupID = ?";
+
+        try (Connection conn = DriverManager.getConnection(DATABASE_URL);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, groupId);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                Timestamp ts = rs.getTimestamp("latest");
+                return (ts != null) ? ts.toLocalDateTime() : null;
+            }
+        } catch (SQLException e) {
+            System.out.println("❌ Error fetching group-wide last upload: " + e.getMessage());
+        }
+
+        return null;
+    }
+
     public void updateItemGroupLastUploaded(String itemId, String groupId, java.time.LocalDateTime time) {
         dbWorker.submitTask(() -> {
             String sql = "UPDATE item_groups SET last_uploaded = ? WHERE itemID = ? AND groupID = ?";
@@ -792,6 +814,7 @@ public class storageManager {
             }
         });
     }
+
 
     public List<Item> getEligibleItems() {
         List<Item> eligibleItems = new ArrayList<>();
@@ -821,17 +844,111 @@ public class storageManager {
                 );
 
                 item.setId(rs.getString("id"));
-                item.setSold(false);  // already filtered
+                item.setSold(false);
                 item.setSupabaseSync(rs.getInt("supabaseSync") == 1);
                 item.setToDelete(false);
                 eligibleItems.add(item);
             }
 
-            System.out.println("✅ Retrieved " + eligibleItems.size() + " eligible items.");
+            System.out.println("✅ Retrieved " + eligibleItems.size() + " raw eligible items.");
         } catch (SQLException e) {
             System.out.println("❌ Error fetching eligible items: " + e.getMessage());
         }
 
         return eligibleItems;
     }
+
+
+    public List<Group> getGroupsForUser(String userID) {
+        List<Group> groups = new ArrayList<>();
+
+        if (userID == null) {
+            System.out.println("⚠️ Cannot fetch groups: userID is null.");
+            return groups;
+        }
+
+        String sql = "SELECT * FROM groups WHERE userID = ?";
+
+        try (Connection conn = DriverManager.getConnection(DATABASE_URL);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, userID);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                Group group = new Group(
+                        rs.getString("name"),
+                        rs.getInt("interval"),
+                        rs.getInt("startHour"),
+                        rs.getInt("startMinute"),
+                        rs.getInt("endHour"),
+                        rs.getInt("endMinute")
+                );
+                group.setId(rs.getString("id"));
+
+                Timestamp ts = rs.getTimestamp("last_uploaded");
+                if (ts != null) {
+                    group.setLastUpload(ts.toLocalDateTime());
+                }
+
+                groups.add(group);
+            }
+
+            System.out.println("✅ Retrieved " + groups.size() + " groups for user.");
+        } catch (SQLException e) {
+            System.out.println("❌ Error fetching groups for user: " + e.getMessage());
+        }
+
+        return groups;
+    }
+
+
+
+    public  List<Group> getEligibleGroupsForItem(Item item){
+        String itemId = item.getId();
+        List<Group> groups = getGroupsForItem(itemId);
+        List<Group> eligibleGroups = new ArrayList<>();
+        LocalDateTime now = LocalDateTime.now();
+
+        for (Group group : groups){
+            LocalDateTime lastUploaded = getLastUploadTime(itemId, group.getId());
+            Boolean pass = checkPriorityPass(lastUploaded, now, item.getPriority());
+            if (pass){
+                eligibleGroups.add(group);
+            }
+        }
+        return eligibleGroups;
+    }
+
+
+    public Boolean checkPriorityPass(LocalDateTime lastUploaded, LocalDateTime now, int priority){
+        if (lastUploaded == null) {
+            System.out.println("⏱️ Item has never been sent to this group. Passing by default.");
+            return true;
+        }
+
+        Duration duration = Duration.between(lastUploaded, now);
+        long hours = duration.toHours();
+
+        if (priority == 1){
+             if(hours < 24){
+                 System.out.println("❌ Item sent " + hours + " hours ago, can't send up until 24 hours are met!");
+                 return false;
+             }
+        } else if (priority == 2){
+            if(hours < 48){
+                System.out.println("❌ Item sent " + hours + " hours ago, can't send up until 48 hours are met!");
+                return false;
+            }
+        } else if (priority == 3){
+            if(hours < 168){
+                System.out.println("❌ Item sent " + hours + " hours ago, can't send up until 168 hours are met!");
+                return false;
+            }
+        }
+        return true;
+    }
+
+
+
 }
