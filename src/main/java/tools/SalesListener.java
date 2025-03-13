@@ -14,89 +14,47 @@ import it.auties.whatsapp.model.message.standard.TextMessage;
 
 import java.text.Normalizer;
 import java.util.List;
+import java.util.Locale;
 
 @RegisterListener
 public class SalesListener implements Listener {
 
     private static final List<String> interestKeywords = List.of(
             // Spanish
-            "me interesa", "interesado", "interesada", "quiero", "lo quiero", "me gusta",
-            "comprar", "lo compro", "yo", "yop", "todavia hay", "todavía hay", "aun hay", "aún hay",
-            "disponible", "reservado", "lo tienes", "esta disponible", "sigue disponible",
-            "hay stock", "tienes stock", "queda?", "quedan?", "hay?", "lo tienes?",
-            "todavia tienes", "todavía tienes",
-
+            "yo", "quiero", "me interesa", "interesado", "interesada", "disponible", "reservado",
             // English
-            "interested", "i'm interested", "i want", "want this", "i want this",
-            "i'll take it", "i'll buy", "i like it", "buying", "is it available",
-            "still available", "do you still have it", "available?", "can i buy",
-            "do you have", "left?", "any left", "do you still have", "is this reserved",
-
+            "interested", "i want", "buy", "available", "is it", "left", "still", "can i", "do you",
             // German
-            "interessiert", "ich will", "möchte", "ich möchte", "ich nehme es",
-            "ich kaufe", "will kaufen", "noch da", "noch verfügbar",
-            "hast du noch", "ist es noch da", "ist das verfügbar",
-            "verfügbar?", "reserviert?", "ist es reserviert"
+            "ich", "will", "möchte", "interessiert", "verfügbar", "noch", "reserviert", "interesse"
     );
 
     @Override
     public void onLoggedIn() {
-        System.out.println("🕹️ Sales Listener Added!");
+        System.out.println("🛎️ SalesListener activated.");
     }
 
-    public Group checkIfMessageIsOnGroup(ChatMessageInfo message) {
-        String chatName = message.chat().map(chat -> chat.name()).orElse("Unknown Group");
-        System.out.println("📛 Group Name: " + chatName);
-        return storageManager.getInstance().getGroupByName(chatName);
+    private static String normalize(String input) {
+        String noAccents = Normalizer.normalize(input, Normalizer.Form.NFD).replaceAll("\\p{M}", "");
+        return noAccents.replaceAll("[^\\p{L}\\p{Nd} ]+", "").toLowerCase(Locale.ROOT);
     }
 
-    public static String normalize(String input) {
-        String normalized = Normalizer.normalize(input, Normalizer.Form.NFD);
-        return normalized.replaceAll("\\p{M}", "").toLowerCase();
-    }
-
-    @Override
-    public void onMessageReply(Whatsapp whatsapp, ChatMessageInfo response, QuotedMessageInfo quoted) {
-        var responseText = response.message().textMessage();
-        if (responseText.isEmpty()) return;
-
-        var quotedSender = quoted.senderJid().user();
-        var myUser = whatsapp.store().jid().get().user();
-
-        if (checkIfMessageIsOnGroup(response) == null) {
-            System.out.println("🚫 Reply not found in selling groups");
-            return;
-        }
-
-        if (!quotedSender.equals(myUser)) {
-            System.out.println("🚫 Ignoring reply not directed at me.");
-            return;
-        }
-
-        String reply = responseText.get().text();
-        String normalizedReply = normalize(reply);
-        System.out.println("✅ They replied to your message: " + reply);
-
-        // Detect interest keyword
-        String matchedKeyword = interestKeywords.stream()
-                .filter(keyword -> normalizedReply.contains(normalize(keyword)))
-                .findFirst()
+    private Group getGroup(ChatMessageInfo message) {
+        return message.chat()
+                .map(chat -> storageManager.getInstance().getGroupByName(chat.name()))
                 .orElse(null);
+    }
 
-        if (matchedKeyword == null) {
-            System.out.println("🤖 Message didn't express interest.");
-            return;
+    private String detectLanguage(String text) {
+        if (text.matches(".*\\b(interested|want|buy|available|still|left|can i|do you)\\b.*")) {
+            return "en";
+        } else if (text.matches(".*\\b(interessiert|möchte|verfügbar|reserviert|noch|interesse)\\b.*")) {
+            return "de";
+        } else {
+            return "es"; // default to Spanish
         }
+    }
 
-        // Guess language
-        String lang = "es"; // default
-        if (matchedKeyword.matches(".*(interested|want|buy|available|left|have|take).*")) {
-            lang = "en";
-        } else if (matchedKeyword.matches(".*(interessiert|möchte|verfügbar|noch|kaufen).*")) {
-            lang = "de";
-        }
-
-        // Language-specific messages
+    private void sendReplies(Whatsapp whatsapp, ChatMessageInfo context, String lang, boolean isReserved, QuotedMessageInfo quoted) {
         String pmRedirect = switch (lang) {
             case "en" -> "I'll contact you via DM 😁";
             case "de" -> "Ich schreibe dir per PM 😁";
@@ -106,52 +64,79 @@ public class SalesListener implements Listener {
         String pmMessage = switch (lang) {
             case "en" -> "Hey! I saw you're interested in this product!";
             case "de" -> "Hallo! Ich habe gesehen, dass du an diesem Produkt interessiert bist!";
-            default -> "Hola! Vi que estás interesado en este producto!";
+            default -> "¡Hola! Vi que estás interesado en este producto!";
         };
 
         String reservedMessage = switch (lang) {
             case "en" -> "Hey! I saw you're interested in this product, but unfortunately it's already reserved!";
             case "de" -> "Hallo! Ich habe gesehen, dass du an diesem Produkt interessiert bist, aber leider ist es bereits reserviert!";
-            default -> "Hola! Vi que estás interesado en este producto, pero lamentablemente ya está reservado!";
+            default -> "¡Hola! Vi que estás interesado en este producto, pero lamentablemente ya está reservado!";
         };
 
-        // Get the quoted message's text
-        Message quotedContent = quoted.message().content();
-        String quotedMessageText = "❌Message not available";
-        if (quotedContent instanceof TextMessage textMsg) {
-            quotedMessageText = textMsg.text();
-        } else if (quotedContent instanceof ImageMessage imageMsg) {
-            quotedMessageText = imageMsg.caption().orElse("❌Image with no text");
+        if (isReserved) {
+            whatsapp.sendMessage(context.chatJid().toJid(), reservedMessage, context);
+        } else {
+            whatsapp.sendMessage(context.chatJid().toJid(), pmRedirect, context);
+            try {
+                Thread.sleep(1000); // brief pause before DM
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            whatsapp.sendMessage(context.senderJid().toJid(), pmMessage, quoted);
+        }
+    }
+
+    private String extractProductName(QuotedMessageInfo quoted) {
+        Message content = quoted.message().content();
+        String text = "Unknown";
+
+        if (content instanceof TextMessage textMsg) {
+            text = textMsg.text();
+        } else if (content instanceof ImageMessage imageMsg) {
+            text = imageMsg.caption().orElse("Image with no caption");
         }
 
-        // Extract product name
-        String[] lines = quotedMessageText.split("\\R");
-        String productName = lines.length > 0 ? lines[0].trim() : "❌ Name not available";
-        System.out.println("🛒 Product name: " + productName);
+        String[] lines = text.split("\\R");
+        return lines.length > 0
+                ? lines[0].replaceAll("^[^\\p{L}\\p{N}]+", "").trim()
+                : "Unknown";
+    }
 
-        // Search for the item
+    @Override
+    public void onMessageReply(Whatsapp whatsapp, ChatMessageInfo replyMsg, QuotedMessageInfo quoted) {
+        var replyTextOpt = replyMsg.message().textMessage();
+        if (replyTextOpt.isEmpty()) return;
+
+        String replyText = normalize(replyTextOpt.get().text());
+        String myUser = whatsapp.store().jid().get().user();
+        String quotedSender = quoted.senderJid().user();
+
+        if (!quotedSender.equals(myUser)) {
+            System.out.println("⛔ Not replying to our message.");
+            return;
+        }
+
+        if (getGroup(replyMsg) == null) {
+            System.out.println("📭 Not in a tracked group.");
+            return;
+        }
+
+        boolean expressedInterest = interestKeywords.stream().anyMatch(replyText::contains);
+        if (!expressedInterest) {
+            System.out.println("🤷 No keyword detected in reply.");
+            return;
+        }
+
+        String lang = detectLanguage(replyText);
+        String productName = extractProductName(quoted);
+        System.out.println("📦 Product candidate: " + productName);
+
         storageManager.getInstance().getItemByName(productName, item -> {
             if (item != null) {
-                System.out.println("✅ Found item: " + item.getName() + " $" + item.getPrice());
-
-                if (item.isReserved()) {
-                    System.out.println("📩 Sending reserved message to: " + response.chatName());
-                    whatsapp.sendMessage(response.senderJid().toJid(), reservedMessage, quoted);
-                } else {
-                    System.out.println("📩 Sending PM redirect to: " + response.chatName());
-                    whatsapp.sendMessage(response.chatJid().toJid(), pmRedirect, quoted);
-
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-
-                    System.out.println("📩 Sending follow-up DM to: " + response.senderJid().user());
-                    whatsapp.sendMessage(response.senderJid().toJid(), pmMessage, quoted);
-                }
+                System.out.println("✅ Found item: " + item.getName());
+                sendReplies(whatsapp, replyMsg, lang, item.isReserved(), quoted);
             } else {
-                System.out.println("❌ Item not found.");
+                System.out.println("❌ Couldn't match item.");
             }
         });
     }
