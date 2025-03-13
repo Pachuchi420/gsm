@@ -355,28 +355,39 @@ public class storageManager {
 
     public void deleteItem(String itemId) {
         dbWorker.submitTask(() -> {
-        String sql = "DELETE FROM items WHERE id = ?";
+            String deleteItemGroupsSQL = "DELETE FROM item_groups WHERE itemID = ?";
+            String deleteItemSQL = "DELETE FROM items WHERE id = ?";
 
-        try (Connection conn = DriverManager.getConnection(DATABASE_URL);
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            try (Connection conn = DriverManager.getConnection(DATABASE_URL)) {
 
-            pstmt.setString(1, itemId);
-            pstmt.executeUpdate();
-            System.out.println("✅ Item deleted from local database.");
-
-            // 🔥 Sync deletion to Supabase
-            if (supabaseAuthentication.checkIfOnline()) {
-                boolean success = supabaseDB.deleteItem(itemId);
-                if (success) {
-                    System.out.println("✅ Item deleted from Supabase.");
-                } else {
-                    System.out.println("⚠️ Failed to delete item from Supabase.");
+                // First: delete from item_groups
+                try (PreparedStatement pstmt = conn.prepareStatement(deleteItemGroupsSQL)) {
+                    pstmt.setString(1, itemId);
+                    int groupLinksDeleted = pstmt.executeUpdate();
+                    System.out.println("🧹 Deleted " + groupLinksDeleted + " group link(s) for itemID: " + itemId);
                 }
-            }
 
-        } catch (SQLException e) {
-            System.out.println("❌ Error deleting item from local database: " + e.getMessage());
-        }});
+                // Then: delete from items
+                try (PreparedStatement pstmt = conn.prepareStatement(deleteItemSQL)) {
+                    pstmt.setString(1, itemId);
+                    int rowsDeleted = pstmt.executeUpdate();
+                    System.out.println("✅ Item deleted from local database.");
+                }
+
+                // Optional: Sync with Supabase
+                if (supabaseAuthentication.checkIfOnline()) {
+                    boolean success = supabaseDB.deleteItem(itemId);
+                    if (success) {
+                        System.out.println("✅ Item deleted from Supabase.");
+                    } else {
+                        System.out.println("⚠️ Failed to delete item from Supabase.");
+                    }
+                }
+
+            } catch (SQLException e) {
+                System.out.println("❌ Error deleting item and group links: " + e.getMessage());
+            }
+        });
     }
 
     public void getItemByName(String name, Consumer<Item> callback) {
@@ -693,35 +704,51 @@ public class storageManager {
     public void updateItemGroupLinks(String itemID, List<String> newGroupIDs) {
         dbWorker.submitTask(() -> {
             try (Connection conn = DriverManager.getConnection(DATABASE_URL)) {
-                // 1. Delete existing links
+                // 1. Get existing group links with timestamps
+                Map<String, LocalDateTime> oldTimestamps = new HashMap<>();
+                String selectSQL = "SELECT groupID, last_uploaded FROM item_groups WHERE itemID = ?";
+                try (PreparedStatement selectStmt = conn.prepareStatement(selectSQL)) {
+                    selectStmt.setString(1, itemID);
+                    ResultSet rs = selectStmt.executeQuery();
+                    while (rs.next()) {
+                        String groupID = rs.getString("groupID");
+                        Timestamp ts = rs.getTimestamp("last_uploaded");
+                        if (ts != null) {
+                            oldTimestamps.put(groupID, ts.toLocalDateTime());
+                        }
+                    }
+                }
+
+                // 2. Delete existing links
                 String deleteSQL = "DELETE FROM item_groups WHERE itemID = ?";
                 try (PreparedStatement deleteStmt = conn.prepareStatement(deleteSQL)) {
                     deleteStmt.setString(1, itemID);
                     deleteStmt.executeUpdate();
                 }
 
-
-
-
-                // 2. Insert new ones
+                // 3. Re-insert with preserved timestamps if available
                 String insertSQL = "INSERT INTO item_groups (itemID, groupID, last_uploaded) VALUES (?, ?, ?)";
                 try (PreparedStatement insertStmt = conn.prepareStatement(insertSQL)) {
                     for (String groupID : newGroupIDs) {
                         insertStmt.setString(1, itemID);
                         insertStmt.setString(2, groupID);
-                        insertStmt.setTimestamp(3, java.sql.Timestamp.valueOf(java.time.LocalDateTime.now()));
+                        LocalDateTime oldTime = oldTimestamps.get(groupID);
+                        if (oldTime != null) {
+                            insertStmt.setTimestamp(3, Timestamp.valueOf(oldTime));
+                        } else {
+                            insertStmt.setTimestamp(3, null);
+                        }
                         insertStmt.addBatch();
                     }
                     insertStmt.executeBatch();
                 }
 
-                System.out.println("✅ Item-group links updated for item: " + itemID);
+                System.out.println("✅ Preserved item-group timestamps where applicable.");
             } catch (SQLException e) {
                 System.out.println("❌ Failed to update item-group links: " + e.getMessage());
             }
         });
     }
-
 
 
     public List<Group> getGroupsForItem(String itemId) {
@@ -950,5 +977,57 @@ public class storageManager {
     }
 
 
+    public void deleteAllGroups() {
+        dbWorker.submitTask(() -> {
+            String sql = "DELETE FROM groups";
+
+            try (Connection conn = DriverManager.getConnection(DATABASE_URL);
+                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+                int rows = pstmt.executeUpdate();
+                System.out.println("🧹 Deleted all " + rows + " item-group links.");
+
+            } catch (SQLException e) {
+                System.out.println("❌ Error deleting item-group links: " + e.getMessage());
+            }
+        });
+    }
+
+
+    public void deleteItemGroupLink(String groupID, String itemID) {
+        dbWorker.submitTask(() -> {
+            String sql = "DELETE FROM item_groups WHERE itemID = ? AND groupID = ?";
+
+            try (Connection conn = DriverManager.getConnection(DATABASE_URL);
+                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+                pstmt.setString(1, itemID);
+                pstmt.setString(2, groupID);
+                int rowsDeleted = pstmt.executeUpdate();
+
+                System.out.println("✅ Deleted " + rowsDeleted + " item-group link(s) for itemID: " + itemID + ", groupID: " + groupID);
+
+            } catch (SQLException e) {
+                System.out.println("❌ Error deleting item-group link: " + e.getMessage());
+            }
+        });
+    }
+
+
+    public void deleteAllItemGroupLinks() {
+        dbWorker.submitTask(() -> {
+            String sql = "DELETE FROM item_groups";
+
+            try (Connection conn = DriverManager.getConnection(DATABASE_URL);
+                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+                int rows = pstmt.executeUpdate();
+                System.out.println("🧹 Deleted all " + rows + " item-group links.");
+
+            } catch (SQLException e) {
+                System.out.println("❌ Error deleting item-group links: " + e.getMessage());
+            }
+        });
+    }
 
 }

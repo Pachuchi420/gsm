@@ -320,11 +320,15 @@ public class listViewController {
 
             if (controller.getGoAhead()){
                 Chatbot chatbotInstance = Chatbot.getInstance();
-                deleteAllGroups();
                 chatbotInstance.logout();
                 setChatBot(false);
                 enableChatbot.setText("Disabled ");
                 enableChatbot.setSelected(false);
+
+                storageManager.getInstance().deleteAllGroups();
+                storageManager.getInstance().deleteAllItemGroupLinks();
+
+                refreshTable(storageManager.getInstance().getUserID());
 
             }
         } catch (IOException e) {
@@ -987,17 +991,21 @@ public class listViewController {
     }
 
 
-    private void deleteAllGroups() {
+    private void deleteAllGroupData() {
         ObservableList<Group> allGroups = groupList.getItems();
         storageManager storage = storageManager.getInstance();
         String userID = storage.getUserID();
 
-        for (Group group : new ArrayList<>(allGroups)) { // clone to avoid concurrent modification
+        for (Group group : new ArrayList<>(allGroups)) {
             storage.deleteGroup(group.getId());
         }
+        storage.deleteAllItemGroupLinks();
 
         refreshTable(userID);
     }
+
+
+
 
 
 
@@ -1140,6 +1148,7 @@ public class listViewController {
                         List<Group> groups = storageManager.getInstance().getEligibleGroupsForItem(item);
 
                         for (Group group : groups){
+                            System.out.println("--------------------------------------");
                             System.out.println("👥 Group: " + group.getName());
 
                             // ✅ Check 1: Time frame
@@ -1164,7 +1173,11 @@ public class listViewController {
                             var chat = Chatbot.getApi().store().findChatByName(group.getName()).orElseThrow();
                             var msg = new ImageMessageSimpleBuilder()
                                     .media(item.getImageData())
-                                    .caption(item.getName() + "\n" + item.getDescription() + "\n" + item.getPrice() + " " + item.getCurrency())
+                                    .caption(
+                                            "• " + item.getName() + "\n" +
+                                            "• " + item.getDescription() + "\n" +
+                                            "• " + item.getPrice() + " " + item.getCurrency()
+                                    )
                                     .build();
 
                             Chatbot.getApi().sendMessage(chat, msg);
@@ -1175,12 +1188,12 @@ public class listViewController {
                             group.setLastUpload(now);
                             storageManager.getInstance().updateGroup(group);
                             storageManager.getInstance().updateItemGroupLastUploaded(item.getId(), group.getId(), now);
-
                             somethingWasSent = true;
-                            Thread.sleep(2500); // avoid spamming
+                            System.out.println("--------------------------------------");
+                            Thread.sleep(10000); // between groups
                         }
 
-                        Thread.sleep(2500); // between items
+                        Thread.sleep(10000); // between items
                     }
 
                     if (somethingWasSent) {
@@ -1190,7 +1203,7 @@ public class listViewController {
                         System.out.println("⚠️ Nothing was sent this round. Consecutive fails: " + consecutiveFails);
                     }
 
-                    if (consecutiveFails >= 2) {
+                    if (consecutiveFails >= 20) {
                         System.out.println("❌ Stopping bot after 5 consecutive failed runs.");
                         javafx.application.Platform.runLater(() -> {
                             enableChatbot.setText("Disabled ");
@@ -1200,8 +1213,6 @@ public class listViewController {
 
                         break;
                     }
-
-                    Thread.sleep(5000); // before next full round
                 } catch (InterruptedException e) {
                     System.out.println("🛑 Bot thread interrupted. Stopping...");
                     Thread.currentThread().interrupt();
@@ -1255,8 +1266,9 @@ public class listViewController {
 
                 for (Item item : selectedItems) {
                     if (supabaseAuthentication.checkIfOnline()) {
-                        System.out.println("🚨 Deleting item: " + item.getName());
+                        System.out.println("🚨Deleting item!");
                         storage.deleteItem(item.getId());
+                        refreshTable(storage.getUserID());
                     } else {
                         System.out.println("🚨 Offline! Marking for deletion: " + item.getName());
                         item.setToDelete(true);
