@@ -42,14 +42,6 @@ public class storageManager {
             initializeDatabase(userID);
         }
     }
-
-    public void submitToDBWorker(Runnable task) {
-        dbWorker.submitTask(task);
-    }
-
-
-
-
     public static synchronized storageManager getInstance() {
         if (instance == null) {
             instance = new storageManager();
@@ -60,7 +52,7 @@ public class storageManager {
 
 
 
-    // CREDENTIALS & REFRESH TOKEN STORAGE MANAGEMENT
+    //  CREDENTIALS & REFRESH TOKEN STORAGE MANAGEMENT
     public void addCredential(String key, String value) {
         try {
             String encryptedValue = encrypt(value);
@@ -69,7 +61,6 @@ public class storageManager {
             e.printStackTrace();
         }
     }
-
     public String getRefreshToken() {
         try {
             String encryptedValue = prefs.get("refreshToken", null);
@@ -79,7 +70,6 @@ public class storageManager {
             return null;
         }
     }
-
     public String getAccessToken() {
         try {
             String encryptedValue = prefs.get("accessToken", null);
@@ -89,7 +79,6 @@ public class storageManager {
             return null;
         }
     }
-
     public String getUserID() {
         try {
             String userID = prefs.get("userID", null);
@@ -99,11 +88,9 @@ public class storageManager {
             return null;
         }
     }
-
     public void removeCredential(String key) {
         prefs.remove(key);
     }
-
     public void clearAllCredentials() {
         try {
             prefs.clear();
@@ -111,7 +98,6 @@ public class storageManager {
             e.printStackTrace();
         }
     }
-
     private String encrypt(String data) throws Exception {
         SecretKeySpec secretKey = new SecretKeySpec(SECRET_KEY.getBytes(), ALGORITHM);
         Cipher cipher = Cipher.getInstance(ALGORITHM);
@@ -119,7 +105,6 @@ public class storageManager {
         byte[] encryptedBytes = cipher.doFinal(data.getBytes());
         return Base64.getEncoder().encodeToString(encryptedBytes);
     }
-
     private String decrypt(String encryptedData) throws Exception {
         SecretKeySpec secretKey = new SecretKeySpec(SECRET_KEY.getBytes(), ALGORITHM);
         Cipher cipher = Cipher.getInstance(ALGORITHM);
@@ -127,7 +112,6 @@ public class storageManager {
         byte[] decryptedBytes = cipher.doFinal(Base64.getDecoder().decode(encryptedData));
         return new String(decryptedBytes);
     }
-
     public void saveUserID(String key, String userID) {
         try {
             prefs.put(key, userID);
@@ -140,7 +124,7 @@ public class storageManager {
 
 
 
-    // FILE STORAGE CRUD OPERATIONS WITH SQLITE-3
+    // 🖥️ LOCAL DATABASE MANAGEMENT
     public void initializeDatabase(String userID) {
         if (userID == null) {
             throw new IllegalStateException("❌ Cannot initialize database, userID is null.");
@@ -151,8 +135,6 @@ public class storageManager {
         try (Connection conn = DriverManager.getConnection(DATABASE_URL);
              Statement stmt = conn.createStatement()) {
 
-
-            // 🔄 Set timeout to allow SQLite to wait if locked
             try (PreparedStatement timeoutStmt = conn.prepareStatement("PRAGMA busy_timeout = 5000;")) {
                 timeoutStmt.execute();
             }
@@ -210,7 +192,6 @@ public class storageManager {
             setDbReady(false);
         }
     }
-
     public String getDatabasePath(String userID) {
         if (userID == null) {
             throw new IllegalStateException("❌ Cannot determine database path, userID is null.");
@@ -224,7 +205,16 @@ public class storageManager {
 
         return baseDir + File.separator + "user_" + userID + ".db";
     }
+    public Boolean getDbReady() {
+        return dbReady;
+    }
+    public void setDbReady(Boolean dbReady) {
+        this.dbReady = dbReady;
+    }
 
+
+
+    // 📦 ITEM MANAGEMENT
     public void addItemLocal(Item item) {
         dbWorker.submitTask(() -> {
         String sql = "INSERT INTO items (id, userID, name, description, imagedata, price, currency, date, sold, uploaddate, priority, " +
@@ -260,8 +250,6 @@ public class storageManager {
         }
         });
     }
-
-
     public void updateItemLocal(Item item) {
         dbWorker.submitTask(() -> {
             String sql = "UPDATE items SET name = ?, description = ?, imagedata = ?, price = ?, currency = ?, date = ?, sold = ?, uploaddate = ?, priority = ?, " +
@@ -311,8 +299,6 @@ public class storageManager {
             }
         });
     }
-
-
     public void getAllLocalItems(String userID, Consumer<List<Item>> callback) {
         dbWorker.submitTask(() -> {
             List<Item> items = new ArrayList<>();
@@ -350,9 +336,6 @@ public class storageManager {
             javafx.application.Platform.runLater(() -> callback.accept(items));
         });
     }
-
-
-
     public void deleteItem(String itemId) {
         dbWorker.submitTask(() -> {
             String deleteItemGroupsSQL = "DELETE FROM item_groups WHERE itemID = ?";
@@ -389,7 +372,6 @@ public class storageManager {
             }
         });
     }
-
     public void getItemByName(String name, Consumer<Item> callback) {
         dbWorker.submitTask(() -> {
             String sql = "SELECT * FROM items WHERE name = ? AND userID = ?";
@@ -433,8 +415,6 @@ public class storageManager {
             }
         });
     }
-
-
     public void syncFailedItems() {
         String sql = "SELECT * FROM items WHERE supabaseSync = 0";
 
@@ -474,15 +454,6 @@ public class storageManager {
             System.out.println("❌ Error syncing failed items: " + e.getMessage());
         }
     }
-
-    public Boolean getDbReady() {
-        return dbReady;
-    }
-
-    public void setDbReady(Boolean dbReady) {
-        this.dbReady = dbReady;
-    }
-
     public void deleteToDeleteItems() {
         dbWorker.submitTask(() -> {
             String sql = "DELETE FROM items WHERE toDelete = 1";
@@ -500,6 +471,9 @@ public class storageManager {
     }
 
 
+
+
+    // 👥 GROUP MANAGEMENT
     public void addGroup(Group group) {
         dbWorker.submitTask(() -> {
             String sql = "INSERT INTO groups (id, userID, name, interval, startHour, startMinute, endHour, endMinute, last_uploaded) " +
@@ -525,7 +499,6 @@ public class storageManager {
             }
         });
     }
-
     public void updateGroup(Group group) {
         dbWorker.submitTask(() -> {
             String sql = "UPDATE groups SET name = ?, interval = ?, startHour = ?, startMinute = ?, endHour = ?, endMinute = ? , last_uploaded = ? " +
@@ -555,7 +528,6 @@ public class storageManager {
             }
         });
     }
-
     public void getAllGroups(String userID, Consumer<List<Group>> callback) {
         dbWorker.submitTask(() -> {
             List<Group> groups = new ArrayList<>();
@@ -591,8 +563,6 @@ public class storageManager {
             javafx.application.Platform.runLater(() -> callback.accept(groups));
         });
     }
-
-
     public Group getGroupByName(String name) {
         String sql = "SELECT * FROM groups WHERE name = ? AND userID = ?";
         String userID = getUserID();  // Retrieve current user's ID
@@ -634,9 +604,48 @@ public class storageManager {
 
         return null;
     }
+    public List<Group> getGroupsForUser(String userID) {
+        List<Group> groups = new ArrayList<>();
 
+        if (userID == null) {
+            System.out.println("⚠️ Cannot fetch groups: userID is null.");
+            return groups;
+        }
 
+        String sql = "SELECT * FROM groups WHERE userID = ?";
 
+        try (Connection conn = DriverManager.getConnection(DATABASE_URL);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, userID);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                Group group = new Group(
+                        rs.getString("name"),
+                        rs.getInt("interval"),
+                        rs.getInt("startHour"),
+                        rs.getInt("startMinute"),
+                        rs.getInt("endHour"),
+                        rs.getInt("endMinute")
+                );
+                group.setId(rs.getString("id"));
+
+                Timestamp ts = rs.getTimestamp("last_uploaded");
+                if (ts != null) {
+                    group.setLastUpload(ts.toLocalDateTime());
+                }
+
+                groups.add(group);
+            }
+
+            System.out.println("✅ Retrieved " + groups.size() + " groups for user.");
+        } catch (SQLException e) {
+            System.out.println("❌ Error fetching groups for user: " + e.getMessage());
+        }
+
+        return groups;
+    }
     public void deleteGroup(String groupId) {
         dbWorker.submitTask(() -> {
             String sql = "DELETE FROM groups WHERE id = ?";
@@ -658,8 +667,26 @@ public class storageManager {
             }
         });
     }
+    public void deleteAllGroups() {
+        dbWorker.submitTask(() -> {
+            String sql = "DELETE FROM groups";
+
+            try (Connection conn = DriverManager.getConnection(DATABASE_URL);
+                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+                int rows = pstmt.executeUpdate();
+                System.out.println("🧹 Deleted all " + rows + " item-group links.");
+
+            } catch (SQLException e) {
+                System.out.println("❌ Error deleting item-group links: " + e.getMessage());
+            }
+        });
+    }
 
 
+
+
+    // 👥📦 Group to Item Links Management
     public void linkItemToGroups(String itemID, List<String> groupIDs) {
         dbWorker.submitTask(() -> {
             String sql = "INSERT OR IGNORE INTO item_groups (itemID, groupID, last_uploaded) VALUES (?, ?, ?)";
@@ -680,7 +707,6 @@ public class storageManager {
             }
         });
     }
-
     public List<String> getGroupIDsForItem(String itemID) {
         List<String> groupIDs = new ArrayList<>();
         String sql = "SELECT groupID FROM item_groups WHERE itemID = ?";
@@ -700,7 +726,6 @@ public class storageManager {
 
         return groupIDs;
     }
-
     public void updateItemGroupLinks(String itemID, List<String> newGroupIDs) {
         dbWorker.submitTask(() -> {
             try (Connection conn = DriverManager.getConnection(DATABASE_URL)) {
@@ -749,8 +774,6 @@ public class storageManager {
             }
         });
     }
-
-
     public List<Group> getGroupsForItem(String itemId) {
         List<Group> groups = new ArrayList<>();
         String sql = "SELECT g.* FROM groups g " +
@@ -781,7 +804,6 @@ public class storageManager {
 
         return groups;
     }
-
     public java.time.LocalDateTime getLastUploadTime(String itemId, String groupId) {
         String sql = "SELECT last_uploaded FROM item_groups WHERE itemID = ? AND groupID = ?";
 
@@ -802,7 +824,6 @@ public class storageManager {
 
         return null;
     }
-
     public LocalDateTime getGroupWideLastUpload(String groupId) {
         String sql = "SELECT MAX(last_uploaded) AS latest FROM item_groups WHERE groupID = ?";
 
@@ -822,7 +843,6 @@ public class storageManager {
 
         return null;
     }
-
     public void updateItemGroupLastUploaded(String itemId, String groupId, java.time.LocalDateTime time) {
         dbWorker.submitTask(() -> {
             String sql = "UPDATE item_groups SET last_uploaded = ? WHERE itemID = ? AND groupID = ?";
@@ -841,8 +861,6 @@ public class storageManager {
             }
         });
     }
-
-
     public List<Item> getEligibleItems() {
         List<Item> eligibleItems = new ArrayList<>();
         String userID = getUserID();
@@ -884,53 +902,6 @@ public class storageManager {
 
         return eligibleItems;
     }
-
-
-    public List<Group> getGroupsForUser(String userID) {
-        List<Group> groups = new ArrayList<>();
-
-        if (userID == null) {
-            System.out.println("⚠️ Cannot fetch groups: userID is null.");
-            return groups;
-        }
-
-        String sql = "SELECT * FROM groups WHERE userID = ?";
-
-        try (Connection conn = DriverManager.getConnection(DATABASE_URL);
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            pstmt.setString(1, userID);
-            ResultSet rs = pstmt.executeQuery();
-
-            while (rs.next()) {
-                Group group = new Group(
-                        rs.getString("name"),
-                        rs.getInt("interval"),
-                        rs.getInt("startHour"),
-                        rs.getInt("startMinute"),
-                        rs.getInt("endHour"),
-                        rs.getInt("endMinute")
-                );
-                group.setId(rs.getString("id"));
-
-                Timestamp ts = rs.getTimestamp("last_uploaded");
-                if (ts != null) {
-                    group.setLastUpload(ts.toLocalDateTime());
-                }
-
-                groups.add(group);
-            }
-
-            System.out.println("✅ Retrieved " + groups.size() + " groups for user.");
-        } catch (SQLException e) {
-            System.out.println("❌ Error fetching groups for user: " + e.getMessage());
-        }
-
-        return groups;
-    }
-
-
-
     public  List<Group> getEligibleGroupsForItem(Item item){
         String itemId = item.getId();
         List<Group> groups = getGroupsForItem(itemId);
@@ -946,8 +917,6 @@ public class storageManager {
         }
         return eligibleGroups;
     }
-
-
     public Boolean checkPriorityPass(LocalDateTime lastUploaded, LocalDateTime now, int priority){
         if (lastUploaded == null) {
             System.out.println("⏱️ Item has never been sent to this group. Passing by default.");
@@ -975,45 +944,6 @@ public class storageManager {
         }
         return true;
     }
-
-
-    public void deleteAllGroups() {
-        dbWorker.submitTask(() -> {
-            String sql = "DELETE FROM groups";
-
-            try (Connection conn = DriverManager.getConnection(DATABASE_URL);
-                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-                int rows = pstmt.executeUpdate();
-                System.out.println("🧹 Deleted all " + rows + " item-group links.");
-
-            } catch (SQLException e) {
-                System.out.println("❌ Error deleting item-group links: " + e.getMessage());
-            }
-        });
-    }
-
-
-    public void deleteItemGroupLink(String groupID, String itemID) {
-        dbWorker.submitTask(() -> {
-            String sql = "DELETE FROM item_groups WHERE itemID = ? AND groupID = ?";
-
-            try (Connection conn = DriverManager.getConnection(DATABASE_URL);
-                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-                pstmt.setString(1, itemID);
-                pstmt.setString(2, groupID);
-                int rowsDeleted = pstmt.executeUpdate();
-
-                System.out.println("✅ Deleted " + rowsDeleted + " item-group link(s) for itemID: " + itemID + ", groupID: " + groupID);
-
-            } catch (SQLException e) {
-                System.out.println("❌ Error deleting item-group link: " + e.getMessage());
-            }
-        });
-    }
-
-
     public void deleteAllItemGroupLinks() {
         dbWorker.submitTask(() -> {
             String sql = "DELETE FROM item_groups";
