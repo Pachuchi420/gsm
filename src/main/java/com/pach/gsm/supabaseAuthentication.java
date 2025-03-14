@@ -72,6 +72,7 @@ public class supabaseAuthentication {
 
                         // ✅ Sync failed items AFTER database reinitialization
                         localStorage.syncFailedItems();
+                        localStorage.syncPendingUpdates();
 
 
                         javafx.application.Platform.runLater(() -> {

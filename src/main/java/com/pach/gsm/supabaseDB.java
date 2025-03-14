@@ -179,7 +179,7 @@ public class supabaseDB {
         jsonBuilder.append("\"reservation_hour\":").append(item.getReservation().getHour()).append(",");
         jsonBuilder.append("\"reservation_minute\":").append(item.getReservation().getMinute()).append(",");
         jsonBuilder.append("\"supabaseSync\":").append(item.getSupabaseSync());
-        jsonBuilder.append("}"); // ✅ Ensuring last field doesn't have a comma
+        jsonBuilder.append("}");
 
         String jsonRequest = jsonBuilder.toString();
         RequestBody body = RequestBody.create(jsonRequest, MediaType.get("application/json"));

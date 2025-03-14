@@ -152,7 +152,8 @@ public class storageManager {
                     "reservation_hour INTEGER," +
                     "reservation_minute INTEGER," +
                     "supabaseSync INTEGER DEFAULT 0,"+
-                    "toDelete INTEGER DEFAULT 0);";
+                    "toDelete INTEGER DEFAULT 0," +
+                    "toUpdate INTEGER DEFAULT 0);";
 
             String sqlGroup = "CREATE TABLE IF NOT EXISTS groups (" +
                     "id TEXT PRIMARY KEY," +
@@ -246,6 +247,14 @@ public class storageManager {
         });
     }
     public void updateItemLocal(Item item) {
+
+        if (!supabaseAuthentication.checkIfOnline()){
+            System.out.println("❌ Offline update! Marking item for Supabase sync: " + item.getId());
+            item.setToUpdate(true);
+            item.setSupabaseSync(false);
+        }
+
+
         dbWorker.submitTask(() -> {
             String sql = "UPDATE items SET name = ?, description = ?, imagedata = ?, price = ?, currency = ?, date = ?, sold = ?, uploaddate = ?, priority = ?, " +
                     "reservation_buyer = ?, reservation_place = ?, reservation_date = ?, reservation_reserved = ?, reservation_hour = ?, reservation_minute = ?, supabaseSync = ?, toDelete = ?, toUpdate = ? " +
@@ -286,10 +295,11 @@ public class storageManager {
                 int rowsUpdated = pstmt.executeUpdate();
 
                 if (rowsUpdated > 0) {
-                    System.out.println("✅ Item updated in local database: " + item.getId() + " | supabaseSync: " + item.getSupabaseSync());
+                    System.out.println("✅ Item updated in local database: " + item.getId());
                 } else {
-                    System.out.println("⚠️ No item found with ID: " + item.getId() + " | Update failed.");
+                    System.out.println("⚠️ No item found with ID: " + item.getId());
                 }
+
             } catch (SQLException e) {
                 System.out.println("❌ Error updating item in local database: " + e.getMessage());
             }
@@ -319,6 +329,7 @@ public class storageManager {
                     item.setSold(rs.getBoolean("sold"));
                     item.setSupabaseSync(rs.getInt("supabaseSync") == 1);
                     item.setToDelete(rs.getInt("toDelete") == 1);
+                    item.setToUpdate(rs.getInt("toUpdate") == 1);
                     items.add(item);
                 }
 
@@ -433,7 +444,14 @@ public class storageManager {
                 item.setSupabaseSync(false);
 
                 // 🔄 Attempt to sync with Supabase
-                boolean success = supabaseDB.addItem(item.getUserID(), item);
+                boolean exists = supabaseDB.doesItemExist(item.getId());
+                boolean success;
+
+                if (exists) {
+                    success = supabaseDB.updateItem(item.getUserID(), item);
+                } else {
+                    success = supabaseDB.addItem(item.getUserID(), item);
+                }
 
                 if (success) {
                     System.out.println("✅ Successfully re-synced item: " + item.getId());
@@ -450,6 +468,45 @@ public class storageManager {
             System.out.println("❌ Error syncing failed items: " + e.getMessage());
         }
     }
+
+    public void syncPendingUpdates() {
+        String sql = "SELECT * FROM items WHERE toUpdate = 1 AND supabaseSync = 0";
+
+        try (Connection conn = DriverManager.getConnection(DATABASE_URL);
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+
+            while (rs.next()) {
+                Item item = new Item(
+                        rs.getString("name"),
+                        rs.getString("description"),
+                        rs.getBytes("imagedata"),
+                        rs.getInt("price"),
+                        rs.getString("currency"),
+                        rs.getInt("priority")
+                );
+                item.setId(rs.getString("id"));
+                item.setUserID(rs.getString("userID"));
+
+                boolean success = supabaseDB.updateItem(item.getUserID(), item);
+
+                if (success) {
+                    System.out.println("✅ Successfully updated item: " + item.getId());
+
+                    item.setToUpdate(false);
+                    item.setSupabaseSync(true);
+                    updateItemLocal(item);
+                    supabaseDB.updateItem(item.getUserID(), item);
+                } else {
+                    System.out.println("⚠️ Failed to update item: " + item.getId());
+                }
+            }
+
+        } catch (SQLException e) {
+            System.out.println("❌ Error syncing pending updates: " + e.getMessage());
+        }
+    }
+
     public void deleteToDeleteItems() {
         dbWorker.submitTask(() -> {
             String sql = "DELETE FROM items WHERE toDelete = 1";
@@ -465,6 +522,8 @@ public class storageManager {
             }
         });
     }
+
+
 
 
 
