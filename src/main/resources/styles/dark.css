@@ -676,3 +676,99 @@
 .sync-false{
     -fx-icon-color: #ff6666;
 }
+
+/* === TableView Scrollbar Styling === */
+
+/* Make the scroll bar slim */
+.table-view .scroll-bar:vertical {
+    -fx-pref-width: 6px;
+    -fx-background-color: transparent;
+}
+
+.table-view .scroll-bar:horizontal {
+    -fx-pref-height: 6px;
+    -fx-background-color: transparent;
+}
+
+/* Scroll track - transparent so only thumb is visible */
+.table-view .scroll-bar .track {
+    -fx-background-color: transparent;
+}
+
+/* Scroll thumb - subtle, rounded */
+.table-view .scroll-bar .thumb {
+    -fx-background-color: #6c6b69;
+    -fx-background-radius: 6px;
+}
+
+/* Hover effect for thumb */
+.table-view .scroll-bar .thumb:hover {
+    -fx-background-color: #8c8c8c;
+}
+
+/* Pressed thumb */
+.table-view .scroll-bar .thumb:pressed {
+    -fx-background-color: #aaaaaa;
+}
+
+/* Remove arrows (increment/decrement buttons) */
+.table-view .scroll-bar .increment-button,
+.table-view .scroll-bar .decrement-button {
+    -fx-shape: "";
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+    -fx-border-color: transparent;
+    -fx-max-height: 0;
+    -fx-pref-height: 0;
+    -fx-min-height: 0;
+    -fx-max-width: 0;
+    -fx-pref-width: 0;
+    -fx-min-width: 0;
+    -fx-opacity: 0;
+}
+
+.text-area {
+    -fx-background-color: #363737;
+    -fx-border-color: #444545;
+    -fx-border-width: 1px;
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+    -fx-text-fill: #999a9a;
+    -fx-effect: none;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+}
+
+.text-area .content {
+    -fx-background-color: #363737;
+    -fx-background-radius: 5px;
+    -fx-padding: 5px;
+    
+}
+
+/* Focus state - clean and matching */
+.text-area:focused {
+    -fx-border-color: #439329;
+}
+
+.text-area:focused .content {
+    -fx-background-color: #444545;
+}
+
+/* Optional: placeholder style if using promptText */
+.text-area .text {
+    -fx-fill: #999a9a;
+}
+
+
+.text-area .viewport {
+    -fx-background-color: transparent;
+}
+
+.text-area .scroll-pane {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+    -fx-background-insets: 0;
+    -fx-border-color: transparent;
+    -fx-background-radius: 5px;
+}
