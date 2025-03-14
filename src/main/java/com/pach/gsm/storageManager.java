@@ -20,17 +20,11 @@ public class storageManager {
 
     private static final String SECRET_KEY = "0123456789abcdef0123456789abcdef"; // 32-char AES key
     private static final String ALGORITHM = "AES";
-    private static final String FILE_PATH = "local_items.json";
     private static String DATABASE_URL = "jdbc:sqlite:gsmLocal.db";
     private static storageManager instance;
-
-
-    private final Gson gson = new Gson();
     private final Preferences prefs;
-
     private Boolean dbReady = false;
     private static DBWorker dbWorker = new DBWorker();
-    private List<Item> itemList;
 
 
     private storageManager() {
@@ -218,8 +212,8 @@ public class storageManager {
     public void addItemLocal(Item item) {
         dbWorker.submitTask(() -> {
         String sql = "INSERT INTO items (id, userID, name, description, imagedata, price, currency, date, sold, uploaddate, priority, " +
-                "reservation_buyer, reservation_place, reservation_date, reservation_reserved, reservation_hour, reservation_minute, supabaseSync, toDelete) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                "reservation_buyer, reservation_place, reservation_date, reservation_reserved, reservation_hour, reservation_minute, supabaseSync, toDelete, toUpdate) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = DriverManager.getConnection(DATABASE_URL);
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -243,6 +237,7 @@ public class storageManager {
             pstmt.setInt(17, item.getReservation().getMinute());
             pstmt.setInt(18, item.getSupabaseSync() ? 1:0);
             pstmt.setInt(19, item.getToDelete() ? 1:0);
+            pstmt.setInt(20, item.getToUpdate() ? 1:0);
             pstmt.executeUpdate();
             System.out.println("✅ Item added to local database!");
         } catch (SQLException e) {
@@ -253,7 +248,7 @@ public class storageManager {
     public void updateItemLocal(Item item) {
         dbWorker.submitTask(() -> {
             String sql = "UPDATE items SET name = ?, description = ?, imagedata = ?, price = ?, currency = ?, date = ?, sold = ?, uploaddate = ?, priority = ?, " +
-                    "reservation_buyer = ?, reservation_place = ?, reservation_date = ?, reservation_reserved = ?, reservation_hour = ?, reservation_minute = ?, supabaseSync = ?, toDelete = ? " +
+                    "reservation_buyer = ?, reservation_place = ?, reservation_date = ?, reservation_reserved = ?, reservation_hour = ?, reservation_minute = ?, supabaseSync = ?, toDelete = ?, toUpdate = ? " +
                     "WHERE id = ? AND userID = ?";  // Ensure we update the correct item
 
             try (Connection conn = DriverManager.getConnection(DATABASE_URL);
@@ -280,12 +275,13 @@ public class storageManager {
                 // Sync status
                 pstmt.setInt(16, item.getSupabaseSync() ? 1 : 0);
 
-                // Delete status
+                // Delete & Update status
                 pstmt.setInt(17, item.getToDelete() ? 1 : 0);
+                pstmt.setInt(18, item.getToUpdate() ? 1 : 0);
 
                 // Identify which item to update
-                pstmt.setString(18, item.getId());
-                pstmt.setString(19, item.getUserID());
+                pstmt.setString(19, item.getId());
+                pstmt.setString(20, item.getUserID());
 
                 int rowsUpdated = pstmt.executeUpdate();
 
@@ -469,6 +465,7 @@ public class storageManager {
             }
         });
     }
+
 
 
 

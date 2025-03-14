@@ -27,6 +27,7 @@ public class Item implements Serializable {
     private int priority;
     private Boolean sold = false;
     private Boolean toDelete = false;
+    private Boolean toUpdate = false;
     private Boolean supabaseSync = false;
 
     public Item(String name, String description, byte[] imageData, int price, String currency, int priority) {
@@ -220,6 +221,15 @@ public class Item implements Serializable {
 
     public void setToDelete(Boolean setToDelete) {
         this.toDelete = setToDelete;
+    }
+
+
+    public Boolean getToUpdate() {
+        return toUpdate;
+    }
+
+    public void setToUpdate(Boolean toUpdate) {
+        this.toUpdate = toUpdate;
     }
 
 }
