@@ -54,7 +54,8 @@ public class listViewController {
 
 
     @FXML
-    private TableColumn<Item, Integer>  itemColumnPriority, itemColumnPrice;;
+    private TableColumn<Item, Integer> itemColumnPriority, itemColumnPrice;
+    ;
 
 
     @FXML
@@ -68,7 +69,7 @@ public class listViewController {
     private TextArea itemAddDescription;
 
     @FXML
-    private ToggleButton itemAddPriorityHigh, itemAddPriorityMedium,itemAddPriorityLow;
+    private ToggleButton itemAddPriorityHigh, itemAddPriorityMedium, itemAddPriorityLow;
 
     @FXML
     private RadioButton itemAddCurrencyUSD, itemAddCurrencyMXN, itemAddCurrencyEUR;
@@ -87,7 +88,6 @@ public class listViewController {
 
 
     private static DBWorker dbWorker = new DBWorker();
-
 
 
     // Group Management
@@ -137,7 +137,6 @@ public class listViewController {
         ToggleHorizontalPane whatsAppToggle = new ToggleHorizontalPane(whatsAppPane, mainPane, true);
 
 
-
         currencyGroup = new ToggleGroup();
         itemAddCurrencyUSD.setToggleGroup(currencyGroup);
         itemAddCurrencyMXN.setToggleGroup(currencyGroup);
@@ -162,28 +161,28 @@ public class listViewController {
                     if (addItemPane.isVisible()) {
                         cancelAddItem(addItemToggle);
                     }
-                    if (whatsAppPane.isVisible()){
+                    if (whatsAppPane.isVisible()) {
                         closeWhatsappPane(whatsAppToggle);
                     }
                     break;
                 case ENTER:
-                    if(whatsAppPane.isVisible()){
+                    if (whatsAppPane.isVisible()) {
                         addGroup(userID);
                         break;
                     }
-                    if(addItemPane.isVisible()){
+                    if (addItemPane.isVisible()) {
                         addItem(userID, addItemToggle);
                         break;
                     }
                     openAddItemPane(addItemToggle);
                     break;
                 case BACK_SPACE:
-                    if(whatsAppPane.isVisible()){
+                    if (whatsAppPane.isVisible()) {
                         deleteGroup();
                         break;
                     }
 
-                    if(itemList.getSelectionModel().getSelectedItems().size() > 1){
+                    if (itemList.getSelectionModel().getSelectedItems().size() > 1) {
                         ObservableList<Item> selectedItems = itemList.getSelectionModel().getSelectedItems();
                         openRemoveMultipleItemsDialog(selectedItems);
                         break;
@@ -192,7 +191,7 @@ public class listViewController {
                     openRemoveItemDialog();
                     break;
                 case W:
-                    if(!addItemPane.isVisible()){
+                    if (!addItemPane.isVisible()) {
                         openWhatsappPane(whatsAppToggle);
                     }
                 default:
@@ -254,7 +253,6 @@ public class listViewController {
         });
 
 
-
         groupName.textProperty().addListener((obs, oldText, newText) -> {
             if (newText == null || newText.isEmpty()) {
                 groupList.getSelectionModel().clearSelection();
@@ -283,7 +281,6 @@ public class listViewController {
     }
 
 
-
     private void populateGroupFields(Group group) {
         groupInterval.setText(String.valueOf(group.getInterval()));
         groupStartHour.setValue(group.getStartHour());
@@ -293,7 +290,7 @@ public class listViewController {
     }
 
     private void openWhatsAppLogoutDialog() {
-        if (!Chatbot.getInstance().isLoggedIn()){
+        if (!Chatbot.getInstance().isLoggedIn()) {
             warningMessageWhatsAppLogout.setText("No session to log out of!");
             effects.vanishText(warningMessageWhatsAppLogout, 2);
             return;
@@ -310,7 +307,6 @@ public class listViewController {
             controller.setCancelButtonText("Actually, no");
 
 
-
             Stage dialogStage = new Stage();
             dialogStage.setResizable(false);
             dialogStage.setTitle("Log out from WhatsApp?");
@@ -318,7 +314,7 @@ public class listViewController {
             dialogStage.setScene(new Scene(dialogRoot));
             dialogStage.showAndWait();
 
-            if (controller.getGoAhead()){
+            if (controller.getGoAhead()) {
                 Chatbot chatbotInstance = Chatbot.getInstance();
                 chatbotInstance.logout();
                 setChatBot(false);
@@ -381,7 +377,7 @@ public class listViewController {
         chatBotThread.start();
     }
 
-    public void refreshQRImage(){
+    public void refreshQRImage() {
 
     }
 
@@ -397,7 +393,6 @@ public class listViewController {
             controller.setCancelButtonText("Not really.");
 
 
-
             Stage dialogStage = new Stage();
             dialogStage.setResizable(false);
             dialogStage.setTitle("Log out?");
@@ -405,7 +400,7 @@ public class listViewController {
             dialogStage.setScene(new Scene(dialogRoot));
             dialogStage.showAndWait();
 
-            if (controller.getGoAhead()){
+            if (controller.getGoAhead()) {
                 logout();
             }
         } catch (IOException e) {
@@ -417,7 +412,7 @@ public class listViewController {
     private void openEditItemPane(ToggleVerticalPane addItemToggle) {
         Item selectedItem = itemList.getSelectionModel().getSelectedItem();
 
-        if (selectedItem == null){
+        if (selectedItem == null) {
             itemListWarning.setText("Select an item to edit!");
             effects.vanishText(itemListWarning, 2);
             return;
@@ -555,9 +550,10 @@ public class listViewController {
             clearAddItemFields();
         });
     }
+
     private void openRemoveItemDialog() {
 
-        if (itemList.getSelectionModel().isEmpty()){
+        if (itemList.getSelectionModel().isEmpty()) {
             itemListWarning.setText("Select an item to remove!");
             effects.vanishText(itemListWarning, 2);
             return;
@@ -575,7 +571,6 @@ public class listViewController {
             controller.setCancelButtonText("Nevermind");
 
 
-
             Stage dialogStage = new Stage();
             dialogStage.setResizable(false);
             dialogStage.setTitle("Remove Item");
@@ -583,9 +578,9 @@ public class listViewController {
             dialogStage.setScene(new Scene(dialogRoot));
             dialogStage.showAndWait();
 
-            if (controller.getGoAhead()){
+            if (controller.getGoAhead()) {
                 storageManager storage = storageManager.getInstance();
-                if (supabaseAuthentication.checkIfOnline()){
+                if (supabaseAuthentication.checkIfOnline()) {
                     System.out.println("🚨Deleting item!");
                     storage.deleteItem(selectedItem.getId());
                     refreshTable(storage.getUserID());
@@ -650,19 +645,19 @@ public class listViewController {
         String priceAsString = itemAddPrice.getText();
         int price = 0;
 
-        if(name.isEmpty()){
+        if (name.isEmpty()) {
             warningAddMessage.setText("Item name can't be empty!");
             effects.vanishText(warningAddMessage, 2);
             return;
         }
 
-        if(description.isEmpty()){
+        if (description.isEmpty()) {
             warningAddMessage.setText("Item description can't be empty!");
             effects.vanishText(warningAddMessage, 2);
             return;
         }
 
-        if(priceAsString.isEmpty()){
+        if (priceAsString.isEmpty()) {
             warningAddMessage.setText("Item price can't be empty!");
             effects.vanishText(warningAddMessage, 2);
             return;
@@ -704,7 +699,7 @@ public class listViewController {
         }
 
 
-        if(itemAddImageView.getImage() == null){
+        if (itemAddImageView.getImage() == null) {
             warningAddMessage.setText("Select at least one image!");
             effects.vanishText(warningAddMessage, 2);
             return;
@@ -719,8 +714,6 @@ public class listViewController {
         } else if (itemAddPriorityHigh.isSelected()) {
             priority = 1;
         }
-
-
 
 
         Item newItem = new Item(name, description, itemAddImageData, price, currency, priority);
@@ -752,9 +745,6 @@ public class listViewController {
     }
 
 
-
-
-
     private void setupTableColumns() {
         itemColumnID.setCellValueFactory(cellData -> new SimpleObjectProperty<>(cellData.getValue().getId()));
         itemColumnName.setCellValueFactory(cellData -> new SimpleObjectProperty<>(cellData.getValue().getName()));
@@ -768,6 +758,30 @@ public class listViewController {
         itemColumnReserved.setCellValueFactory(cellData -> new SimpleObjectProperty<>(cellData.getValue().isReserved()));
         itemColumnSold.setCellValueFactory(cellData -> new SimpleObjectProperty<>(cellData.getValue().getSold()));
         itemColumnSync.setCellValueFactory(cellData -> new SimpleObjectProperty<>(cellData.getValue().getSupabaseSync()));
+        itemColumnSync.setCellFactory(column -> new TableCell<>() {
+            private final FontIcon syncIcon = new FontIcon();
+
+            {
+                syncIcon.setIconSize(16); // Optional: adjust icon size
+            }
+
+            @Override
+            protected void updateItem(Boolean isSynced, boolean empty) {
+                super.updateItem(isSynced, empty);
+
+                if (empty || isSynced == null) {
+                    setGraphic(null);
+                    return;
+                }
+
+                syncIcon.setIconLiteral(isSynced ? "fas-check-circle" : "fas-times-circle");
+                syncIcon.getStyleClass().clear();
+                syncIcon.getStyleClass().add(isSynced ? "sync-true" : "sync-false");
+
+                setGraphic(syncIcon);
+            }
+        });
+
         groupNameColumn.setCellValueFactory(cellData -> new SimpleObjectProperty<>(cellData.getValue().getName()));
         groupIntervalColumn.setCellValueFactory(cellData -> new SimpleStringProperty(String.valueOf(cellData.getValue().getInterval())));
         groupStartTimeColumn.setCellValueFactory(cellData -> new SimpleObjectProperty<>(cellData.getValue().getStartTime()));
@@ -777,7 +791,7 @@ public class listViewController {
     private void logout() throws IOException {
         supabaseAuthentication instance = supabaseAuthentication.getInstance();
         if (instance.logoutUser()) {
-            if(Chatbot.getInstance().isLoggedIn()){
+            if (Chatbot.getInstance().isLoggedIn()) {
                 Chatbot.getInstance().logout();
             }
             System.out.println("🔑 User logged out. Redirecting to loginView.fxml...");
@@ -796,7 +810,7 @@ public class listViewController {
     }
 
     private void cancelAddItem(ToggleVerticalPane addItemToggle) {
-        addItemToggle.togglePane(addItemPane, null,0.35);
+        addItemToggle.togglePane(addItemPane, null, 0.35);
         clearAddItemFields();
     }
 
@@ -877,7 +891,7 @@ public class listViewController {
     }
 
 
-    private void updateItemOnSupabase(Item givenItem){
+    private void updateItemOnSupabase(Item givenItem) {
         if (supabaseAuthentication.checkIfOnline()) {
             supabaseDB.updateItem(storageManager.getInstance().getUserID(), givenItem);
         }
@@ -903,7 +917,7 @@ public class listViewController {
     }
 
 
-    private void populateGroupComboBoxes(){
+    private void populateGroupComboBoxes() {
         for (int i = 0; i < 24; i++) {
             groupStartHour.getItems().add(i);
             groupEndHour.getItems().add(i);
@@ -913,7 +927,6 @@ public class listViewController {
             groupStartMinute.getItems().add(i);
             groupEndMinute.getItems().add(i);
         }
-
 
 
     }
@@ -926,20 +939,20 @@ public class listViewController {
         Integer endHour = groupEndHour.getValue();
         Integer endMinute = groupEndMinute.getValue();
 
-        if(name.isEmpty() || intervalString.isEmpty() || startHour == null ||
-           startMinute == null || endHour == null || endMinute == null) {
+        if (name.isEmpty() || intervalString.isEmpty() || startHour == null ||
+                startMinute == null || endHour == null || endMinute == null) {
             groupWarningMessage.setText("Please fill in all fields!");
             effects.vanishText(groupWarningMessage, 2);
         }
 
-        if(storageManager.getInstance().getGroupByName(name) != null){
+        if (storageManager.getInstance().getGroupByName(name) != null) {
             groupWarningMessage.setText("Group already added!");
             effects.vanishText(groupWarningMessage, 2);
             groupName.clear();
             return;
         }
 
-        if(Chatbot.getApi().store().findChatByName(name).isEmpty()){
+        if (Chatbot.getApi().store().findChatByName(name).isEmpty()) {
             groupWarningMessage.setText("No contact or group found with that name!");
             effects.vanishText(groupWarningMessage, 2);
             groupName.clear();
@@ -976,7 +989,7 @@ public class listViewController {
     }
 
     private void deleteGroup() {
-        if (groupList.getSelectionModel().isEmpty()){
+        if (groupList.getSelectionModel().isEmpty()) {
             groupWarningMessage.setText("Select an item to remove!");
             effects.vanishText(groupWarningMessage, 2);
             return;
@@ -1003,11 +1016,6 @@ public class listViewController {
 
         refreshTable(userID);
     }
-
-
-
-
-
 
 
     private void updateGroup() {
@@ -1106,10 +1114,10 @@ public class listViewController {
         itemAddGroupsList.setItems(groupCheckboxes);
     }
 
-    public void setChatBot(Boolean state){
+    public void setChatBot(Boolean state) {
         Chatbot.getInstance().setEnabled(state);
 
-        if(state){
+        if (state) {
             System.out.println("✅ Enabling chatbot!");
             startSendingMessages();
         } else {
@@ -1147,12 +1155,12 @@ public class listViewController {
 
                         List<Group> groups = storageManager.getInstance().getEligibleGroupsForItem(item);
 
-                        for (Group group : groups){
+                        for (Group group : groups) {
                             System.out.println("--------------------------------------");
                             System.out.println("👥 Group: " + group.getName());
 
                             // ✅ Check 1: Time frame
-                            if(!group.isNowWithinTimeWindow()){
+                            if (!group.isNowWithinTimeWindow()) {
                                 System.out.println("❌ Outside our group's start and end times!");
                                 continue;
                             }
@@ -1175,8 +1183,8 @@ public class listViewController {
                                     .media(item.getImageData())
                                     .caption(
                                             "• " + item.getName() + "\n" +
-                                            "• " + item.getDescription() + "\n" +
-                                            "• " + item.getPrice() + " " + item.getCurrency()
+                                                    "• " + item.getDescription() + "\n" +
+                                                    "• " + item.getPrice() + " " + item.getCurrency()
                                     )
                                     .build();
 
@@ -1283,8 +1291,6 @@ public class listViewController {
             e.printStackTrace();
         }
     }
-
-
 
 
 }

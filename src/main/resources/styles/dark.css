@@ -667,3 +667,12 @@
     -fx-text-fill: #91e291;
     -fx-effect: dropshadow(gaussian, rgba(69, 147, 43, 0.7), 10, 0.5, 0, 0);
 }
+
+
+.sync-true{
+    -fx-icon-color: #4f93f1;
+}
+
+.sync-false{
+    -fx-icon-color: #ff6666;
+}
