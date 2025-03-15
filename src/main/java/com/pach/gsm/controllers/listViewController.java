@@ -294,6 +294,7 @@ public class listViewController {
         }
 
         storageManager.getInstance().updateItemLocal(selectedItem);
+        updateItemOnSupabase(selectedItem);
         refreshTable(selectedItem.getUserID());
     }
 
