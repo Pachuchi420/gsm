@@ -89,6 +89,8 @@ public class listViewController {
     private ToggleGroup priorityGroup;
     private byte[] itemAddImageData;
 
+    private Item itemBeingEdited = null;
+
 
     private static DBWorker dbWorker = new DBWorker();
 
@@ -117,6 +119,17 @@ public class listViewController {
 
     private Thread botThread;
 
+
+    // Reserve Item
+
+    @FXML
+    AnchorPane reserveItemPane;
+
+    @FXML
+    Button reserveItem, closeReservePane, confirmReserveItem, cancelReserveitem;
+
+
+
     @FXML
     public void initialize() throws IOException {
         storageManager storage = storageManager.getInstance();
@@ -138,6 +151,9 @@ public class listViewController {
 
         whatsAppPane.setVisible(false);
         ToggleHorizontalPane whatsAppToggle = new ToggleHorizontalPane(whatsAppPane, mainPane, true);
+
+        reserveItemPane.setVisible(false);
+        ToggleVerticalPane reserveItemToggle = new ToggleVerticalPane(reserveItemPane, mainPane, true);
 
 
         currencyGroup = new ToggleGroup();
@@ -167,14 +183,23 @@ public class listViewController {
                     if (whatsAppPane.isVisible()) {
                         closeWhatsappPane(whatsAppToggle);
                     }
+
+                    if (reserveItemPane.isVisible()) {
+                        cancelReservation(reserveItemToggle);
+                    }
                     break;
                 case ENTER:
                     if (whatsAppPane.isVisible()) {
                         addGroup(userID);
                         break;
                     }
+
                     if (addItemPane.isVisible()) {
-                        addItem(userID, addItemToggle);
+                        if (itemBeingEdited != null) {
+                            updateItem(itemBeingEdited, addItemToggle);
+                        } else {
+                            addItem(userID, addItemToggle);
+                        }
                         break;
                     }
                     openAddItemPane(addItemToggle);
@@ -199,6 +224,13 @@ public class listViewController {
                     }
                 default:
                     break;
+
+                case R:
+                    if(!reserveItemPane.isVisible()){
+                        openReserveItemPane(reserveItemToggle);
+                    }
+
+
             }
         });
 
@@ -282,10 +314,36 @@ public class listViewController {
         });
 
 
+        reserveItem.setOnAction(event -> openReserveItemPane(reserveItemToggle));
+        closeReservePane.setOnAction(event -> cancelReservation(reserveItemToggle));
+        cancelReserveitem.setOnAction(event -> cancelReservation(reserveItemToggle));
+
+
+    }
+
+    private void cancelReservation(ToggleVerticalPane reserveItemToggle) {
+        reserveItemToggle.togglePane(reserveItemPane, null, 0.35);
+    }
+
+    private void openReserveItemPane(ToggleVerticalPane reserveItemToggle) {
+        Item selectedItem = itemList.getSelectionModel().getSelectedItem();
+
+        if (selectedItem == null) {
+            itemListWarning.setText("Select an item to reserve!");
+            effects.vanishText(itemListWarning, 2);
+            return;
+        }
+        reserveItemToggle.togglePane(reserveItemPane, null, 0.35);
     }
 
     private void toggleSold() {
         Item selectedItem = itemList.getSelectionModel().getSelectedItem();
+
+        if (selectedItem == null) {
+            itemListWarning.setText("Select an item to sell!");
+            effects.vanishText(itemListWarning, 2);
+            return;
+        }
 
         if (selectedItem.getSold()) {
             selectedItem.setSold(false);
@@ -433,6 +491,7 @@ public class listViewController {
             return;
         }
 
+        itemBeingEdited = selectedItem;
         addItemTitle.setText("Edit Item");
         confirmAddItem.setText("Ok!");
         itemAddName.setText(selectedItem.getName());
@@ -562,8 +621,11 @@ public class listViewController {
         // Close the pane after updating
         addItemToggle.togglePane(addItemPane, () -> {
             System.out.println("✅ Item updated successfully!");
+            System.out.println("✅ Item updated successfully!");
             clearAddItemFields();
         });
+
+        itemBeingEdited = null;
     }
 
     private void openRemoveItemDialog() {
@@ -827,6 +889,7 @@ public class listViewController {
     private void cancelAddItem(ToggleVerticalPane addItemToggle) {
         addItemToggle.togglePane(addItemPane, null, 0.35);
         clearAddItemFields();
+
     }
 
     private void clearAddItemFields() {
@@ -837,6 +900,7 @@ public class listViewController {
         priorityGroup.selectToggle(null);
         itemAddImageView.setImage(null);
         itemAddImageData = null;
+        itemBeingEdited = null;
 
         for (CheckBox checkBox : itemAddGroupsList.getItems()) {
             checkBox.setSelected(false);

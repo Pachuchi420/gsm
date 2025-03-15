@@ -33,6 +33,7 @@
 
 .table-row-cell:selected{
     -fx-background-color: #45932b;
+    -fx-background-color: rgba(69, 147, 43, 0.65);
 }
 
 
@@ -670,7 +671,7 @@
 
 
 .sync-true{
-    -fx-icon-color: #4f93f1;
+    -fx-icon-color: #3980e5;
 }
 
 .sync-false{
