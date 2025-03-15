@@ -103,7 +103,7 @@ public class listViewController {
     private TextField groupName, groupInterval;
 
     @FXML
-    private ComboBox<Integer> groupStartHour, groupStartMinute, groupEndHour, groupEndMinute;
+    private ComboBox<Integer> groupStartHour, groupStartMinute, groupEndHour, groupEndMinute, reserveItemTimeHour, reserveItemTimeMinutes;
 
     @FXML
     private Button addGroup, removeGroup, updateGroup;
@@ -153,7 +153,7 @@ public class listViewController {
         ToggleHorizontalPane whatsAppToggle = new ToggleHorizontalPane(whatsAppPane, mainPane, true);
 
         reserveItemPane.setVisible(false);
-        ToggleVerticalPane reserveItemToggle = new ToggleVerticalPane(reserveItemPane, mainPane, true);
+        ToggleVerticalPane reserveItemToggle = new ToggleVerticalPane(reserveItemPane, mainPane, false);
 
 
         currencyGroup = new ToggleGroup();
@@ -1000,11 +1000,14 @@ public class listViewController {
         for (int i = 0; i < 24; i++) {
             groupStartHour.getItems().add(i);
             groupEndHour.getItems().add(i);
+            reserveItemTimeHour.getItems().add(i);
+
         }
 
         for (int i = 0; i < 60; i += 5) {
             groupStartMinute.getItems().add(i);
             groupEndMinute.getItems().add(i);
+            reserveItemTimeMinutes.getItems().add(i);
         }
 
 
