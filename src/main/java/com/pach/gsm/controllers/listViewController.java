@@ -153,7 +153,7 @@ public class listViewController {
         ToggleHorizontalPane whatsAppToggle = new ToggleHorizontalPane(whatsAppPane, mainPane, true);
 
         reserveItemPane.setVisible(false);
-        ToggleVerticalPane reserveItemToggle = new ToggleVerticalPane(reserveItemPane, mainPane, false);
+        ToggleVerticalPane reserveItemToggle = new ToggleVerticalPane(reserveItemPane, mainPane, true);
 
 
         currencyGroup = new ToggleGroup();

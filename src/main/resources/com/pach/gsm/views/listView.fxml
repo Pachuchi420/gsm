@@ -173,7 +173,7 @@
                         <Label fx:id="addItemTitle" />
                      </children>
                   </HBox>
-                  <HBox prefHeight="475.0" prefWidth="1000.0" spacing="10.0" VBox.vgrow="ALWAYS">
+                  <HBox alignment="CENTER" prefHeight="475.0" prefWidth="1000.0" spacing="10.0" VBox.vgrow="ALWAYS">
                      <children>
                         <VBox id="addItemLeftPanel" alignment="TOP_CENTER" maxWidth="720.0" prefHeight="480.0" prefWidth="520.0" HBox.hgrow="ALWAYS">
                            <HBox.margin>
@@ -241,11 +241,11 @@
                         </VBox>
                         <VBox alignment="CENTER" maxWidth="700.0" prefHeight="530.0" prefWidth="500.0" HBox.hgrow="ALWAYS">
                            <children>
-                              <HBox alignment="TOP_CENTER" prefHeight="275.0" prefWidth="363.0" VBox.vgrow="ALWAYS">
+                              <HBox alignment="CENTER" prefHeight="275.0" prefWidth="363.0" VBox.vgrow="ALWAYS">
                                  <children>
-                                    <AnchorPane id="thumbnail" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="353.0" prefWidth="387.0" HBox.hgrow="ALWAYS">
+                                    <AnchorPane id="thumbnail" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="353.0" prefWidth="387.0" HBox.hgrow="ALWAYS">
                                        <children>
-                                          <ImageView fx:id="itemAddImageView" fitHeight="250.0" fitWidth="250.0" layoutX="35.0" layoutY="25.0" pickOnBounds="true" preserveRatio="true" AnchorPane.bottomAnchor="25.0" AnchorPane.leftAnchor="35.0" AnchorPane.rightAnchor="35.0" AnchorPane.topAnchor="25.0" />
+                                          <ImageView fx:id="itemAddImageView" fitHeight="250.0" fitWidth="250.0" layoutX="69.0" layoutY="52.0" pickOnBounds="true" preserveRatio="true" AnchorPane.bottomAnchor="51.0" AnchorPane.leftAnchor="69.0" AnchorPane.rightAnchor="68.0" AnchorPane.topAnchor="52.0" />
                                        </children>
                                     </AnchorPane>
                                  </children>
@@ -253,7 +253,7 @@
                                     <Insets bottom="20.0" top="20.0" />
                                  </VBox.margin>
                               </HBox>
-                              <HBox alignment="CENTER" prefHeight="336.0" prefWidth="470.0">
+                              <HBox alignment="CENTER" prefHeight="336.0" prefWidth="470.0" VBox.vgrow="ALWAYS">
                                  <children>
                                     <ListView fx:id="itemAddGroupsList" prefHeight="151.0" prefWidth="470.0" HBox.hgrow="ALWAYS" />
                                  </children>
