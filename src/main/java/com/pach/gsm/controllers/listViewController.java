@@ -38,7 +38,10 @@ public class listViewController {
     private Label warningAddMessage, itemListWarning, addItemTitle, warningMessageWhatsAppLogout;
 
     @FXML
-    private Button logoutButton, addItem, closeAddItemPane, confirmAddItem, cancelAdditem, itemAddImage, removeItem, editItem, whatsappPane, closeWhatsappPane, whatsAppLogout, confirmWhatsapp;
+    private Button logoutButton, addItem, closeAddItemPane,
+                   confirmAddItem, cancelAdditem, itemAddImage,
+                   removeItem, editItem, whatsappPane, closeWhatsappPane,
+                   whatsAppLogout, confirmWhatsapp, sellItem;
 
     @FXML
     private AnchorPane addItemPane, whatsAppPane, mainPane;
@@ -202,6 +205,7 @@ public class listViewController {
 
         addItem.setOnAction(event -> openAddItemPane(addItemToggle));
         editItem.setOnAction(event -> openEditItemPane(addItemToggle));
+        sellItem.setOnAction(event -> toggleSold());
         removeItem.setOnAction(event -> openRemoveItemDialog());
         confirmAddItem.setOnAction(event -> addItem(userID, addItemToggle));
         closeAddItemPane.setOnAction(event -> cancelAddItem(addItemToggle));
@@ -278,6 +282,19 @@ public class listViewController {
         });
 
 
+    }
+
+    private void toggleSold() {
+        Item selectedItem = itemList.getSelectionModel().getSelectedItem();
+
+        if (selectedItem.getSold()) {
+            selectedItem.setSold(false);
+        } else {
+            selectedItem.setSold(true);
+        }
+
+        storageManager.getInstance().updateItemLocal(selectedItem);
+        refreshTable(selectedItem.getUserID());
     }
 
 
@@ -377,9 +394,6 @@ public class listViewController {
         chatBotThread.start();
     }
 
-    public void refreshQRImage() {
-
-    }
 
     private void openLogoutDialog() {
         try {
