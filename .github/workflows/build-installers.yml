@@ -37,12 +37,14 @@ jobs:
       - name: Extract app version from tag
         id: version
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+        shell: bash
 
-      - name: Set up jpackage path
+      - name: Set up jpackage path (macOS only)
         if: runner.os == 'macOS'
         run: echo "JAVA_HOME=$JAVA_HOME" >> $GITHUB_ENV
 
-      - name: Create native installer
+      - name: Create native installer (Linux and macOS)
+        if: runner.os != 'Windows'
         run: |
           mkdir dist
           jpackage \
@@ -50,8 +52,23 @@ jobs:
             --main-jar gsm-1.0-SNAPSHOT.jar \
             --main-class com.pach.gsm.Launcher \
             --name GSM \
-            --type ${{ runner.os == 'Windows' && 'exe' || runner.os == 'macOS' && 'dmg' || 'deb' }} \
+            --type ${{ runner.os == 'macOS' && 'dmg' || 'deb' }} \
             --dest dist \
+            --app-version "${{ steps.version.outputs.VERSION }}"
+        shell: bash
+
+      - name: Create native installer (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          mkdir dist
+          jpackage ^
+            --input target ^
+            --main-jar gsm-1.0-SNAPSHOT.jar ^
+            --main-class com.pach.gsm.Launcher ^
+            --name GSM ^
+            --type exe ^
+            --dest dist ^
             --app-version "${{ steps.version.outputs.VERSION }}"
 
       - name: Upload installers to GitHub Release
