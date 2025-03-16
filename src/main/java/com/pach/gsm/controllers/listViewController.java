@@ -5,6 +5,8 @@ import it.auties.whatsapp.model.message.standard.ImageMessageSimpleBuilder;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
+import javafx.scene.input.KeyEvent;
+import javafx.util.StringConverter;
 import org.kordamp.ikonli.javafx.FontIcon;
 import tools.*;
 import javafx.beans.property.SimpleObjectProperty;
@@ -100,7 +102,10 @@ public class listViewController {
     private Label groupWarningMessage;
 
     @FXML
-    private TextField groupName, groupInterval;
+    private TextField groupInterval;
+
+    @FXML
+    private ComboBox<String> groupName;
 
     @FXML
     private ComboBox<Integer> groupStartHour, groupStartMinute, groupEndHour, groupEndMinute;
@@ -306,31 +311,7 @@ public class listViewController {
         });
 
 
-        groupName.textProperty().addListener((obs, oldText, newText) -> {
-            if (newText == null || newText.isEmpty()) {
-                groupList.getSelectionModel().clearSelection();
-                return;
-            }
-
-            for (Group group : groupList.getItems()) {
-                if (group.getName().equalsIgnoreCase(newText.trim())) {
-                    groupList.getSelectionModel().select(group);
-                    populateGroupFields(group);
-                    return;
-                }
-            }
-
-            groupList.getSelectionModel().clearSelection();
-        });
-
-        groupList.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal != null) {
-                groupName.setText(newVal.getName());
-                populateGroupFields(newVal);
-            }
-        });
-
-
+        groupName.setEditable(true);
         reserveItem.setOnAction(event -> openReserveItemPane(reserveItemToggle));
         closeReservePane.setOnAction(event -> cancelReservation(reserveItemToggle));
         confirmReserveItem.setOnAction(event -> addReservation(reserveItemToggle));
@@ -1087,9 +1068,56 @@ public class listViewController {
 
 
     private void openWhatsappPane(ToggleHorizontalPane whatsAppToggle) {
+        groupName.setEditable(true);
+
+        ObservableList<String> allGroupNames = FXCollections.observableArrayList(
+                Chatbot.getInstance().getAllChats()
+        );
+
+        FilteredList<String> filteredGroupNames = new FilteredList<>(allGroupNames, s -> true);
+        groupName.setItems(filteredGroupNames);
+
+        groupName.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(String object) {
+                return object;
+            }
+
+            @Override
+            public String fromString(String string) {
+                return string; // ✅ This lets you type *anything*
+            }
+        });
+
+        // 🛠 Prevent ComboBox from doing weird things when typing space
+        groupName.getEditor().addEventFilter(KeyEvent.KEY_TYPED, event -> {
+            if (" ".equals(event.getCharacter())) {
+                // Append space manually
+                TextField editor = groupName.getEditor();
+                int caret = editor.getCaretPosition();
+                String text = editor.getText();
+                editor.setText(text.substring(0, caret) + " " + text.substring(caret));
+                editor.positionCaret(caret + 1);
+
+                event.consume(); // Stop JavaFX from doing its bugged default thing
+            }
+        });
+
+        // 💡 Filter suggestions
+        groupName.getEditor().textProperty().addListener((obs, oldText, newText) -> {
+            String typed = newText.toLowerCase();
+
+            filteredGroupNames.setPredicate(item ->
+                    typed.isEmpty() || item.toLowerCase().contains(typed)
+            );
+
+            if (!filteredGroupNames.isEmpty()) {
+                groupName.show();
+            }
+        });
+
         whatsAppToggle.togglePane(whatsAppPane, null);
     }
-
     private void closeWhatsappPane(ToggleHorizontalPane whatsAppToggle) {
         whatsAppToggle.togglePane(whatsAppPane, null);
     }
@@ -1113,7 +1141,7 @@ public class listViewController {
     }
 
     private void addGroup(String userID) {
-        String name = groupName.getText();
+        String name = groupName.getValue();
         String intervalString = groupInterval.getText();
         Integer startHour = groupStartHour.getValue();
         Integer startMinute = groupStartMinute.getValue();
@@ -1129,14 +1157,14 @@ public class listViewController {
         if (storageManager.getInstance().getGroupByName(name) != null) {
             groupWarningMessage.setText("Group already added!");
             effects.vanishText(groupWarningMessage, 2);
-            groupName.clear();
+            groupName.setValue(null);
             return;
         }
 
         if (Chatbot.getApi().store().findChatByName(name).isEmpty()) {
             groupWarningMessage.setText("No contact or group found with that name!");
             effects.vanishText(groupWarningMessage, 2);
-            groupName.clear();
+            groupName.setValue(null);
             return;
         }
 
@@ -1260,7 +1288,7 @@ public class listViewController {
         }
 
         // Read updated values from UI
-        String updatedName = groupName.getText();
+        String updatedName = groupName.getValue();
         String updatedIntervalStr = groupInterval.getText();
         Integer updatedStartHour = groupStartHour.getValue();
         Integer updatedStartMinute = groupStartMinute.getValue();

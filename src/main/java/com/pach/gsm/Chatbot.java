@@ -10,7 +10,9 @@ import tools.SalesListener;
 import javax.swing.*;
 import java.io.File;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.NoSuchElementException;
+import it.auties.whatsapp.model.chat.Chat;
 
 public class Chatbot {
     private static Chatbot instance;
@@ -160,6 +162,17 @@ public class Chatbot {
     }
 
 
+    public List<String> getAllChats() {
+        return Chatbot.getApi()
+                .store()
+                .chats()
+                .stream()
+                .filter(chat -> chat.name() != null && !chat.name().isBlank()) // has a display name
+                .map(Chat::name)
+                .distinct()
+                .sorted(String.CASE_INSENSITIVE_ORDER)
+                .toList();
+    }
 
 
 
