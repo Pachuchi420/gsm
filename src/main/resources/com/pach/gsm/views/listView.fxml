@@ -410,7 +410,7 @@
                                           <Insets />
                                        </GridPane.margin>
                                     </HBox>
-                                    <ComboBox fx:id="groupName" prefHeight="30.0" prefWidth="551.0" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" editable="true" promptText="Type a group name..." />
+                                    <ComboBox fx:id="groupName" editable="true" prefHeight="30.0" prefWidth="551.0" promptText="Type a group name..." GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" />
                                  </children>
                                  <VBox.margin>
                                     <Insets bottom="10.0" right="20.0" top="10.0" />
@@ -483,6 +483,7 @@
                             <RowConstraints maxHeight="-Infinity" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                               <RowConstraints maxHeight="-Infinity" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                               <RowConstraints maxHeight="-Infinity" minHeight="10.0" prefHeight="30.0" valignment="CENTER" vgrow="SOMETIMES" />
+                              <RowConstraints maxHeight="-Infinity" minHeight="10.0" prefHeight="30.0" valignment="CENTER" vgrow="SOMETIMES" />
                           </rowConstraints>
                            <children>
                               <Label text="Buyer:" />
@@ -498,7 +499,12 @@
                                     <ComboBox fx:id="reserveItemTimeMinutes" prefWidth="150.0" promptText="Minutes" />
                                  </children>
                               </HBox>
-                              <Label fx:id="reserveItemWarningMessage" styleClass="warningMessage" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                              <Label fx:id="reserveItemWarningMessage" styleClass="warningMessage" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                              <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="4">
+                                 <children>
+                                    <Button fx:id="reserveItemCancelReservation" mnemonicParsing="false" text="Cancel Reservation" />
+                                 </children>
+                              </HBox>
                            </children>
                         </GridPane>
                      </children>
@@ -508,7 +514,7 @@
                   <HBox id="bottomMenu" alignment="CENTER" prefHeight="49.0" prefWidth="1000.0" spacing="20.0" styleClass="auxiliaryMenu">
                      <children>
                         <Button fx:id="confirmReserveItem" mnemonicParsing="false" text="Reserve" />
-                        <Button fx:id="cancelReserveitem" mnemonicParsing="false" text="Cancel" />
+                        <Button fx:id="cancelReserveItem" mnemonicParsing="false" text="Cancel" />
                      </children>
                   </HBox>
                </children>

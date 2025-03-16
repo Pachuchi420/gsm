@@ -131,7 +131,7 @@ public class listViewController {
     private AnchorPane reserveItemPane;
 
     @FXML
-    private Button reserveItem, closeReservePane, confirmReserveItem, cancelReserveitem;
+    private Button reserveItem, closeReservePane, confirmReserveItem, cancelReserveItem, reserveItemCancelReservation;
 
     @FXML
     private TextField reserveItemBuyer, reserveItemPlace;
@@ -315,7 +315,7 @@ public class listViewController {
         reserveItem.setOnAction(event -> openReserveItemPane(reserveItemToggle));
         closeReservePane.setOnAction(event -> cancelReservation(reserveItemToggle));
         confirmReserveItem.setOnAction(event -> addReservation(reserveItemToggle));
-        cancelReserveitem.setOnAction(event -> cancelReservation(reserveItemToggle));
+        cancelReserveItem.setOnAction(event -> cancelReservation(reserveItemToggle));
         reserveItemDate.setDayCellFactory(picker -> new DateCell() {
             @Override
             public void updateItem(LocalDate date, boolean empty) {
@@ -328,9 +328,30 @@ public class listViewController {
             }
         });
 
+        reserveItemCancelReservation.setOnAction(event -> deleteReservation(reserveItemToggle));
 
     }
 
+    private void deleteReservation(ToggleVerticalPane reserveItemToggle) {
+        Item selectedItem = itemList.getSelectionModel().getSelectedItem();
+
+        Reservation itemReservation = selectedItem.getReservation();
+        itemReservation.setReserved(false);
+        itemReservation.setBuyer(null);
+        itemReservation.setPlace(null);
+        itemReservation.setDate(null);
+        itemReservation.setHour(0);
+        itemReservation.setMinute(0);
+
+        storageManager.getInstance().updateItemLocal(selectedItem);
+        updateItemOnSupabase(selectedItem);
+        refreshTable(storageManager.getInstance().getUserID());
+
+        // Clearing fields & closing pane
+        clearReserveItemFields();
+        reserveItemToggle.togglePane(reserveItemPane, null, 0.35);
+
+    }
 
 
     private void cancelReservation(ToggleVerticalPane reserveItemToggle) {
