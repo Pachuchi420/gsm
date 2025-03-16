@@ -34,6 +34,10 @@ jobs:
       - name: Build Fat JAR
         run: mvn clean package
 
+      - name: Extract app version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
       - name: Set up jpackage path
         if: runner.os == 'macOS'
         run: echo "JAVA_HOME=$JAVA_HOME" >> $GITHUB_ENV
@@ -48,7 +52,7 @@ jobs:
             --name GSM \
             --type ${{ runner.os == 'Windows' && 'exe' || runner.os == 'macOS' && 'dmg' || 'deb' }} \
             --dest dist \
-            --app-version "${{ github.ref_name##v }}"
+            --app-version "${{ steps.version.outputs.VERSION }}"
 
       - name: Upload installers to GitHub Release
         uses: softprops/action-gh-release@v1
