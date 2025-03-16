@@ -1,0 +1,59 @@
+name: Build Native Installers
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
+
+    name: Build for ${{ matrix.os }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 21 with JavaFX
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'liberica' # Includes JavaFX
+
+      - name: Cache Maven packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-maven-
+
+      - name: Build Fat JAR
+        run: mvn clean package
+
+      - name: Set up jpackage path
+        if: runner.os == 'macOS'
+        run: echo "JAVA_HOME=$JAVA_HOME" >> $GITHUB_ENV
+
+      - name: Create native installer
+        run: |
+          mkdir dist
+          jpackage \
+            --input target \
+            --main-jar gsm-1.0-SNAPSHOT.jar \
+            --main-class com.pach.gsm.Launcher \
+            --name GSM \
+            --type ${{ runner.os == 'Windows' && 'exe' || runner.os == 'macOS' && 'dmg' || 'deb' }} \
+            --dest dist \
+            --app-version ${{ github.ref_name }}
+
+      - name: Upload installers to GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/*
+          tag_name: ${{ github.ref_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
