@@ -1119,6 +1119,11 @@ public class listViewController {
         whatsAppToggle.togglePane(whatsAppPane, null);
     }
     private void closeWhatsappPane(ToggleHorizontalPane whatsAppToggle) {
+        groupName.setEditable(false);
+        ObservableList<String> allGroupNames = null;
+        groupName.setItems(allGroupNames);
+
+
         whatsAppToggle.togglePane(whatsAppPane, null);
     }
 
