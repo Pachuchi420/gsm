@@ -48,7 +48,7 @@ jobs:
             --name GSM \
             --type ${{ runner.os == 'Windows' && 'exe' || runner.os == 'macOS' && 'dmg' || 'deb' }} \
             --dest dist \
-            --app-version ${{ github.ref_name }}
+            --app-version "${{ github.ref_name##v }}"
 
       - name: Upload installers to GitHub Release
         uses: softprops/action-gh-release@v1
