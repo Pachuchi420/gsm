@@ -103,7 +103,7 @@ public class listViewController {
     private TextField groupName, groupInterval;
 
     @FXML
-    private ComboBox<Integer> groupStartHour, groupStartMinute, groupEndHour, groupEndMinute, reserveItemTimeHour, reserveItemTimeMinutes;
+    private ComboBox<Integer> groupStartHour, groupStartMinute, groupEndHour, groupEndMinute;
 
     @FXML
     private Button addGroup, removeGroup, updateGroup;
@@ -123,10 +123,22 @@ public class listViewController {
     // Reserve Item
 
     @FXML
-    AnchorPane reserveItemPane;
+    private AnchorPane reserveItemPane;
 
     @FXML
-    Button reserveItem, closeReservePane, confirmReserveItem, cancelReserveitem;
+    private Button reserveItem, closeReservePane, confirmReserveItem, cancelReserveitem;
+
+    @FXML
+    private TextField reserveItemBuyer, reserveItemPlace;
+
+    @FXML
+    private DatePicker reserveItemDate;
+
+    @FXML
+    private ComboBox<Integer> reserveItemTimeHour, reserveItemTimeMinutes;
+
+    @FXML
+    private Label reserveItemWarningMessage;
 
 
 
@@ -200,6 +212,11 @@ public class listViewController {
                         } else {
                             addItem(userID, addItemToggle);
                         }
+                        break;
+                    }
+
+                    if (reserveItemPane.isVisible()){
+                        addReservation(reserveItemToggle);
                         break;
                     }
                     openAddItemPane(addItemToggle);
@@ -316,12 +333,27 @@ public class listViewController {
 
         reserveItem.setOnAction(event -> openReserveItemPane(reserveItemToggle));
         closeReservePane.setOnAction(event -> cancelReservation(reserveItemToggle));
+        confirmReserveItem.setOnAction(event -> addReservation(reserveItemToggle));
         cancelReserveitem.setOnAction(event -> cancelReservation(reserveItemToggle));
+        reserveItemDate.setDayCellFactory(picker -> new DateCell() {
+            @Override
+            public void updateItem(LocalDate date, boolean empty) {
+                super.updateItem(date, empty);
+                // Disable all dates before today
+                if (date.isBefore(LocalDate.now())) {
+                    setDisable(true);
+                    setStyle("-fx-background-color: #eeeeee; -fx-text-fill: #888888;");
+                }
+            }
+        });
 
 
     }
 
+
+
     private void cancelReservation(ToggleVerticalPane reserveItemToggle) {
+        clearReserveItemFields();
         reserveItemToggle.togglePane(reserveItemPane, null, 0.35);
     }
 
@@ -333,8 +365,75 @@ public class listViewController {
             effects.vanishText(itemListWarning, 2);
             return;
         }
+
+        // Pre-fill if item already reserved
+        Reservation res = selectedItem.getReservation();
+        if (res != null && res.getReserved()) {
+            reserveItemBuyer.setText(res.getBuyer());
+            reserveItemPlace.setText(res.getPlace());
+            reserveItemDate.setValue(res.getDate());
+            reserveItemTimeHour.setValue(res.getHour());
+            reserveItemTimeMinutes.setValue(res.getMinute());
+        } else {
+            clearReserveItemFields(); // Make sure it's clean for new
+        }
+
         reserveItemToggle.togglePane(reserveItemPane, null, 0.35);
     }
+
+
+
+    private void addReservation(ToggleVerticalPane reserveItemToggle) {
+        Item selectedItem = itemList.getSelectionModel().getSelectedItem();
+
+        if(reserveItemBuyer.getText().isEmpty()){
+            reserveItemWarningMessage.setText("Buyer can't be empty...");
+            effects.vanishText(reserveItemWarningMessage, 2);
+            reserveItemBuyer.requestFocus();
+            return;
+        }
+
+        String buyer = reserveItemBuyer.getText();
+        String place = reserveItemPlace.getText();
+
+
+        // Date & Time
+        LocalDate date = reserveItemDate.getValue();
+        Integer hour =  reserveItemTimeHour.getValue();
+        Integer minute =  reserveItemTimeMinutes.getValue();
+
+
+        // Setting the item reservation
+        Reservation itemReservation = selectedItem.getReservation();
+
+        itemReservation.setReserved(true);
+        itemReservation.setBuyer(buyer);
+        itemReservation.setPlace(place);
+        itemReservation.setHour(hour);
+        itemReservation.setMinute(minute);
+        itemReservation.setDate(date);
+
+        storageManager.getInstance().updateItemLocal(selectedItem);
+        updateItemOnSupabase(selectedItem);
+        refreshTable(storageManager.getInstance().getUserID());
+
+        // Clearing fields & closing pane
+        clearReserveItemFields();
+        reserveItemToggle.togglePane(reserveItemPane, null, 0.35);
+
+
+
+    }
+
+
+    private void clearReserveItemFields(){
+        reserveItemBuyer.clear();
+        reserveItemPlace.clear();
+        reserveItemDate.setValue(null);
+        reserveItemTimeHour.setValue(null);
+        reserveItemTimeMinutes.setValue(null);
+    }
+
 
     private void toggleSold() {
         Item selectedItem = itemList.getSelectionModel().getSelectedItem();
@@ -1063,11 +1162,62 @@ public class listViewController {
             return;
         }
 
+
+
         // Create and add the group
         Group newGroup = new Group(name, interval, startHour, startMinute, endHour, endMinute);
-        storageManager.getInstance().addGroup(newGroup);
-        refreshTable(userID);
+        storageManager storage = storageManager.getInstance();
 
+        if (!itemList.getItems().isEmpty()) {
+            openLinkGroupToAllDialog(newGroup, () -> {
+                storage.addGroup(newGroup);
+                // ✅ Link new group to all items
+                List<Item> allItems = itemList.getItems();
+                for (Item item : allItems) {
+                    storage.linkItemToGroups(item.getId(), List.of(newGroup.getId()));
+                }
+                refreshTable(userID);
+            }, () -> {
+                // 👎 User said "no"
+                storage.addGroup(newGroup);
+                refreshTable(userID);
+            });
+        } else {
+            storage.addGroup(newGroup);
+            refreshTable(userID);
+        }
+
+
+
+    }
+
+    private void openLinkGroupToAllDialog(Group newGroup, Runnable onConfirm, Runnable onCancel) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/pach/gsm/views/generalDialogBox.fxml"));
+            Parent dialogRoot = loader.load();
+
+            generalDialogBoxController controller = loader.getController();
+            controller.setDialogTitle("Link group to all items?");
+            controller.setDialogBody("There are already items in your list.\nWould you like to link this new group to all of them?");
+            controller.setConfirmButtonText("Yes, link");
+            controller.setCancelButtonText("No");
+
+            Stage dialogStage = new Stage();
+            dialogStage.setResizable(false);
+            dialogStage.setTitle("Link to Items?");
+            dialogStage.initModality(Modality.APPLICATION_MODAL);
+            dialogStage.setScene(new Scene(dialogRoot));
+            dialogStage.showAndWait();
+
+            if (controller.getGoAhead()) {
+                onConfirm.run();
+            } else {
+                onCancel.run();
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void deleteGroup() {

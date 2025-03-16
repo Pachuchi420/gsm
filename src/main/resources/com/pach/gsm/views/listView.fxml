@@ -472,16 +472,17 @@
                   </HBox>
                   <HBox alignment="CENTER" prefHeight="129.0" prefWidth="1000.0" VBox.vgrow="ALWAYS">
                      <children>
-                        <GridPane hgap="5.0" minHeight="-Infinity" prefHeight="277.0" prefWidth="338.0">
+                        <GridPane hgap="5.0" minHeight="-Infinity" prefHeight="337.0" prefWidth="338.0" vgap="20.0">
                           <columnConstraints>
                             <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" maxWidth="171.0" minWidth="0.0" prefWidth="38.0" />
                             <ColumnConstraints hgrow="SOMETIMES" maxWidth="314.0" minWidth="10.0" prefWidth="295.0" />
                           </columnConstraints>
                           <rowConstraints>
-                            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                              <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                            <RowConstraints maxHeight="-Infinity" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                            <RowConstraints maxHeight="-Infinity" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                            <RowConstraints maxHeight="-Infinity" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                              <RowConstraints maxHeight="-Infinity" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                              <RowConstraints maxHeight="-Infinity" minHeight="10.0" prefHeight="30.0" valignment="CENTER" vgrow="SOMETIMES" />
                           </rowConstraints>
                            <children>
                               <Label text="Buyer:" />
@@ -497,12 +498,16 @@
                                     <ComboBox fx:id="reserveItemTimeMinutes" prefWidth="150.0" promptText="Minutes" />
                                  </children>
                               </HBox>
+                              <Label fx:id="reserveItemWarningMessage" styleClass="warningMessage" GridPane.columnIndex="1" GridPane.rowIndex="4" />
                            </children>
                         </GridPane>
-                     </children></HBox>
+                     </children>
+                     <VBox.margin>
+                        <Insets top="30.0" />
+                     </VBox.margin></HBox>
                   <HBox id="bottomMenu" alignment="CENTER" prefHeight="49.0" prefWidth="1000.0" spacing="20.0" styleClass="auxiliaryMenu">
                      <children>
-                        <Button fx:id="confirmReserveItem" mnemonicParsing="false" text="Ok" />
+                        <Button fx:id="confirmReserveItem" mnemonicParsing="false" text="Reserve" />
                         <Button fx:id="cancelReserveitem" mnemonicParsing="false" text="Cancel" />
                      </children>
                   </HBox>

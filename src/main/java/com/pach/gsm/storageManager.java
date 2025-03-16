@@ -325,11 +325,27 @@ public class storageManager {
                             rs.getString("currency"),
                             rs.getInt("priority")
                     );
+
+
                     item.setId(rs.getString("id"));
                     item.setSold(rs.getBoolean("sold"));
                     item.setSupabaseSync(rs.getInt("supabaseSync") == 1);
                     item.setToDelete(rs.getInt("toDelete") == 1);
                     item.setToUpdate(rs.getInt("toUpdate") == 1);
+
+                    Reservation itemReservation = item.getReservation();
+                    itemReservation.setBuyer(rs.getString("reservation_buyer"));
+                    itemReservation.setPlace(rs.getString("reservation_place"));
+                    itemReservation.setReserved(rs.getInt("reservation_reserved") == 1);
+                    itemReservation.setHour(rs.getInt("reservation_hour"));
+                    itemReservation.setMinute(rs.getInt("reservation_minute"));
+                    Date resDate = rs.getDate("reservation_date");
+                    if (resDate != null) {
+                        itemReservation.setDate(resDate.toLocalDate());
+                    } else {
+                        itemReservation.setDate(null); // optional, just to be safe
+                    }
+
                     items.add(item);
                 }
 
