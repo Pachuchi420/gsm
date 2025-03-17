@@ -78,7 +78,7 @@ public class supabaseDB {
         jsonBuilder.append("\"name\":\"").append(item.getName()).append("\",");
 
         if (item.getDescription() != null) {
-            jsonBuilder.append("\"description\":\"").append(item.getDescription().replace("\t", "    ")).append("\",");
+            jsonBuilder.append("\"description\":\"").append(escapeJson(item.getDescription())).append("\",");
         }
 
         jsonBuilder.append("\"price\":").append(item.getPrice()).append(",");
@@ -153,7 +153,7 @@ public class supabaseDB {
         jsonBuilder.append("\"name\":\"").append(item.getName()).append("\",");
 
         if (item.getDescription() != null) {
-            jsonBuilder.append("\"description\":\"").append(item.getDescription().replace("\t", "    ")).append("\",");
+            jsonBuilder.append("\"description\":\"").append(escapeJson(item.getDescription())).append("\",");
         }
 
         jsonBuilder.append("\"price\":").append(item.getPrice()).append(",");
@@ -216,7 +216,7 @@ public class supabaseDB {
         return input.replace("\\", "\\\\")
                 .replace("\"", "\\\"")
                 .replace("\n", "\\n")
-                .replace("\r", "\\r")
+                .replace("\r", "")
                 .replace("\t", "    ");
     }
 

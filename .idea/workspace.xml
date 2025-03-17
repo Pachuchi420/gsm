@@ -12,8 +12,7 @@
   <component name="ChangeListManager">
     <list default="true" id="f6b0af61-df03-44f2-9b6b-621fd867ff2a" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/pach/gsm/controllers/listViewController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/pach/gsm/controllers/listViewController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/com/pach/gsm/views/listView.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/com/pach/gsm/views/listView.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/pach/gsm/supabaseDB.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/pach/gsm/supabaseDB.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -210,6 +209,7 @@
       <workItem from="1742086109668" duration="2230000" />
       <workItem from="1742124393343" duration="2805000" />
       <workItem from="1742144055180" duration="4336000" />
+      <workItem from="1742171295026" duration="393000" />
     </task>
     <servers />
   </component>
