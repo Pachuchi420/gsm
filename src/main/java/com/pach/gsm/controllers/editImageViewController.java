@@ -7,8 +7,10 @@ import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
+import tools.ResizableImageHelper;
 
 import java.util.List;
 
@@ -48,7 +50,6 @@ public class editImageViewController {
 
 
     private void makeSlotAcceptDrop(StackPane slot) {
-        // ✅ 1. Add this to clip anything that moves outside the StackPane
         Rectangle clip = new Rectangle();
         clip.widthProperty().bind(slot.widthProperty());
         clip.heightProperty().bind(slot.heightProperty());
@@ -71,10 +72,12 @@ public class editImageViewController {
                 droppedImage.setPreserveRatio(true);
                 droppedImage.setPickOnBounds(true);
 
-                makeImageMovable(droppedImage);
+                Pane resizableContainer = ResizableImageHelper.makeResizable(droppedImage);
+                makeImageMovable(resizableContainer); // ✅ move the container, not just image
 
                 slot.getChildren().clear();
-                slot.getChildren().add(droppedImage);
+                slot.getChildren().add(resizableContainer);
+
 
                 if (image1.getImage() == db.getImage()) image1.setVisible(false);
                 if (image2.getImage() == db.getImage()) image2.setVisible(false);
@@ -87,7 +90,7 @@ public class editImageViewController {
             event.consume();
         });
     }
-    private void makeImageMovable(ImageView imageView) {
+    private void makeImageMovable(Pane imageView) {
         final Delta dragDelta = new Delta();
 
         imageView.setOnMousePressed(event -> {
