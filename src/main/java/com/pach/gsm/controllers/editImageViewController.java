@@ -1,8 +1,12 @@
 package com.pach.gsm.controllers;
 
+import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXML;
+import javafx.scene.SnapshotParameters;
+import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.image.WritableImage;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
@@ -10,15 +14,27 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
+import javafx.stage.Stage;
 import tools.ResizableImageHelper;
 
+import javax.imageio.ImageIO;
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
+import java.util.function.Consumer;
 
 public class editImageViewController {
 
     @FXML private HBox twoImageLayoutOne, twoImageLayoutTwo, threeImageLayoutOne, threeImageLayoutTwo, fourImageLayout;
     @FXML private ImageView image1, image2, image3;
     @FXML private StackPane twoImageLayoutOneSlot1, twoImageLayoutOneSlot2;
+    @FXML private Button acceptImageEdit, cancelImageEdit;
+
+    private Consumer<Image> onImageConfirmed;
+
+    public void setOnImageConfirmed(Consumer<Image> callback) {
+        this.onImageConfirmed = callback;
+    }
 
     @FXML
     public void initialize() {
@@ -26,8 +42,15 @@ public class editImageViewController {
         makeDraggable(image2);
         makeDraggable(image3);
 
+        applyRoundedCorners(image1, 10);
+        applyRoundedCorners(image2, 10);
+        applyRoundedCorners(image3, 10);
+
         makeSlotAcceptDrop(twoImageLayoutOneSlot1);
         makeSlotAcceptDrop(twoImageLayoutOneSlot2);
+
+        acceptImageEdit.setOnAction(event -> handleAcceptImageEdit());
+        cancelImageEdit.setOnAction(event -> handleCancelImageEdit());
     }
 
     public void loadImages(List<Image> images) {
@@ -122,5 +145,35 @@ public class editImageViewController {
             case 4 -> threeImageLayoutTwo.setVisible(true);
             case 5 -> fourImageLayout.setVisible(true);*/
         }
+    }
+
+    private void applyRoundedCorners(ImageView imageView, double radius) {
+        Rectangle clip = new Rectangle();
+        clip.setWidth(imageView.getFitWidth());
+        clip.setHeight(imageView.getFitHeight());
+        clip.setArcWidth(radius * 2);
+        clip.setArcHeight(radius * 2);
+        imageView.setClip(clip);
+
+        // Ensure the clip resizes with the image
+        imageView.fitWidthProperty().addListener((obs, oldVal, newVal) -> clip.setWidth(newVal.doubleValue()));
+        imageView.fitHeightProperty().addListener((obs, oldVal, newVal) -> clip.setHeight(newVal.doubleValue()));
+    }
+
+    private void handleAcceptImageEdit() {
+        WritableImage snapshot = twoImageLayoutOne.snapshot(new SnapshotParameters(), null);
+        if (onImageConfirmed != null) {
+            onImageConfirmed.accept(snapshot); // send back
+        }
+
+        // Close window
+        Stage stage = (Stage) acceptImageEdit.getScene().getWindow();
+        stage.close();
+    }
+
+    private void handleCancelImageEdit() {
+        // close the window
+        Stage stage = (Stage) cancelImageEdit.getScene().getWindow();
+        stage.close();
     }
 }

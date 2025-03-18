@@ -1082,7 +1082,7 @@ public class listViewController {
 
                 // Store as byte array for saving later
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                ImageIO.write(ImageRotationHelper.toBufferedImage(fxImages.get(0)), "jpg", baos);
+                ImageIO.write(ImageRotationHelper.toBufferedImage(fxImages.getFirst()), "png", baos);
                 itemAddImageData = baos.toByteArray();
                 return;
             }
@@ -1123,6 +1123,19 @@ public class listViewController {
                 stage.initModality(Modality.APPLICATION_MODAL);
                 stage.setResizable(false);
                 stage.show();
+
+                controller.setOnImageReady(finalImage -> {
+                    itemAddImageView.setImage(finalImage);
+
+                    try {
+                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                        ImageIO.write(SwingFXUtils.fromFXImage(finalImage, null), "png", baos);
+                        itemAddImageData = baos.toByteArray();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                });
+
             } else if (imageCount > 4) {
                 warningAddMessage.setText("Maximum of 4 images possible...");
                 effects.vanishText(warningAddMessage, 2);

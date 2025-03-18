@@ -10,6 +10,7 @@ import javafx.scene.layout.HBox;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.function.Consumer;
 
 public class manageImageViewController {
 
@@ -22,6 +23,11 @@ public class manageImageViewController {
     private Button twoImageLayoutOne, twoImageLayoutTwo, threeImageLayoutOne, threeImageLayoutTwo;
 
     private List<Image> imagesToUse;
+    private Consumer<Image> onImageReady;
+
+    public void setOnImageReady(Consumer<Image> callback) {
+        this.onImageReady = callback;
+    }
 
 
     public void setImages(List<Image> images) {
@@ -82,6 +88,11 @@ public class manageImageViewController {
 
             javafx.stage.Stage stage = (javafx.stage.Stage) rootPane.getScene().getWindow();
             stage.sizeToScene();
+            controller.setOnImageConfirmed(finalImage -> {
+                if (onImageReady != null) {
+                    onImageReady.accept(finalImage);
+                }
+            });
 
         } catch (IOException e) {
             e.printStackTrace();
