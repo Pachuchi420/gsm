@@ -11,11 +11,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f6b0af61-df03-44f2-9b6b-621fd867ff2a" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/main/java/tools/ImageRotationHelper.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/tools/ResizeableImagePane.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/pach/gsm/controllers/editImageViewController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/pach/gsm/controllers/editImageViewController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/pach/gsm/controllers/listViewController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/pach/gsm/controllers/listViewController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/pach/gsm/controllers/manageImageViewController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/pach/gsm/controllers/manageImageViewController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/tools/ImageRotationHelper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/tools/ImageRotationHelper.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/com/pach/gsm/views/editImageView.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/com/pach/gsm/views/editImageView.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/styles/dark.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/styles/dark.css" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

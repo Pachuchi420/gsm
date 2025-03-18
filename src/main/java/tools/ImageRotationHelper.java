@@ -3,6 +3,7 @@ package tools;
 import com.drew.imaging.ImageMetadataReader;
 import com.drew.metadata.*;
 import com.drew.metadata.exif.ExifIFD0Directory;
+import javafx.embed.swing.SwingFXUtils;
 
 import java.awt.*;
 import java.awt.geom.AffineTransform;
@@ -85,5 +86,10 @@ public class ImageRotationHelper {
         g.dispose();
 
         return transformedImage;
+    }
+
+    // ImageRotationHelper.java
+    public static BufferedImage toBufferedImage(javafx.scene.image.Image fxImage) {
+        return SwingFXUtils.fromFXImage(fxImage, null);
     }
 }

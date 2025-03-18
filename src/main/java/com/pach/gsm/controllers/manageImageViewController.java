@@ -4,10 +4,12 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
+import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 
 import java.io.IOException;
+import java.util.List;
 
 public class manageImageViewController {
 
@@ -18,6 +20,14 @@ public class manageImageViewController {
 
     @FXML
     private Button twoImageLayoutOne, twoImageLayoutTwo, threeImageLayoutOne, threeImageLayoutTwo;
+
+    private List<Image> imagesToUse;
+
+
+    public void setImages(List<Image> images) {
+        this.imagesToUse = images;
+    }
+
 
 
     @FXML
@@ -50,28 +60,34 @@ public class manageImageViewController {
     }
 
 
-    private void changeToEditWindow(int window){
+    private void changeToEditWindow(int window) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/pach/gsm/views/editImageView.fxml"));
             Parent editView = loader.load();
 
-            // ✅ Grab the actual controller instance
             editImageViewController controller = loader.getController();
 
-            // ✅ Replace view content
+            // 🔥 Pass images
+            if (imagesToUse != null) {
+                controller.loadImages(imagesToUse);
+            }
+
+            controller.handleCase(window);
+
             rootPane.getChildren().setAll(editView);
             AnchorPane.setTopAnchor(editView, 0.0);
             AnchorPane.setBottomAnchor(editView, 0.0);
             AnchorPane.setLeftAnchor(editView, 0.0);
             AnchorPane.setRightAnchor(editView, 0.0);
 
-            // ✅ Tell it which layout to show
-            controller.handleCase(window);
+            javafx.stage.Stage stage = (javafx.stage.Stage) rootPane.getScene().getWindow();
+            stage.sizeToScene();
 
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
     public void showTwoImageLayout(){
         threeImageView.setVisible(false);
         twoImageView.setVisible(true);

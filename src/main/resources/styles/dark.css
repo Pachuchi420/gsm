@@ -807,3 +807,7 @@
     -fx-border-radius: 10px;
     -fx-background-radius: 10px;
 }
+.layoutPaneHolder{
+    -fx-background-color: #585a5c;
+    -fx-background-radius: 6px;
+}

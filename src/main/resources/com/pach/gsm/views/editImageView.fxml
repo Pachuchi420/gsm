@@ -8,69 +8,40 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<AnchorPane prefHeight="500.0" prefWidth="770.0" styleClass="backgroundPane" stylesheets="@../../../../styles/dark.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.pach.gsm.controllers.editImageViewController">
+<AnchorPane prefHeight="640.0" prefWidth="770.0" styleClass="backgroundPane" stylesheets="@../../../../styles/dark.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.pach.gsm.controllers.editImageViewController">
    <children>
-      <VBox prefHeight="500.0" prefWidth="770.0">
+      <VBox prefHeight="641.0" prefWidth="770.0">
          <children>
-            <HBox alignment="CENTER" prefHeight="69.0" prefWidth="770.0" styleClass="paneTitle">
+            <HBox alignment="CENTER" prefHeight="247.0" prefWidth="770.0" styleClass="paneTitle">
                <children>
                   <Label text="Edit Image" />
                </children>
             </HBox>
-            <HBox prefHeight="442.0" prefWidth="770.0" VBox.vgrow="NEVER">
+            <HBox alignment="CENTER" prefHeight="700.0" prefWidth="770.0">
                <children>
-                  <AnchorPane prefHeight="437.0" prefWidth="795.0">
+                  <HBox fx:id="twoImageLayoutOne" alignment="CENTER" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="600.0" spacing="10.0" styleClass="layoutPaneHolder">
                      <children>
-                        <HBox fx:id="twoImageLayoutOne" alignment="CENTER" prefHeight="500.0" prefWidth="800.0">
-                           <children>
-                              <HBox fx:id="twoImageContainer" alignment="CENTER" spacing="5.0">
-                                 <children>
-                                    <StackPane fx:id="slot1" prefHeight="150.0" prefWidth="300.0" styleClass="layoutPane" HBox.hgrow="NEVER">
-                                       <HBox.margin>
-                                          <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-                                       </HBox.margin>
-                                       <children>
-                                          <ImageView fx:id="imageView1" fitHeight="360.0" fitWidth="240.0" pickOnBounds="true" preserveRatio="true" />
-                                       </children>
-                                    </StackPane>
-                                    <StackPane fx:id="slot2" prefHeight="300.0" prefWidth="300.0" styleClass="layoutPane" HBox.hgrow="NEVER">
-                                       <HBox.margin>
-                                          <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-                                       </HBox.margin>
-                                       <children>
-                                          <ImageView fx:id="imageView2" fitHeight="360.0" fitWidth="240.0" pickOnBounds="true" preserveRatio="true" />
-                                       </children>
-                                    </StackPane>
-                                 </children>
-                                 <HBox.margin>
-                                    <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
-                                 </HBox.margin>
-                              </HBox>
-                           </children>
-                        </HBox>
-                        <HBox fx:id="twoImageLayoutTwo" alignment="CENTER" prefHeight="453.0" prefWidth="780.0" visible="false">
-                           <children>
-                              <Label text="Two Image Layout Two" />
-                           </children>
-                        </HBox>
-                        <HBox fx:id="threeImageLayoutOne" alignment="CENTER" prefHeight="453.0" prefWidth="780.0" visible="false">
-                           <children>
-                              <Label text="Three Image Layout One" />
-                           </children>
-                        </HBox>
-                        <HBox fx:id="threeImageLayoutTwo" alignment="CENTER" prefHeight="453.0" prefWidth="780.0" visible="false">
-                           <children>
-                              <Label text="Three Image Layout Two" />
-                           </children>
-                        </HBox>
-                        <HBox fx:id="fourImageLayout" alignment="CENTER" layoutX="10.0" layoutY="10.0" prefHeight="453.0" prefWidth="780.0" visible="false">
-                           <children>
-                              <Label text="Four Image Layout" />
-                           </children>
-                        </HBox>
+                        <StackPane fx:id="twoImageLayoutOneSlot1" prefHeight="580.0" prefWidth="300.0" styleClass="layoutPane" />
+                        <StackPane fx:id="twoImageLayoutOneSlot2" prefHeight="580.0" prefWidth="300.0" styleClass="layoutPane" />
                      </children>
-                  </AnchorPane>
+                     <padding>
+                        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                     </padding>
+                  </HBox>
                </children>
+               <padding>
+                  <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+               </padding>
+            </HBox>
+            <HBox id="bottomMenu" alignment="CENTER" prefHeight="321.0" prefWidth="770.0" spacing="10.0" styleClass="auxiliaryMenu">
+               <children>
+                  <ImageView fx:id="image1" fitHeight="150.0" fitWidth="150.0" pickOnBounds="true" preserveRatio="true" />
+                  <ImageView fx:id="image2" fitHeight="150.0" fitWidth="150.0" pickOnBounds="true" preserveRatio="true" />
+                  <ImageView fx:id="image3" fitHeight="150.0" fitWidth="150.0" pickOnBounds="true" preserveRatio="true" />
+               </children>
+               <padding>
+                  <Insets left="20.0" right="20.0" />
+               </padding>
             </HBox>
          </children>
       </VBox>

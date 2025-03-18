@@ -148,6 +148,11 @@ public class listViewController {
     private Label reserveItemWarningMessage;
 
 
+    // Image editing
+    @FXML
+    private ImageView image1, image2, image3;
+
+
 
     @FXML
     public void initialize() throws IOException {
@@ -352,6 +357,9 @@ public class listViewController {
 
             groupList.getSelectionModel().clearSelection();
         });
+
+
+
 
     }
 
@@ -1056,77 +1064,75 @@ public class listViewController {
     }
 
     public void handleImageSelection(List<File> selectedFiles) {
-        if (selectedFiles == null || selectedFiles.isEmpty()) {
-            return;
-        }
+        if (selectedFiles == null || selectedFiles.isEmpty()) return;
 
         int imageCount = selectedFiles.size();
+        List<Image> fxImages = new ArrayList<>();
 
         try {
+            for (File file : selectedFiles) {
+                BufferedImage bufferedImage = ImageIO.read(file);
+                BufferedImage correctedImage = ImageRotationHelper.autoOrientImage(file, bufferedImage);
+                Image fxImage = SwingFXUtils.toFXImage(correctedImage, null);
+                fxImages.add(fxImage);
+            }
+
+            if (imageCount == 1) {
+                itemAddImageView.setImage(fxImages.get(0));
+
+                // Store as byte array for saving later
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                ImageIO.write(ImageRotationHelper.toBufferedImage(fxImages.get(0)), "jpg", baos);
+                itemAddImageData = baos.toByteArray();
+                return;
+            }
+
             if (imageCount == 4) {
-                // ✅ Skip manage view and open editImageView directly
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/pach/gsm/views/editImageView.fxml"));
                 Parent editView = loader.load();
 
                 editImageViewController controller = loader.getController();
-                controller.handleCase(5); // show four-image layout
+                controller.handleCase(5);
+                controller.loadImages(fxImages);
 
                 Stage stage = new Stage();
                 stage.setTitle("Edit Layout");
                 stage.setScene(new Scene(editView));
-                stage.initModality(Modality.APPLICATION_MODAL); // optional
+                stage.initModality(Modality.APPLICATION_MODAL);
                 stage.setResizable(false);
                 stage.show();
-                return; // ✅ EXIT after this
-            }
-
-            if (imageCount == 1) {
-                File file = selectedFiles.get(0);
-                if (file != null) {
-                    try {
-                        BufferedImage originalImage = ImageIO.read(file);
-                        BufferedImage correctedImage = ImageRotationHelper.autoOrientImage(file, originalImage);
-
-                        // Convert to JavaFX image and show it
-                        Image fxImage = SwingFXUtils.toFXImage(correctedImage, null);
-                        itemAddImageView.setImage(fxImage);
-
-                        // Store corrected image as byte array
-                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                        ImageIO.write(correctedImage, "jpg", baos);
-                        itemAddImageData = baos.toByteArray();
-
-                    } catch (IOException ex) {
-                        ex.printStackTrace();
-                    }
-                }
                 return;
             }
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/pach/gsm/views/manageImageView.fxml"));
-            Parent root = loader.load();
-            manageImageViewController controller = loader.getController();
 
-            if (imageCount == 2) {
-                controller.showTwoImageLayout();
-            } else if (imageCount == 3) {
-                controller.showThreeImageLayout();
+            if (imageCount == 2 || imageCount == 3) {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/pach/gsm/views/manageImageView.fxml"));
+                Parent root = loader.load();
+
+                manageImageViewController controller = loader.getController();
+                controller.setImages(fxImages); // 🔥 Pass images
+
+                if (imageCount == 2) {
+                    controller.showTwoImageLayout();
+                } else {
+                    controller.showThreeImageLayout();
+                }
+
+                Stage stage = new Stage();
+                stage.setTitle("Select Layout");
+                stage.setScene(new Scene(root));
+                stage.initModality(Modality.APPLICATION_MODAL);
+                stage.setResizable(false);
+                stage.show();
             } else if (imageCount > 4) {
                 warningAddMessage.setText("Maximum of 4 images possible...");
                 effects.vanishText(warningAddMessage, 2);
-                return;
             }
-
-            Stage stage = new Stage();
-            stage.setTitle("Select Layout");
-            stage.setScene(new Scene(root));
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.setResizable(false);
-            stage.show();
 
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
     private void addItemToSupabase(Item givenItem) {
         if (supabaseAuthentication.checkIfOnline()) {
             boolean success = supabaseDB.addItem(givenItem.getUserID(), givenItem);
