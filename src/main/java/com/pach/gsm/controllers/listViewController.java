@@ -5,6 +5,7 @@ import it.auties.whatsapp.model.message.standard.ImageMessageSimpleBuilder;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.layout.HBox;
 import org.kordamp.ikonli.javafx.FontIcon;
 import tools.*;
@@ -23,9 +24,10 @@ import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.*;
+import java.nio.file.Files;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -291,7 +293,11 @@ public class listViewController {
 
         itemList.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue != null) {
-                displayItemImage(newValue);
+                try {
+                    displayItemImage(newValue);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
             } else {
                 imageThumbnail.setImage(null); // Optionally, clear or set a default image when no item is selected
             }
@@ -1043,6 +1049,7 @@ public class listViewController {
 
         List<File> selectedFiles = fileChooser.showOpenMultipleDialog(null);
 
+
         if (selectedFiles != null && !selectedFiles.isEmpty()) {
             handleImageSelection(selectedFiles);
         }
@@ -1074,10 +1081,27 @@ public class listViewController {
             }
 
             if (imageCount == 1) {
-                System.out.println("One image, just show it lol");
-            }
+                File file = selectedFiles.get(0);
+                if (file != null) {
+                    try {
+                        BufferedImage originalImage = ImageIO.read(file);
+                        BufferedImage correctedImage = ImageRotationHelper.autoOrientImage(file, originalImage);
 
-            // 2 or 3 images → show manageImageView
+                        // Convert to JavaFX image and show it
+                        Image fxImage = SwingFXUtils.toFXImage(correctedImage, null);
+                        itemAddImageView.setImage(fxImage);
+
+                        // Store corrected image as byte array
+                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                        ImageIO.write(correctedImage, "jpg", baos);
+                        itemAddImageData = baos.toByteArray();
+
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    }
+                }
+                return;
+            }
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/pach/gsm/views/manageImageView.fxml"));
             Parent root = loader.load();
             manageImageViewController controller = loader.getController();
@@ -1143,10 +1167,11 @@ public class listViewController {
         }
     }
 
-    private void displayItemImage(Item item) {
+    private void displayItemImage(Item item) throws IOException {
         if (item != null && item.getImageData() != null) {
-            Image image = new Image(new ByteArrayInputStream(item.getImageData()));
-            imageThumbnail.setImage(image);
+            BufferedImage buffered = ImageIO.read(new ByteArrayInputStream(item.getImageData()));
+            Image fxImage = SwingFXUtils.toFXImage(buffered, null);
+            imageThumbnail.setImage(fxImage);
         } else {
             imageThumbnail.setImage(null);
         }
