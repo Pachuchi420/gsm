@@ -5,8 +5,7 @@ import it.auties.whatsapp.model.message.standard.ImageMessageSimpleBuilder;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
-import javafx.scene.input.KeyEvent;
-import javafx.util.StringConverter;
+import javafx.scene.layout.HBox;
 import org.kordamp.ikonli.javafx.FontIcon;
 import tools.*;
 import javafx.beans.property.SimpleObjectProperty;
@@ -26,9 +25,7 @@ import javafx.stage.Stage;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -86,6 +83,12 @@ public class listViewController {
 
     @FXML
     private ListView<CheckBox> itemAddGroupsList;
+
+    @FXML
+    private HBox twoImageView;
+
+    @FXML
+    private HBox threeImageView;
 
     private ToggleGroup currencyGroup;
     private ToggleGroup priorityGroup;
@@ -1035,22 +1038,71 @@ public class listViewController {
 
     public void selectImage() {
         FileChooser fileChooser = new FileChooser();
-        FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("Image files (*.png, *.jpg, *.jpeg)", "*.png", "*.jpg", "*.jpeg");
-        fileChooser.getExtensionFilters().add(extFilter);
+        fileChooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("Image files", "*.png", "*.jpg", "*.jpeg"));
 
-        File file = fileChooser.showOpenDialog(null);
-        if (file != null) {
-            try (FileInputStream fis = new FileInputStream(file)) {
-                Image image = new Image(fis);
-                itemAddImageView.setImage(image);
+        List<File> selectedFiles = fileChooser.showOpenMultipleDialog(null);
 
-                itemAddImageData = Files.readAllBytes(file.toPath());
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
+        if (selectedFiles != null && !selectedFiles.isEmpty()) {
+            handleImageSelection(selectedFiles);
         }
     }
 
+    public void handleImageSelection(List<File> selectedFiles) {
+        if (selectedFiles == null || selectedFiles.isEmpty()) {
+            return;
+        }
+
+        int imageCount = selectedFiles.size();
+
+        try {
+            if (imageCount == 4) {
+                // ✅ Skip manage view and open editImageView directly
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/pach/gsm/views/editImageView.fxml"));
+                Parent editView = loader.load();
+
+                editImageViewController controller = loader.getController();
+                controller.handleCase(5); // show four-image layout
+
+                Stage stage = new Stage();
+                stage.setTitle("Edit Layout");
+                stage.setScene(new Scene(editView));
+                stage.initModality(Modality.APPLICATION_MODAL); // optional
+                stage.setResizable(false);
+                stage.show();
+                return; // ✅ EXIT after this
+            }
+
+            if (imageCount == 1) {
+                System.out.println("One image, just show it lol");
+            }
+
+            // 2 or 3 images → show manageImageView
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/pach/gsm/views/manageImageView.fxml"));
+            Parent root = loader.load();
+            manageImageViewController controller = loader.getController();
+
+            if (imageCount == 2) {
+                controller.showTwoImageLayout();
+            } else if (imageCount == 3) {
+                controller.showThreeImageLayout();
+            } else if (imageCount > 4) {
+                warningAddMessage.setText("Maximum of 4 images possible...");
+                effects.vanishText(warningAddMessage, 2);
+                return;
+            }
+
+            Stage stage = new Stage();
+            stage.setTitle("Select Layout");
+            stage.setScene(new Scene(root));
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setResizable(false);
+            stage.show();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
     private void addItemToSupabase(Item givenItem) {
         if (supabaseAuthentication.checkIfOnline()) {
             boolean success = supabaseDB.addItem(givenItem.getUserID(), givenItem);

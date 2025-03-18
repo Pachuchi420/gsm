@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<AnchorPane prefHeight="500.0" prefWidth="770.0" styleClass="backgroundPane" stylesheets="@../../../../styles/dark.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.pach.gsm.controllers.editImageViewController">
+   <children>
+      <VBox prefHeight="500.0" prefWidth="770.0">
+         <children>
+            <HBox alignment="CENTER" prefHeight="69.0" prefWidth="770.0" styleClass="paneTitle">
+               <children>
+                  <Label text="Edit Image" />
+               </children>
+            </HBox>
+            <HBox prefHeight="442.0" prefWidth="770.0">
+               <children>
+                  <AnchorPane prefHeight="437.0" prefWidth="795.0">
+                     <children>
+                        <HBox fx:id="twoImageLayoutOne" alignment="CENTER" prefHeight="453.0" prefWidth="780.0" visible="false">
+                           <children>
+                              <Label text="Two Image Layout One" />
+                           </children>
+                        </HBox>
+                        <HBox fx:id="twoImageLayoutTwo" alignment="CENTER" prefHeight="453.0" prefWidth="780.0" visible="false">
+                           <children>
+                              <Label text="Two Image Layout Two" />
+                           </children>
+                        </HBox>
+                        <HBox fx:id="threeImageLayoutOne" alignment="CENTER" prefHeight="453.0" prefWidth="780.0" visible="false">
+                           <children>
+                              <Label text="Three Image Layout One" />
+                           </children>
+                        </HBox>
+                        <HBox fx:id="threeImageLayoutTwo" alignment="CENTER" prefHeight="453.0" prefWidth="780.0" visible="false">
+                           <children>
+                              <Label text="Three Image Layout Two" />
+                           </children>
+                        </HBox>
+                        <HBox fx:id="fourImageLayout" alignment="CENTER" layoutX="10.0" layoutY="10.0" prefHeight="453.0" prefWidth="780.0">
+                           <children>
+                              <Label text="Four Image Layout" />
+                           </children>
+                        </HBox>
+                     </children>
+                  </AnchorPane>
+               </children>
+            </HBox>
+         </children>
+      </VBox>
+   </children>
+</AnchorPane>
