@@ -9,9 +9,9 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<AnchorPane prefHeight="812.0" prefWidth="880.0" styleClass="backgroundPane" stylesheets="@../../../../styles/dark.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.pach.gsm.controllers.editImageViewController">
+<AnchorPane prefHeight="810.0" prefWidth="909.0" styleClass="backgroundPane" stylesheets="@../../../../styles/dark.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.pach.gsm.controllers.editImageViewController">
    <children>
-      <VBox prefHeight="812.0" prefWidth="880.0">
+      <VBox prefHeight="823.0" prefWidth="909.0">
          <children>
             <HBox prefHeight="813.0" prefWidth="880.0">
                <children>
@@ -25,16 +25,16 @@
                         <Insets top="10.0" />
                      </padding>
                   </VBox>
-                  <VBox prefHeight="641.0" prefWidth="770.0">
+                  <VBox prefHeight="641.0" prefWidth="770.0" spacing="10.0">
                      <children>
-                        <HBox alignment="CENTER" prefHeight="67.0" prefWidth="620.0" styleClass="paneTitle">
+                        <HBox alignment="CENTER" prefHeight="285.0" prefWidth="723.0" styleClass="paneTitle">
                            <children>
                               <Label text="Edit Image" />
                            </children>
                         </HBox>
-                        <HBox alignment="CENTER" prefHeight="700.0" prefWidth="688.0">
+                        <StackPane prefHeight="689.0" prefWidth="723.0">
                            <children>
-                              <HBox fx:id="twoImageLayoutOne" alignment="CENTER" minHeight="-Infinity" minWidth="-Infinity" prefHeight="680.0" prefWidth="689.0" spacing="10.0" styleClass="layoutPaneHolder">
+                              <HBox fx:id="twoImageLayoutOne" alignment="CENTER" minHeight="-Infinity" minWidth="-Infinity" prefHeight="680.0" prefWidth="690.0" spacing="10.0" styleClass="layoutPaneHolder" visible="false">
                                  <children>
                                     <StackPane fx:id="twoImageLayoutOneSlot1" prefHeight="580.0" prefWidth="300.0" styleClass="layoutPane" HBox.hgrow="ALWAYS" />
                                     <StackPane fx:id="twoImageLayoutOneSlot2" prefHeight="580.0" prefWidth="300.0" styleClass="layoutPane" HBox.hgrow="ALWAYS" />
@@ -42,17 +42,63 @@
                                  <padding>
                                     <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
                                  </padding>
+                                 <StackPane.margin>
+                                    <Insets bottom="10.0" left="10.0" right="10.0" top="5.0" />
+                                 </StackPane.margin>
                               </HBox>
+                              <VBox fx:id="twoImageLayoutTwo" minHeight="-Infinity" minWidth="-Infinity" prefHeight="690.0" prefWidth="680.0" spacing="10.0" styleClass="layoutPaneHolder" visible="false">
+                                 <children>
+                                    <StackPane fx:id="twoImageLayoutTwoSlot1" prefHeight="580.0" prefWidth="300.0" styleClass="layoutPane" />
+                                    <StackPane fx:id="twoImageLayoutTwoSlot2" prefHeight="580.0" prefWidth="300.0" styleClass="layoutPane" />
+                                 </children>
+                                 <padding>
+                                    <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                                 </padding>
+                                 <StackPane.margin>
+                                    <Insets bottom="10.0" left="10.0" right="10.0" top="5.0" />
+                                 </StackPane.margin>
+                              </VBox>
+                              <HBox fx:id="threeImageLayoutOne" alignment="CENTER" minHeight="-Infinity" minWidth="-Infinity" prefHeight="705.0" prefWidth="593.0" spacing="10.0" styleClass="layoutPaneHolder" visible="false">
+                                 <children>
+                                    <VBox prefHeight="685.0" prefWidth="330.0" spacing="10.0">
+                                       <children>
+                                          <StackPane fx:id="threeImageLayoutOneSlot1" prefHeight="350.0" prefWidth="350.0" styleClass="layoutPane" />
+                                          <StackPane fx:id="threeImageLayoutOneSlot2" prefHeight="350.0" prefWidth="350.0" styleClass="layoutPane" />
+                                       </children>
+                                    </VBox>
+                                    <StackPane fx:id="threeImageLayoutOneSlot3" prefHeight="685.0" prefWidth="376.0" styleClass="layoutPane" />
+                                 </children>
+                                 <padding>
+                                    <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                                 </padding>
+                                 <StackPane.margin>
+                                    <Insets bottom="10.0" left="10.0" right="10.0" top="5.0" />
+                                 </StackPane.margin>
+                              </HBox>
+                              <VBox fx:id="threeImageLayoutTwo" minHeight="-Infinity" minWidth="-Infinity" prefHeight="690.0" prefWidth="680.0" spacing="10.0" styleClass="layoutPaneHolder" visible="false">
+                                 <children>
+                                    <StackPane fx:id="threeImageLayoutTwoSlot1" prefHeight="375.0" prefWidth="685.0" styleClass="layoutPane" />
+                                    <HBox prefHeight="330.0" prefWidth="685.0" spacing="10.0">
+                                       <children>
+                                          <StackPane fx:id="threeImageLayoutTwoSlot2" prefHeight="350.0" prefWidth="350.0" styleClass="layoutPane" />
+                                          <StackPane fx:id="threeImageLayoutTwoSlot3" prefHeight="350.0" prefWidth="350.0" styleClass="layoutPane" />
+                                       </children>
+                                    </HBox>
+                                 </children>
+                                 <padding>
+                                    <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                                 </padding>
+                                 <StackPane.margin>
+                                    <Insets bottom="10.0" left="10.0" right="10.0" top="5.0" />
+                                 </StackPane.margin>
+                              </VBox>
                            </children>
-                           <padding>
-                              <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
-                           </padding>
-                        </HBox>
+                        </StackPane>
                      </children>
                   </VBox>
                </children>
             </HBox>
-            <HBox id="bottomMenu" alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="10.0" styleClass="auxiliaryMenu">
+            <HBox id="bottomMenu" alignment="CENTER" prefHeight="171.0" prefWidth="909.0" spacing="10.0" styleClass="auxiliaryMenu">
                <children>
                   <Button fx:id="cancelImageEdit" mnemonicParsing="false" text="Cancel" />
                   <Button fx:id="acceptImageEdit" mnemonicParsing="false" text="Use this image" />
