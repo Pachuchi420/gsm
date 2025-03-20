@@ -24,13 +24,18 @@ public class editImageViewController {
 
     @FXML private HBox twoImageLayoutOne, threeImageLayoutOne;
     @FXML private VBox twoImageLayoutTwo, threeImageLayoutTwo;
+    @FXML private VBox fourImageLayout;
 
-    @FXML private ImageView image1, image2, image3;
+    @FXML private ImageView image1, image2, image3, image4;
+
     @FXML private StackPane twoImageLayoutOneSlot1, twoImageLayoutOneSlot2;
     @FXML private StackPane twoImageLayoutTwoSlot1, twoImageLayoutTwoSlot2;
     @FXML private StackPane threeImageLayoutOneSlot1, threeImageLayoutOneSlot2, threeImageLayoutOneSlot3;
     @FXML private StackPane threeImageLayoutTwoSlot1, threeImageLayoutTwoSlot2, threeImageLayoutTwoSlot3;
+    @FXML private StackPane fourImageLayoutSlot1,fourImageLayoutSlot2,fourImageLayoutSlot3,fourImageLayoutSlot4;
+
     @FXML private Button acceptImageEdit, cancelImageEdit;
+
 
     private Consumer<Image> onImageConfirmed;
 
@@ -43,10 +48,12 @@ public class editImageViewController {
         makeDraggable(image1);
         makeDraggable(image2);
         makeDraggable(image3);
+        makeDraggable(image4);
 
         applyRoundedCorners(image1, 10);
         applyRoundedCorners(image2, 10);
         applyRoundedCorners(image3, 10);
+        applyRoundedCorners(image4, 10);
 
         makeSlotAcceptDrop(twoImageLayoutOneSlot1);
         makeSlotAcceptDrop(twoImageLayoutOneSlot2);
@@ -61,6 +68,11 @@ public class editImageViewController {
         makeSlotAcceptDrop(threeImageLayoutTwoSlot2);
         makeSlotAcceptDrop(threeImageLayoutTwoSlot3);
 
+        makeSlotAcceptDrop(fourImageLayoutSlot1);
+        makeSlotAcceptDrop(fourImageLayoutSlot2);
+        makeSlotAcceptDrop(fourImageLayoutSlot3);
+        makeSlotAcceptDrop(fourImageLayoutSlot4);
+
         acceptImageEdit.setOnAction(event -> handleAcceptImageEdit());
         cancelImageEdit.setOnAction(event -> handleCancelImageEdit());
     }
@@ -69,6 +81,7 @@ public class editImageViewController {
         if (images.size() > 0) image1.setImage(images.get(0));
         if (images.size() > 1) image2.setImage(images.get(1));
         if (images.size() > 2) image3.setImage(images.get(2));
+        if (images.size() > 3) image4.setImage(images.get(3));
     }
 
     private void makeDraggable(ImageView thumbnail) {
@@ -145,16 +158,15 @@ public class editImageViewController {
         twoImageLayoutOne.setVisible(false);
         twoImageLayoutTwo.setVisible(false);
         threeImageLayoutOne.setVisible(false);
-        threeImageLayoutOne.setVisible(false);
-        // threeImageLayoutTwo.setVisible(false);
-        // fourImageLayout.setVisible(false);
+        threeImageLayoutTwo.setVisible(false);
+        fourImageLayout.setVisible(false);
 
         switch (window) {
             case 1 -> twoImageLayoutOne.setVisible(true);
             case 2 -> twoImageLayoutTwo.setVisible(true);
             case 3 -> threeImageLayoutTwo.setVisible(true);
             case 4 -> threeImageLayoutOne.setVisible(true);
-            // case 5 -> fourImageLayout.setVisible(true);
+            case 5 -> fourImageLayout.setVisible(true);
         }
     }
 
@@ -181,6 +193,8 @@ public class editImageViewController {
             snapshot = threeImageLayoutOne.snapshot(new SnapshotParameters(), null);
         } else if(threeImageLayoutTwo.isVisible()){
             snapshot = threeImageLayoutTwo.snapshot(new SnapshotParameters(), null);
+        } else if (fourImageLayout.isVisible()){
+            snapshot = fourImageLayout.snapshot(new SnapshotParameters(), null);
         }
 
         if (snapshot != null && onImageConfirmed != null) {
