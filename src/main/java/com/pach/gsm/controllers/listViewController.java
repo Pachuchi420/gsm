@@ -300,6 +300,7 @@ public class listViewController {
             if (newValue != null) {
                 try {
                     displayItemImage(newValue);
+                    displayItemDetails(newValue);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -1095,6 +1096,18 @@ public class listViewController {
                 controller.handleCase(5);
                 controller.loadImages(fxImages);
 
+                controller.setOnImageConfirmed(finalImage -> {
+                    itemAddImageView.setImage(finalImage);
+
+                    try {
+                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                        ImageIO.write(SwingFXUtils.fromFXImage(finalImage, null), "png", baos);
+                        itemAddImageData = baos.toByteArray();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                });
+
                 Stage stage = new Stage();
                 stage.setTitle("Edit Layout");
                 stage.setScene(new Scene(editView));
@@ -1195,6 +1208,12 @@ public class listViewController {
             imageThumbnail.setImage(null);
         }
         itemList.refresh();
+    }
+
+    private void displayItemDetails(Item item){
+        if (item != null){
+            return;
+        }
     }
 
 
