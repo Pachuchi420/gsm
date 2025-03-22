@@ -795,7 +795,7 @@ public class listViewController {
             dialogStage.initModality(Modality.APPLICATION_MODAL);
             dialogStage.setResizable(false);
             dialogStage.setTitle("Remove Item");
-            dialogStage.setScene(new Scene(dialogRoot));
+            dialogStage.setScene(scene);
             dialogStage.showAndWait();
 
             if (controller.getGoAhead()) {
