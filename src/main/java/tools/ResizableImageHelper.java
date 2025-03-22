@@ -19,8 +19,14 @@ public class ResizableImageHelper {
 
         for (int i = 0; i < 8; i++) {
             Rectangle handle = new Rectangle(HANDLE_SIZE, HANDLE_SIZE);
-            handle.setFill(Color.WHITE);
-            handle.setStroke(Color.DARKGRAY);
+            handle.setFill(Color.web("#444444", 0.8));  // semi-transparent dark fill
+            handle.setStroke(Color.web("#888888"));     // soft border
+            handle.setArcWidth(5);
+            handle.setArcHeight(5);
+
+// Optional: Add glow on hover
+            handle.setOnMouseEntered(e -> handle.setEffect(new javafx.scene.effect.DropShadow(8, Color.web("#439329", 0.85))));
+            handle.setOnMouseExited(e -> handle.setEffect(null));
             handle.setCursor(getCursorForHandle(i));
             handle.setVisible(false); // start hidden
             handles[i] = handle;
@@ -140,4 +146,16 @@ public class ResizableImageHelper {
             }
         }
     }
+
+    public static void hideAllHandlesDeep(Pane root) {
+        for (Node node : root.getChildrenUnmodifiable()) {
+            if (node instanceof Pane pane) {
+                setHandlesVisible(pane, false);
+                // Recursively go deeper
+                hideAllHandlesDeep(pane);
+            }
+        }
+    }
+
+
 }

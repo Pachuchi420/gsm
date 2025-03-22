@@ -1,6 +1,7 @@
 package com.pach.gsm.controllers;
 
 import javafx.fxml.FXML;
+import javafx.scene.Node;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.control.Button;
 import javafx.scene.image.Image;
@@ -9,10 +10,7 @@ import javafx.scene.image.WritableImage;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import tools.ResizableImageHelper;
@@ -21,6 +19,8 @@ import java.util.List;
 import java.util.function.Consumer;
 
 public class editImageViewController {
+
+    @FXML private AnchorPane rootAnchorPane;
 
     @FXML private HBox twoImageLayoutOne, threeImageLayoutOne;
     @FXML private VBox twoImageLayoutTwo, threeImageLayoutTwo;
@@ -75,6 +75,17 @@ public class editImageViewController {
 
         acceptImageEdit.setOnAction(event -> handleAcceptImageEdit());
         cancelImageEdit.setOnAction(event -> handleCancelImageEdit());
+
+        rootAnchorPane.setOnMousePressed(event -> {
+            Node clickedNode = event.getPickResult().getIntersectedNode();
+
+            for (StackPane slot : getAllSlots()) {
+                if (!slot.getChildren().isEmpty() && slot.getChildren().get(0) instanceof Pane container) {
+                    boolean isClicked = isAncestorOf(container, clickedNode);
+                    ResizableImageHelper.setHandlesVisible(container, isClicked);
+                }
+            }
+        });
     }
 
     public void loadImages(List<Image> images) {
@@ -113,10 +124,17 @@ public class editImageViewController {
             Dragboard db = event.getDragboard();
             if (db.hasImage()) {
                 ImageView droppedImage = new ImageView(db.getImage());
-                droppedImage.setFitWidth(slot.getWidth());
-                droppedImage.setFitHeight(slot.getHeight());
                 droppedImage.setPreserveRatio(true);
                 droppedImage.setPickOnBounds(true);
+                droppedImage.setFitHeight(slot.getHeight());
+                droppedImage.setFitWidth(slot.getWidth());
+
+                Rectangle imageClip = new Rectangle();
+                imageClip.setArcWidth(20);
+                imageClip.setArcHeight(20);
+                imageClip.widthProperty().bind(droppedImage.fitWidthProperty());
+                imageClip.heightProperty().bind(droppedImage.fitHeightProperty());
+                droppedImage.setClip(imageClip);
 
                 Pane resizableContainer = ResizableImageHelper.makeResizable(droppedImage);
                 makeImageMovable(resizableContainer);
@@ -182,7 +200,26 @@ public class editImageViewController {
         imageView.fitHeightProperty().addListener((obs, oldVal, newVal) -> clip.setHeight(newVal.doubleValue()));
     }
 
+    private List<StackPane> getAllSlots() {
+        return List.of(
+                twoImageLayoutOneSlot1, twoImageLayoutOneSlot2,
+                twoImageLayoutTwoSlot1, twoImageLayoutTwoSlot2,
+                threeImageLayoutOneSlot1, threeImageLayoutOneSlot2, threeImageLayoutOneSlot3,
+                threeImageLayoutTwoSlot1, threeImageLayoutTwoSlot2, threeImageLayoutTwoSlot3,
+                fourImageLayoutSlot1, fourImageLayoutSlot2, fourImageLayoutSlot3, fourImageLayoutSlot4
+        );
+    }
+
+    private boolean isAncestorOf(Node ancestor, Node node) {
+        while (node != null) {
+            if (node == ancestor) return true;
+            node = node.getParent();
+        }
+        return false;
+    }
+
     private void handleAcceptImageEdit() {
+        ResizableImageHelper.hideAllHandlesDeep(rootAnchorPane);
         WritableImage snapshot = null;
 
         if (twoImageLayoutOne.isVisible()) {
@@ -209,4 +246,7 @@ public class editImageViewController {
         Stage stage = (Stage) cancelImageEdit.getScene().getWindow();
         stage.close();
     }
+
+
+
 }
