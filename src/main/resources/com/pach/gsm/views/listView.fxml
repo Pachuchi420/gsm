@@ -46,7 +46,7 @@
             </TableView>
          </center>
          <right>
-            <VBox id="rightMenu" alignment="TOP_CENTER" prefHeight="549.0" prefWidth="252.0" spacing="20.0" styleClass="test" BorderPane.alignment="CENTER">
+            <VBox id="rightMenu" alignment="TOP_CENTER" prefHeight="549.0" prefWidth="252.0" spacing="10.0" BorderPane.alignment="CENTER">
                <children>
                   <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0">
                      <children>
@@ -57,6 +57,11 @@
                         </StackPane>
                      </children>
                   </HBox>
+                  <TextArea id="itemDescriptionTableView" fx:id="itemDescriptionTableView" editable="false" focusTraversable="false" layoutX="10.0" layoutY="237.0" visible="false" wrapText="true">
+                     <VBox.margin>
+                        <Insets bottom="5.0" left="5.0" right="5.0" />
+                     </VBox.margin>
+                  </TextArea>
                   <Label fx:id="itemListWarning" styleClass="warningMessage" />
                </children>
                <padding>
@@ -80,11 +85,6 @@
                         <Button fx:id="editItem" mnemonicParsing="false" text="">
                            <graphic>
                               <FontIcon iconLiteral="fas-edit" iconSize="15" styleClass="buttonIcon" />
-                           </graphic>
-                        </Button>
-                        <Button fx:id="aboutItem" mnemonicParsing="false" text="">
-                           <graphic>
-                              <FontIcon iconLiteral="fas-info-circle" iconSize="15" styleClass="buttonIcon" />
                            </graphic>
                         </Button>
                         <Button fx:id="removeItem" mnemonicParsing="false" text="">
@@ -120,6 +120,11 @@
                         <Button id="whatsappButton" fx:id="whatsappPane" mnemonicParsing="false">
                            <graphic>
                               <FontIcon id="whatsappIcon" iconLiteral="fab-whatsapp" styleClass="buttonIcon" text="" />
+                           </graphic>
+                        </Button>
+                        <Button id="infoButton" fx:id="aboutItem" mnemonicParsing="false" text="">
+                           <graphic>
+                              <FontIcon id="infoIcon" iconLiteral="fas-info-circle" iconSize="20" styleClass="buttonIcon" />
                            </graphic>
                         </Button>
                         <Button mnemonicParsing="false" text="Settings" />
@@ -203,7 +208,7 @@
                                     <Label text="Description:" GridPane.rowIndex="1" />
                                     <Label text="Price:" GridPane.rowIndex="2" />
                                     <TextField fx:id="itemAddName" GridPane.columnIndex="1" />
-                                    <TextArea fx:id="itemAddDescription" prefHeight="135.0" prefWidth="413.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                    <TextArea fx:id="itemAddDescription" prefHeight="135.0" prefWidth="413.0" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                                     <TextField fx:id="itemAddPrice" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                                     <Label text="Currency:" GridPane.rowIndex="3" />
                                     <HBox alignment="CENTER_LEFT" prefHeight="100.0" prefWidth="200.0" spacing="10.0" GridPane.columnIndex="1" GridPane.rowIndex="3">
@@ -410,7 +415,7 @@
                                           <Insets />
                                        </GridPane.margin>
                                     </HBox>
-                                    <TextField fx:id="groupName"  prefHeight="30.0" prefWidth="551.0" promptText="Type a group name..." GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" />
+                                    <TextField fx:id="groupName" prefHeight="30.0" prefWidth="551.0" promptText="Type a group name..." GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" />
                                  </children>
                                  <VBox.margin>
                                     <Insets bottom="10.0" right="20.0" top="10.0" />

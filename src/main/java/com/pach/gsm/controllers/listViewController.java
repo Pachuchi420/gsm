@@ -33,6 +33,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class listViewController {
     @FXML
@@ -148,9 +149,12 @@ public class listViewController {
     private Label reserveItemWarningMessage;
 
 
-    // Image editing
-    @FXML
-    private ImageView image1, image2, image3;
+    // Item details
+   @FXML
+    private TextArea itemDescriptionTableView;
+
+
+
 
 
 
@@ -301,11 +305,14 @@ public class listViewController {
                 try {
                     displayItemImage(newValue);
                     displayItemDetails(newValue);
+                    itemDescriptionTableView.setVisible(true);
+                    itemDescriptionTableView.setText(newValue.getDescription());
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             } else {
                 imageThumbnail.setImage(null); // Optionally, clear or set a default image when no item is selected
+                itemDescriptionTableView.setVisible(false);
             }
         });
 
@@ -773,6 +780,9 @@ public class listViewController {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/pach/gsm/views/generalDialogBox.fxml"));
             Parent dialogRoot = loader.load();
+            Scene scene = new Scene(dialogRoot);
+            scene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/styles/dark.css")).toExternalForm());
+
 
             generalDialogBoxController controller = loader.getController();
             controller.setDialogTitle("️You are removing an item!");
@@ -782,9 +792,9 @@ public class listViewController {
 
 
             Stage dialogStage = new Stage();
+            dialogStage.initModality(Modality.APPLICATION_MODAL);
             dialogStage.setResizable(false);
             dialogStage.setTitle("Remove Item");
-            dialogStage.initModality(Modality.APPLICATION_MODAL);
             dialogStage.setScene(new Scene(dialogRoot));
             dialogStage.showAndWait();
 

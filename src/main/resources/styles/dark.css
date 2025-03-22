@@ -814,3 +814,91 @@
 .layoutPaneHolder{
     -fx-background-color: #585a5c;
 }
+
+.itemDescription{
+    -fx-background-color: #2d2f2f;
+    -fx-padding: 5px;
+    -fx-background-radius: 5px;
+    -fx-border-color: #4d4f4f;
+    -fx-border-width: 1px;
+    -fx-border-radius: 5px;
+}
+
+#infoButton #infoIcon{
+        -fx-icon-size: 20px;
+}
+
+/* === Scrollbar Styling for TextArea === */
+
+/* Vertical scrollbar */
+.text-area .scroll-bar:vertical {
+    -fx-pref-width: 6px;
+    -fx-background-color: transparent;
+}
+
+/* Horizontal scrollbar */
+.text-area .scroll-bar:horizontal {
+    -fx-pref-height: 6px;
+    -fx-background-color: transparent;
+}
+
+/* Scroll track */
+.text-area .scroll-bar .track {
+    -fx-background-color: transparent;
+}
+
+/* Scroll thumb */
+.text-area .scroll-bar .thumb {
+    -fx-background-color: #6c6b69;
+    -fx-background-radius: 6px;
+}
+
+.text-area .scroll-bar .thumb:hover {
+    -fx-background-color: #8c8c8c;
+}
+
+.text-area .scroll-bar .thumb:pressed {
+    -fx-background-color: #aaaaaa;
+}
+
+/* Remove increment/decrement buttons */
+.text-area .scroll-bar .increment-button,
+.text-area .scroll-bar .decrement-button {
+    -fx-shape: "";
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+    -fx-border-color: transparent;
+    -fx-max-height: 0;
+    -fx-pref-height: 0;
+    -fx-min-height: 0;
+    -fx-max-width: 0;
+    -fx-pref-width: 0;
+    -fx-min-width: 0;
+    -fx-opacity: 0;
+}
+
+#itemDescriptionTableView {
+    -fx-background-color: #2d2f2f;
+    -fx-border-color: #4d4f4f;
+    -fx-border-width: 1px;
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+    -fx-text-fill: #999a9a;
+    -fx-padding: 5px;
+}
+
+/* Make the content region match the background */
+#itemDescriptionTableView .content {
+    -fx-background-color: #2d2f2f;
+    -fx-background-radius: 5px;
+}
+
+/* Remove the green border and change nothing when focused */
+#itemDescriptionTableView:focused {
+    -fx-border-color: #4d4f4f;
+    -fx-background-color: #2d2f2f;
+}
+
+#itemDescriptionTableView:focused .content {
+    -fx-background-color: #2d2f2f;
+}
