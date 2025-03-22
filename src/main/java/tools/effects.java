@@ -4,6 +4,8 @@ import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.shape.Rectangle;
 import javafx.util.Duration;
+import javafx.animation.ScaleTransition;
+import javafx.scene.Node;
 
 public class effects {
     private static FadeTransition fadeOut; // Store transition globally
@@ -61,6 +63,8 @@ public class effects {
         clip.setArcHeight(radius);
         imageView.setClip(clip);
     }
+
+
 
 
 }

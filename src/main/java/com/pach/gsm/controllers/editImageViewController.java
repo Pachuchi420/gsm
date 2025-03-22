@@ -9,6 +9,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.Dragboard;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.*;
 import javafx.scene.shape.Rectangle;
@@ -86,6 +87,25 @@ public class editImageViewController {
                 }
             }
         });
+
+        rootAnchorPane.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.BACK_SPACE || event.getCode() == KeyCode.DELETE) {
+                for (StackPane slot : getAllSlots()) {
+                    if (!slot.getChildren().isEmpty()) {
+                        Node child = slot.getChildren().get(0);
+
+                        // ✅ check focus inside resizable container
+                        if (child instanceof Pane pane && pane.isFocused()) {
+                            ImageView img = (ImageView) pane.getChildren().get(0);
+                            restoreImageToSidebar(img.getImage());
+
+                            slot.getChildren().clear();
+                            break; // optional: delete only one per key press
+                        }
+                    }
+                }
+            }
+        });
     }
 
     public void loadImages(List<Image> images) {
@@ -95,6 +115,27 @@ public class editImageViewController {
         if (images.size() > 3) image4.setImage(images.get(3));
     }
 
+
+
+    private void restoreImageToSidebar(Image image) {
+        if (image1.getImage() == null) {
+            image1.setImage(image);
+            image1.setVisible(true);
+            image1.setOpacity(1.0);
+        } else if (image2.getImage() == null) {
+            image2.setImage(image);
+            image2.setVisible(true);
+            image2.setOpacity(1.0);
+        } else if (image3.getImage() == null) {
+            image3.setImage(image);
+            image3.setVisible(true);
+            image3.setOpacity(1.0);
+        } else if (image4.getImage() == null) {
+            image4.setImage(image);
+            image4.setVisible(true);
+            image4.setOpacity(1.0);
+        }
+    }
     private void makeDraggable(ImageView thumbnail) {
         thumbnail.setOnDragDetected(event -> {
             if (thumbnail.getImage() == null) return;
@@ -103,7 +144,40 @@ public class editImageViewController {
             ClipboardContent content = new ClipboardContent();
             content.putImage(thumbnail.getImage());
             db.setContent(content);
+
+            // Show smaller preview when dragging
+            Image original = thumbnail.getImage();
+            double previewSize = 64;
+            double ratio = original.getWidth() / original.getHeight();
+            double width = previewSize;
+            double height = previewSize;
+
+            if (ratio > 1) height = previewSize / ratio;
+            else width = previewSize * ratio;
+
+            ImageView preview = new ImageView(original);
+            preview.setFitWidth(width);
+            preview.setFitHeight(height);
+            preview.setPreserveRatio(true);
+
+            SnapshotParameters snapParams = new SnapshotParameters();
+            snapParams.setFill(javafx.scene.paint.Color.TRANSPARENT);
+            WritableImage dragImage = preview.snapshot(snapParams, null);
+
+            db.setDragView(dragImage);
+            thumbnail.setOpacity(0.3); // visually indicate "dragging"
             event.consume();
+        });
+
+        // ✅ Handle drop result
+        thumbnail.setOnDragDone(event -> {
+            if (event.getTransferMode() == TransferMode.COPY) {
+                // Drop was successful → hide this image
+                thumbnail.setImage(null);
+            } else {
+                // Not dropped anywhere → reset opacity
+                thumbnail.setOpacity(1.0);
+            }
         });
     }
 
@@ -139,6 +213,9 @@ public class editImageViewController {
                 Pane resizableContainer = ResizableImageHelper.makeResizable(droppedImage);
                 makeImageMovable(resizableContainer);
 
+                resizableContainer.setFocusTraversable(true);
+                resizableContainer.requestFocus();
+
                 slot.getChildren().clear();
                 slot.getChildren().add(resizableContainer);
 
@@ -160,6 +237,7 @@ public class editImageViewController {
         imageView.setOnMousePressed(event -> {
             dragDelta.x = event.getX();
             dragDelta.y = event.getY();
+            imageView.requestFocus();
         });
 
         imageView.setOnMouseDragged(event -> {
