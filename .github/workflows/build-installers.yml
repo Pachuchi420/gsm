@@ -70,6 +70,11 @@ jobs:
             --type exe ^
             --dest dist ^
             --app-version "${{ steps.version.outputs.VERSION }}"
+            --vendor "Pachuchi"
+            --win-dir-chooser ^
+            --win-menu ^
+            --win-shortcut ^
+          
 
       - name: Upload installers to GitHub Release
         uses: softprops/action-gh-release@v1
