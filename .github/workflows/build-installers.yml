@@ -72,7 +72,7 @@ jobs:
           --vendor Pachuchi ^
           --win-dir-chooser ^
           --win-menu ^
-          --win-shortcut
+          --win-shortcut ^
                 
 
       - name: Upload installers to GitHub Release
