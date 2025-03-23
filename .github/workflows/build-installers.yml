@@ -61,19 +61,19 @@ jobs:
         if: runner.os == 'Windows'
         shell: cmd
         run: |
-          "jpackage ^
-            --input target ^
-            --main-jar gsm-1.0-SNAPSHOT.jar ^
-            --main-class com.pach.gsm.Launcher ^
-            --name GSM ^
-            --type exe ^
-            --dest dist ^
-            --app-version ${{ steps.version.outputs.VERSION }} ^
-            --vendor Pachuchi ^
-            --win-dir-chooser ^
-            --win-menu ^
-            --win-shortcut"
-          
+          jpackage ^
+          --input target ^
+          --main-jar gsm-1.0-SNAPSHOT.jar ^
+          --main-class com.pach.gsm.Launcher ^
+          --name GSM ^
+          --type exe ^
+          --dest dist ^
+          --app-version ${{ steps.version.outputs.VERSION }} ^
+          --vendor Pachuchi ^
+          --win-dir-chooser ^
+          --win-menu ^
+          --win-shortcut
+                
 
       - name: Upload installers to GitHub Release
         uses: softprops/action-gh-release@v1
