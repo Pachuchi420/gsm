@@ -32,6 +32,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -830,6 +831,8 @@ public class listViewController {
                 // Ensure UI updates on JavaFX thread
                 javafx.application.Platform.runLater(() -> {
                     itemList.setItems(filteredItems);
+                    itemList.getSelectionModel().clearSelection();
+                    imageThumbnail.setImage(null);
                     System.out.println("✅ TableView updated with latest items for user: " + storage.getUserID());
                 });
             } else {
@@ -939,6 +942,7 @@ public class listViewController {
         Item newItem = new Item(name, description, itemAddImageData, price, currency, priority);
         storageManager storage = storageManager.getInstance();
         storage.addItemLocal(newItem);
+
 
         List<String> selectedGroupIDs = new ArrayList<>();
         for (CheckBox checkBox : itemAddGroupsList.getItems()) {
@@ -1210,13 +1214,23 @@ public class listViewController {
     }
 
     private void displayItemImage(Item item) throws IOException {
-        if (item != null && item.getImageData() != null) {
-            BufferedImage buffered = ImageIO.read(new ByteArrayInputStream(item.getImageData()));
-            Image fxImage = SwingFXUtils.toFXImage(buffered, null);
-            imageThumbnail.setImage(fxImage);
+        if (item != null && item.getThumbnailData() != null) {
+            ByteArrayInputStream bais = new ByteArrayInputStream(item.getThumbnailData());
+            BufferedImage buffered = ImageIO.read(bais);
+
+            if (buffered != null) {
+                Image fxImage = SwingFXUtils.toFXImage(buffered, null);
+                imageThumbnail.setImage(fxImage);
+            } else {
+                System.out.println("❌ Could not parse thumbnail image for item: " + item.getId());
+                imageThumbnail.setImage(null);
+            }
+
         } else {
+            // 🔇 Silently skip if thumbnailData is missing – this is expected on freshly synced items
             imageThumbnail.setImage(null);
         }
+
         itemList.refresh();
     }
 
@@ -1524,6 +1538,7 @@ public class listViewController {
 
                 try {
                     List<Item> items = storageManager.getInstance().getEligibleItems();
+                    Collections.shuffle(items);
 
                     if (items.isEmpty()) {
                         System.out.println("⏳ No eligible items available to send. Retrying in 30s...");

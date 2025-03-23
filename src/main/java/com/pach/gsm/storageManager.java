@@ -5,7 +5,12 @@ import tools.DBWorker;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.sql.*;
 import java.sql.Date;
 import java.time.Duration;
@@ -14,7 +19,7 @@ import java.time.LocalTime;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.prefs.Preferences;
-
+import org.imgscalr.Scalr;
 
 public class storageManager {
 
@@ -139,6 +144,7 @@ public class storageManager {
                     "name TEXT NOT NULL," +
                     "description TEXT," +
                     "imagedata BLOB," +
+                    "thumbnaildata BLOB," +
                     "price INTEGER NOT NULL," +
                     "currency TEXT," +
                     "date TIMESTAMP DEFAULT CURRENT_TIMESTAMP," +
@@ -179,12 +185,93 @@ public class storageManager {
             stmt.execute(sqlItem);
             stmt.execute(sqlGroup);
             stmt.execute(sqlItemGroup);
+
+            try (ResultSet rs = stmt.executeQuery("PRAGMA table_info(items);")) {
+                boolean thumbnailExists = false;
+                while (rs.next()) {
+                    if ("thumbnaildata".equals(rs.getString("name"))) {
+                        thumbnailExists = true;
+                        break;
+                    }
+                }
+
+                if (!thumbnailExists) {
+                    System.out.println("🛠️ Migrating: Adding 'thumbnaildata' column to items table...");
+                    stmt.execute("ALTER TABLE items ADD COLUMN thumbnaildata BLOB;");
+                    System.out.println("✅ Migration complete: 'thumbnaildata' column added.");
+                    generateThumbnails();
+                } else {
+                    System.out.println("🔍 'thumbnaildata' column already exists. No migration needed.");
+                }
+            } catch (SQLException e) {
+                System.out.println("❌ Migration error: " + e.getMessage());
+            }
+
+
             System.out.println("✅ User-specific database initialized for: " + userID);
             setDbReady(true);
         } catch (SQLException e) {
             e.printStackTrace();
             System.out.println("❌ Database initialization failed.");
             setDbReady(false);
+        }
+    }
+
+
+    public void generateThumbnails() {
+        getAllLocalItems(getUserID(), items -> {
+            for (Item item : items) {
+                generateThumbnail(item);
+            }
+        });
+    }
+
+    public void generateThumbnail(Item item) {
+        byte[] originalImageBytes = item.getImageData();
+        if (originalImageBytes == null || originalImageBytes.length == 0) {
+            System.out.println("❌ No image data found for item: " + item.getName());
+            return;
+        }
+
+        try {
+            ByteArrayInputStream inStream = new ByteArrayInputStream(originalImageBytes);
+            BufferedImage originalImage = ImageIO.read(inStream);
+
+            if (originalImage == null) {
+                System.out.println("⚠️ Original image is invalid or unreadable for item: " + item.getId());
+                return;
+            }
+
+            // Resize using imgscalr to 400px width
+            BufferedImage thumbnail = Scalr.resize(originalImage, Scalr.Method.QUALITY, 400);
+
+            if (thumbnail == null) {
+                System.out.println("❌ Failed to resize image for item: " + item.getId());
+                return;
+            }
+
+            ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+
+            // Try writing the thumbnail as JPEG
+            boolean success = ImageIO.write(thumbnail, "png", outStream);
+            if (!success) {
+                System.out.println("❌ ImageIO.write failed for thumbnail (format unsupported?) for item: " + item.getId());
+                return;
+            }
+
+            byte[] thumbnailBytes = outStream.toByteArray();
+
+            if (thumbnailBytes == null || thumbnailBytes.length < 100) {
+                System.out.println("❌ Thumbnail bytes too small or empty for item: " + item.getId());
+                return;
+            }
+
+            item.setThumbnailData(thumbnailBytes);
+            System.out.println("✅ Thumbnail successfully generated for item: " + item.getId());
+
+        } catch (IOException e) {
+            System.out.println("❌ IOException during thumbnail generation for item: " + item.getId());
+            e.printStackTrace();
         }
     }
     public String getDatabasePath(String userID) {
@@ -211,10 +298,12 @@ public class storageManager {
 
     // 📦 ITEM MANAGEMENT
     public void addItemLocal(Item item) {
+        generateThumbnail(item);
+
         dbWorker.submitTask(() -> {
-        String sql = "INSERT INTO items (id, userID, name, description, imagedata, price, currency, date, sold, uploaddate, priority, " +
+        String sql = "INSERT INTO items (id, userID, name, description, imagedata, thumbnaildata, price, currency, date, sold, uploaddate, priority, " +
                 "reservation_buyer, reservation_place, reservation_date, reservation_reserved, reservation_hour, reservation_minute, supabaseSync, toDelete, toUpdate) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = DriverManager.getConnection(DATABASE_URL);
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -224,21 +313,22 @@ public class storageManager {
             pstmt.setString(3, item.getName());
             pstmt.setString(4, item.getDescription());
             pstmt.setBytes(5, item.getImageData());
-            pstmt.setInt(6, item.getPrice());
-            pstmt.setString(7, item.getCurrency());
-            pstmt.setTimestamp(8, java.sql.Timestamp.valueOf(item.getDate()));
-            pstmt.setInt(9, item.getSold() ? 1:0);
-            pstmt.setDate(10, item.getUploadDate() != null ? java.sql.Date.valueOf(item.getUploadDate()) : null);
-            pstmt.setInt(11, item.getPriority());
-            pstmt.setString(12, item.getReservation().getBuyer());
-            pstmt.setString(13, item.getReservation().getPlace());
-            pstmt.setDate(14, item.getReservationDate() != null ? java.sql.Date.valueOf(item.getReservationDate()) : null);
-            pstmt.setInt(15, item.getReservation().getReserved()  ? 1:0);
-            pstmt.setInt(16, item.getReservation().getHour());
-            pstmt.setInt(17, item.getReservation().getMinute());
-            pstmt.setInt(18, item.getSupabaseSync() ? 1:0);
-            pstmt.setInt(19, item.getToDelete() ? 1:0);
-            pstmt.setInt(20, item.getToUpdate() ? 1:0);
+            pstmt.setBytes(6, item.getThumbnailData());
+            pstmt.setInt(7, item.getPrice());
+            pstmt.setString(8, item.getCurrency());
+            pstmt.setTimestamp(9, java.sql.Timestamp.valueOf(item.getDate()));
+            pstmt.setInt(10, item.getSold() ? 1:0);
+            pstmt.setDate(11, item.getUploadDate() != null ? java.sql.Date.valueOf(item.getUploadDate()) : null);
+            pstmt.setInt(12, item.getPriority());
+            pstmt.setString(13, item.getReservation().getBuyer());
+            pstmt.setString(14, item.getReservation().getPlace());
+            pstmt.setDate(15, item.getReservationDate() != null ? java.sql.Date.valueOf(item.getReservationDate()) : null);
+            pstmt.setInt(16, item.getReservation().getReserved()  ? 1:0);
+            pstmt.setInt(17, item.getReservation().getHour());
+            pstmt.setInt(18, item.getReservation().getMinute());
+            pstmt.setInt(19, item.getSupabaseSync() ? 1:0);
+            pstmt.setInt(20, item.getToDelete() ? 1:0);
+            pstmt.setInt(21, item.getToUpdate() ? 1:0);
             pstmt.executeUpdate();
             System.out.println("✅ Item added to local database!");
         } catch (SQLException e) {
@@ -254,9 +344,11 @@ public class storageManager {
             item.setSupabaseSync(false);
         }
 
+        generateThumbnail(item);
+
 
         dbWorker.submitTask(() -> {
-            String sql = "UPDATE items SET name = ?, description = ?, imagedata = ?, price = ?, currency = ?, date = ?, sold = ?, uploaddate = ?, priority = ?, " +
+            String sql = "UPDATE items SET name = ?, description = ?, imagedata = ?, thumbnaildata = ? , price = ?, currency = ?, date = ?, sold = ?, uploaddate = ?, priority = ?, " +
                     "reservation_buyer = ?, reservation_place = ?, reservation_date = ?, reservation_reserved = ?, reservation_hour = ?, reservation_minute = ?, supabaseSync = ?, toDelete = ?, toUpdate = ? " +
                     "WHERE id = ? AND userID = ?";  // Ensure we update the correct item
 
@@ -266,31 +358,32 @@ public class storageManager {
                 pstmt.setString(1, item.getName());
                 pstmt.setString(2, item.getDescription());
                 pstmt.setBytes(3, item.getImageData());
-                pstmt.setInt(4, item.getPrice());
-                pstmt.setString(5, item.getCurrency());
-                pstmt.setTimestamp(6, java.sql.Timestamp.valueOf(item.getDate()));
-                pstmt.setInt(7, item.getSold() ? 1 : 0);
-                pstmt.setDate(8, item.getUploadDate() != null ? java.sql.Date.valueOf(item.getUploadDate()) : null);
-                pstmt.setInt(9, item.getPriority());
+                pstmt.setBytes(4, item.getThumbnailData());
+                pstmt.setInt(5, item.getPrice());
+                pstmt.setString(6, item.getCurrency());
+                pstmt.setTimestamp(7, java.sql.Timestamp.valueOf(item.getDate()));
+                pstmt.setInt(8, item.getSold() ? 1 : 0);
+                pstmt.setDate(9, item.getUploadDate() != null ? java.sql.Date.valueOf(item.getUploadDate()) : null);
+                pstmt.setInt(10, item.getPriority());
 
                 // Reservation details
-                pstmt.setString(10, item.getReservation().getBuyer());
-                pstmt.setString(11, item.getReservation().getPlace());
-                pstmt.setDate(12, item.getReservationDate() != null ? java.sql.Date.valueOf(item.getReservationDate()) : null);
-                pstmt.setInt(13, item.getReservation().getReserved() ? 1 : 0);
-                pstmt.setInt(14, item.getReservation().getHour());
-                pstmt.setInt(15, item.getReservation().getMinute());
+                pstmt.setString(11, item.getReservation().getBuyer());
+                pstmt.setString(12, item.getReservation().getPlace());
+                pstmt.setDate(13, item.getReservationDate() != null ? java.sql.Date.valueOf(item.getReservationDate()) : null);
+                pstmt.setInt(14, item.getReservation().getReserved() ? 1 : 0);
+                pstmt.setInt(15, item.getReservation().getHour());
+                pstmt.setInt(16, item.getReservation().getMinute());
 
                 // Sync status
-                pstmt.setInt(16, item.getSupabaseSync() ? 1 : 0);
+                pstmt.setInt(17, item.getSupabaseSync() ? 1 : 0);
 
                 // Delete & Update status
-                pstmt.setInt(17, item.getToDelete() ? 1 : 0);
-                pstmt.setInt(18, item.getToUpdate() ? 1 : 0);
+                pstmt.setInt(18, item.getToDelete() ? 1 : 0);
+                pstmt.setInt(19, item.getToUpdate() ? 1 : 0);
 
                 // Identify which item to update
-                pstmt.setString(19, item.getId());
-                pstmt.setString(20, item.getUserID());
+                pstmt.setString(20, item.getId());
+                pstmt.setString(21, item.getUserID());
 
                 int rowsUpdated = pstmt.executeUpdate();
 
@@ -332,7 +425,7 @@ public class storageManager {
                     item.setSupabaseSync(rs.getInt("supabaseSync") == 1);
                     item.setToDelete(rs.getInt("toDelete") == 1);
                     item.setToUpdate(rs.getInt("toUpdate") == 1);
-
+                    item.setThumbnailData(rs.getBytes("thumbnaildata"));
                     Reservation itemReservation = item.getReservation();
                     itemReservation.setBuyer(rs.getString("reservation_buyer"));
                     itemReservation.setPlace(rs.getString("reservation_place"));

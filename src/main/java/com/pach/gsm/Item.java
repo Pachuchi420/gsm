@@ -16,6 +16,7 @@ public class Item implements Serializable {
     private String name;
     private String description;
     private byte[] imageData;
+    private byte[] thumbnailData;
     private int price;
     private String currency;
     private final LocalDateTime date;
@@ -29,6 +30,7 @@ public class Item implements Serializable {
     private Boolean toDelete = false;
     private Boolean toUpdate = false;
     private Boolean supabaseSync = false;
+
 
     public Item(String name, String description, byte[] imageData, int price, String currency, int priority) {
         this.id = makeUniqueID();
@@ -231,5 +233,14 @@ public class Item implements Serializable {
     public void setToUpdate(Boolean toUpdate) {
         this.toUpdate = toUpdate;
     }
+
+    public byte[] getThumbnailData() {
+        return thumbnailData;
+    }
+
+    public void setThumbnailData(byte[] thumbnailData) {
+        this.thumbnailData = thumbnailData;
+    }
+
 
 }
