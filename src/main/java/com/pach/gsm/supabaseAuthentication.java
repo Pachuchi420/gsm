@@ -218,7 +218,7 @@ public class supabaseAuthentication {
 
                     if (supabaseItems != null) {
                         for (Item item : supabaseItems) {
-                            localStorage.addItemLocal(item); // Store in local SQLite
+                            localStorage.addItemFromSupabase(item); // NEW
                         }
                         System.out.println("✅ Synced items from Supabase to local database.");
                     } else {
@@ -271,8 +271,9 @@ public class supabaseAuthentication {
         List<Item> supabaseItems = supabaseDB.fetchItems(userID);
         if (supabaseItems != null) {
             for (Item item : supabaseItems) {
-                storage.addItemLocal(item); // Store in local SQLite
+                storage.addItemFromSupabase(item);
             }
+
             System.out.println("✅ Synced items from Supabase to local database.");
         } else {
             System.out.println("🚨 No items to sync found in supabase!");

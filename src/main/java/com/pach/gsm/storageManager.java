@@ -336,6 +336,50 @@ public class storageManager {
         }
         });
     }
+
+
+
+    public void addItemFromSupabase(Item item) {
+        // 🔒 Safety checks for required fields
+        if (item.getName() == null || item.getName().isBlank()) {
+            System.out.println("❌ Skipping Supabase item with null or blank name: " + item.getId());
+            return;
+        }
+
+        if (item.getUserID() == null) {
+            System.out.println("❌ Skipping Supabase item with null userID: " + item.getId());
+            return;
+        }
+
+        // 🌱 Set default reservation if null
+        if (item.getReservation() == null) {
+            item.setReservation(new Reservation());
+        }
+
+        // ✅ Ensure no NPE on reservation sub-fields
+        Reservation r = item.getReservation();
+        if (r.getBuyer() == null) r.setBuyer("");
+        if (r.getPlace() == null) r.setPlace("");
+        if (r.getReserved() == null) r.setReserved(false);
+
+        // 📦 Ensure thumbnail is null (since we're not using imageData)
+        item.setImageData(null);
+        item.setThumbnailData(null);
+
+        // 🧼 Sanitize optional booleans
+        if (item.getToDelete() == null) item.setToDelete(false);
+        if (item.getToUpdate() == null) item.setToUpdate(false);
+        if (item.getSupabaseSync() == null) item.setSupabaseSync(true); // assume true since it came from Supabase
+        if (!item.getSold()) item.setSold(false); // guard against null if needed
+
+        // 🗓️ Upload date can be null, no need to touch
+
+        // 🚀 Insert like normal
+        addItemLocal(item);
+    }
+
+
+
     public void updateItemLocal(Item item) {
 
         if (!supabaseAuthentication.checkIfOnline()){

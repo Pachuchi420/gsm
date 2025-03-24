@@ -1,5 +1,7 @@
 package com.pach.gsm;
 
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 import javafx.scene.image.Image;
 
 import java.io.*;
@@ -10,26 +12,30 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 public class Item implements Serializable {
-    private String id;
+    @Expose private String id;
 
+    @Expose
+    @SerializedName("userid")
     private String userID;
-    private String name;
-    private String description;
-    private byte[] imageData;
-    private byte[] thumbnailData;
-    private int price;
-    private String currency;
-    private final LocalDateTime date;
 
+    @Expose private String name;
+    @Expose private String description;
+    @Expose private byte[] imageData;
+    @Expose private byte[] thumbnailData;
+    @Expose private int price;
+    @Expose private String currency;
+    @Expose private LocalDateTime date;
+
+    @Expose
     private Reservation reservation = new Reservation(null, null, null, false);
 
-    private LocalDate uploadDate;
+    @Expose private LocalDate uploadDate;
 
-    private int priority;
-    private Boolean sold = false;
-    private Boolean toDelete = false;
-    private Boolean toUpdate = false;
-    private Boolean supabaseSync = false;
+    @Expose private int priority;
+    @Expose private Boolean sold = false;
+    @Expose private Boolean toDelete = false;
+    @Expose private Boolean toUpdate = false;
+    @Expose private Boolean supabaseSync = false;
 
 
     public Item(String name, String description, byte[] imageData, int price, String currency, int priority) {
@@ -47,6 +53,11 @@ public class Item implements Serializable {
         this.supabaseSync = false;
         this.toDelete = false;
     }
+
+    public Item() {
+        this.date = LocalDateTime.now(); // fallback
+    }
+
 
     private String makeUniqueID(){
         return UUID.randomUUID().toString();
@@ -134,6 +145,10 @@ public class Item implements Serializable {
     }
 
     public Reservation getReservation(){return reservation;}
+    public void setReservation(Reservation reservation) {
+        this.reservation = reservation;
+    }
+
 
     public Boolean isReserved(){
         return reservation.getReserved();

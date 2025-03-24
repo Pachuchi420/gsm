@@ -1,15 +1,17 @@
 package com.pach.gsm;
 
+import com.google.gson.annotations.Expose;
+
 import java.io.Serializable;
 import java.time.LocalDate;
 
 public class Reservation implements Serializable {
-    private String buyer;
-    private String place;
-    private LocalDate date;
-    private Boolean reserved;
-    private int hour;   // New field to store the hour
-    private int minute; // New field to store the minute
+    @Expose private String buyer;
+    @Expose private String place;
+    @Expose private LocalDate date;
+    @Expose private Boolean reserved;
+    @Expose private int hour;   // New field to store the hour
+    @Expose private int minute; // New field to store the minute
 
     public Reservation(String buyer, String place, LocalDate date, Boolean reserved){
         this.buyer = buyer;
@@ -19,6 +21,16 @@ public class Reservation implements Serializable {
         this.hour = 0;   // Default hour to 0
         this.minute = 0; // Default minute to 0
     }
+
+    public Reservation() {
+        this.buyer = null;
+        this.place = null;
+        this.date = null;
+        this.reserved = false;
+        this.hour = 0;
+        this.minute = 0;
+    }
+
 
     public String getBuyer() {
         return buyer;

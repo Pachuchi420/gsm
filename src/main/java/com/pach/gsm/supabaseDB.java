@@ -1,12 +1,13 @@
 package com.pach.gsm;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import okhttp3.*;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class supabaseDB {
@@ -16,7 +17,18 @@ public class supabaseDB {
     private static final String SUPABASE_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1cm16eXdzc2hsbnFpc3JsdXBxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk4NzI0OTAsImV4cCI6MjA1NTQ0ODQ5MH0.onMgwEmnbE8AjAUEQvXtKXVbTjL5q115jjkui2Dh3mw"; // Secure API key
 
     private static final OkHttpClient client = new OkHttpClient();
-    private static final Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
+
+    private static final Gson gson = new GsonBuilder()
+            .registerTypeAdapter(LocalDate.class, (JsonDeserializer<LocalDate>) (json, type, context) ->
+                    LocalDate.parse(json.getAsJsonPrimitive().getAsString()))
+            .registerTypeAdapter(LocalDateTime.class, (JsonDeserializer<LocalDateTime>) (json, type, context) ->
+                    LocalDateTime.parse(json.getAsJsonPrimitive().getAsString()))
+            .excludeFieldsWithoutExposeAnnotation()
+            .create();
+
+
+
+
     private static supabaseDB supabaseDBInstance;
 
 
@@ -61,6 +73,8 @@ public class supabaseDB {
             System.out.println("❌ Network error while fetching items: " + e.getMessage());
             return null;
         }
+
+
     }
 
     public static boolean addItem(String userID, Item item) {
