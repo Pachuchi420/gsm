@@ -26,7 +26,6 @@ public class App extends Application {
             stage.setMinWidth(1000);
             stage.setMinHeight(600);
             stage.setScene(scene);
-            stage.getIcons().add(new Image(App.class.getResourceAsStream("/icon/icon.png")));
             stage.show();
         } else {
             fxmlFile = "/com/pach/gsm/views/loginView.fxml"; // Otherwise, show login
@@ -35,7 +34,6 @@ public class App extends Application {
             Scene scene = new Scene(fxmlLoader.load(), 600, 400);
             stage.setResizable(false);
             stage.setScene(scene);
-            stage.getIcons().add(new Image(App.class.getResourceAsStream("/icon/icon.png")));
             stage.show();
         }
     }
