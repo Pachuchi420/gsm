@@ -538,8 +538,8 @@ public class listViewController {
                 enableChatbot.setText("Disabled ");
                 enableChatbot.setSelected(false);
 
-                storageManager.getInstance().deleteAllGroups();
-                storageManager.getInstance().deleteAllItemGroupLinks();
+                //storageManager.getInstance().deleteAllGroups();
+                //storageManager.getInstance().deleteAllItemGroupLinks();
 
                 refreshTable(storageManager.getInstance().getUserID());
 
