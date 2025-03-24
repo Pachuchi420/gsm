@@ -43,6 +43,11 @@ jobs:
         if: runner.os == 'macOS'
         run: echo "JAVA_HOME=$JAVA_HOME" >> $GITHUB_ENV
 
+      - name: Copy icons to working dir
+        run: |
+          mkdir -p resources/icon
+          cp src/main/resources/icon/* resources/icon/
+
       - name: Create native installer (Linux and macOS)
         if: runner.os != 'Windows'
         run: |
@@ -57,6 +62,8 @@ jobs:
             --app-version "${{ steps.version.outputs.VERSION }}" \
             --icon resources/icon/${{ runner.os == 'macOS' && 'icon.icns' || 'icon.png' }}
         shell: bash
+
+
 
       - name: Create native installer (Windows)
         if: runner.os == 'Windows'
