@@ -361,10 +361,7 @@ public class storageManager {
         if (r.getBuyer() == null) r.setBuyer("");
         if (r.getPlace() == null) r.setPlace("");
         if (r.getReserved() == null) r.setReserved(false);
-
-        // 📦 Ensure thumbnail is null (since we're not using imageData)
-        item.setImageData(null);
-        item.setThumbnailData(null);
+        
 
         // 🧼 Sanitize optional booleans
         if (item.getToDelete() == null) item.setToDelete(false);
