@@ -1188,6 +1188,23 @@ public class listViewController {
                 dbWorker.submitTask(() -> {
                     storage.updateItemLocal(givenItem);
 
+                    File tempImage;
+                    try {
+                        tempImage = File.createTempFile("item-image", ".png");
+                        try (FileOutputStream fos = new FileOutputStream(tempImage)) {
+                            fos.write(givenItem.getImageData());
+
+                            boolean uploaded = SupabaseBucket.uploadImage(givenItem.getId(), tempImage);
+                            if (uploaded) {
+                                System.out.println("📤 Image uploaded to Supabase bucket!");
+                            } else {
+                                System.out.println("⚠️ Failed to upload image to bucket.");
+                            }
+                        }
+                    } catch (IOException e) {
+                        System.out.println("❌ Error creating or writing temp image: " + e.getMessage());
+                    }
+
                     // Fetch items asynchronously and update UI
                     storage.getAllLocalItems(givenItem.getUserID(), updatedItems -> {
                         javafx.application.Platform.runLater(() -> {
@@ -1209,7 +1226,32 @@ public class listViewController {
 
     private void updateItemOnSupabase(Item givenItem) {
         if (supabaseAuthentication.checkIfOnline()) {
-            supabaseDB.updateItem(storageManager.getInstance().getUserID(), givenItem);
+            boolean success = supabaseDB.updateItem(storageManager.getInstance().getUserID(), givenItem);
+
+            if (success) {
+                System.out.println("✅ Item updated in Supabase.");
+
+                // Upload updated image to bucket
+                File tempImage;
+                try {
+                    tempImage = File.createTempFile("item-image", ".png");
+                    try (FileOutputStream fos = new FileOutputStream(tempImage)) {
+                        fos.write(givenItem.getImageData());
+
+                        boolean uploaded = SupabaseBucket.uploadImage(givenItem.getId(), tempImage);
+                        if (uploaded) {
+                            System.out.println("📤 Image re-uploaded to Supabase bucket.");
+                        } else {
+                            System.out.println("⚠️ Failed to upload updated image.");
+                        }
+                    }
+                } catch (IOException e) {
+                    System.out.println("❌ Error writing updated image: " + e.getMessage());
+                }
+
+            } else {
+                System.out.println("⚠️ Item update failed — skipping image upload.");
+            }
         }
     }
 

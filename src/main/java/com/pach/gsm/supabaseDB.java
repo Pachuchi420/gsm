@@ -4,6 +4,7 @@ import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import okhttp3.*;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.time.LocalDate;
@@ -64,6 +65,24 @@ public class supabaseDB {
                 Type listType = new TypeToken<List<Item>>() {}.getType();
                 List<Item> items = gson.fromJson(jsonResponse, listType);
                 System.out.println("✅ Retrieved " + items.size() + " items from Supabase.");
+
+                // 🔽 Download image for each item
+                for (Item item : items) {
+                    try {
+                        File tempImage = File.createTempFile("item-img-", ".png");
+                        boolean downloaded = SupabaseBucket.downloadImage(item.getId(), tempImage);
+
+                        if (downloaded) {
+                            byte[] imageBytes = java.nio.file.Files.readAllBytes(tempImage.toPath());
+                            item.setImageData(imageBytes);
+                        } else {
+                            System.out.println("⚠️ No image found for item: " + item.getId());
+                        }
+                    } catch (IOException e) {
+                        System.out.println("❌ Failed to load image for item " + item.getId() + ": " + e.getMessage());
+                    }
+                }
+
                 return items;
             } else {
                 System.out.println("❌ Error fetching items: " + response.code());
