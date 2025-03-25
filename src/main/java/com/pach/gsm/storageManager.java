@@ -361,7 +361,7 @@ public class storageManager {
         if (r.getBuyer() == null) r.setBuyer("");
         if (r.getPlace() == null) r.setPlace("");
         if (r.getReserved() == null) r.setReserved(false);
-        
+
 
         // 🧼 Sanitize optional booleans
         if (item.getToDelete() == null) item.setToDelete(false);
@@ -517,11 +517,20 @@ public class storageManager {
                 // Optional: Sync with Supabase
                 if (supabaseAuthentication.checkIfOnline()) {
                     boolean success = supabaseDB.deleteItem(itemId);
+                    boolean imageSuccess = SupabaseBucket.deleteImage(itemId);
                     if (success) {
                         System.out.println("✅ Item deleted from Supabase.");
                     } else {
                         System.out.println("⚠️ Failed to delete item from Supabase.");
                     }
+
+                    if (imageSuccess) {
+                        System.out.println("✅ Item Image deleted from Supabase.");
+                    } else {
+                        System.out.println("⚠️ Failed to delete item image from Supabase.");
+                    }
+
+
                 }
 
             } catch (SQLException e) {
@@ -664,7 +673,16 @@ public class storageManager {
             try (Connection conn = DriverManager.getConnection(DATABASE_URL);
                  PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
+                String userId = storageManager.getInstance().getUserID();
+
+                storageManager.getInstance().getAllLocalItems(userId, items -> {
+                    for (Item item : items) {
+                        SupabaseBucket.deleteImage(item.getId());
+                    }
+                });
+
                 int rowsDeleted = pstmt.executeUpdate();
+
                 System.out.println("✅ Deleted " + rowsDeleted + " items marked for deletion.");
 
             } catch (SQLException e) {
