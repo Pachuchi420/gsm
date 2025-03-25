@@ -233,6 +233,12 @@ public class storageManager {
             return;
         }
 
+        byte[] thumbnailData = item.getThumbnailData();
+        if (thumbnailData != null && thumbnailData.length > 100) {
+            System.out.println("🖼️ Thumbnail already exists. Skipping generation for item: " + item.getId());
+            return;
+        }
+
         try {
             ByteArrayInputStream inStream = new ByteArrayInputStream(originalImageBytes);
             BufferedImage originalImage = ImageIO.read(inStream);
@@ -340,40 +346,17 @@ public class storageManager {
 
 
     public void addItemFromSupabase(Item item) {
-        // 🔒 Safety checks for required fields
-        if (item.getName() == null || item.getName().isBlank()) {
-            System.out.println("❌ Skipping Supabase item with null or blank name: " + item.getId());
-            return;
-        }
-
-        if (item.getUserID() == null) {
-            System.out.println("❌ Skipping Supabase item with null userID: " + item.getId());
-            return;
-        }
-
-        // 🌱 Set default reservation if null
-        if (item.getReservation() == null) {
-            item.setReservation(new Reservation());
-        }
-
-        // ✅ Ensure no NPE on reservation sub-fields
-        Reservation r = item.getReservation();
-        if (r.getBuyer() == null) r.setBuyer("");
-        if (r.getPlace() == null) r.setPlace("");
-        if (r.getReserved() == null) r.setReserved(false);
-
-
-        // 🧼 Sanitize optional booleans
-        if (item.getToDelete() == null) item.setToDelete(false);
-        if (item.getToUpdate() == null) item.setToUpdate(false);
-        if (item.getSupabaseSync() == null) item.setSupabaseSync(true); // assume true since it came from Supabase
-        if (!item.getSold()) item.setSold(false); // guard against null if needed
-
-        // 🗓️ Upload date can be null, no need to touch
-
-        // 🚀 Insert like normal
-        addItemLocal(item);
+        getItemById(item.getId(), existingItem -> {
+            if (existingItem != null) {
+                System.out.println("🔁 Item already exists locally. Updating instead: " + item.getId());
+                updateItemLocal(item);  // Update existing
+            } else {
+                System.out.println("➕ New item from Supabase: " + item.getId());
+                addItemLocal(item);     // Insert new
+            }
+        });
     }
+
 
 
 
@@ -577,6 +560,47 @@ public class storageManager {
 
             } catch (SQLException e) {
                 System.out.println("❌ Error fetching item by name: " + e.getMessage());
+                javafx.application.Platform.runLater(() -> callback.accept(null));
+            }
+        });
+    }
+
+    public void getItemById(String id, Consumer<Item> callback) {
+        dbWorker.submitTask(() -> {
+            String sql = "SELECT * FROM items WHERE id = ? AND userID = ?";
+            String userID = getUserID();
+
+            if (userID == null) {
+                System.out.println("⚠️ No user ID available. Cannot fetch item.");
+                return;
+            }
+
+            try (Connection conn = DriverManager.getConnection(DATABASE_URL);
+                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+                pstmt.setString(1, id);
+                pstmt.setString(2, userID);
+                ResultSet rs = pstmt.executeQuery();
+
+                if (rs.next()) {
+                    Item item = new Item(
+                            rs.getString("name"),
+                            rs.getString("description"),
+                            rs.getBytes("imagedata"),
+                            rs.getInt("price"),
+                            rs.getString("currency"),
+                            rs.getInt("priority")
+                    );
+                    item.setId(rs.getString("id"));
+                    item.setSupabaseSync(rs.getInt("supabaseSync") == 1);
+                    item.setToDelete(rs.getInt("toDelete") == 1);
+                    javafx.application.Platform.runLater(() -> callback.accept(item));
+                } else {
+                    javafx.application.Platform.runLater(() -> callback.accept(null));
+                }
+
+            } catch (SQLException e) {
+                System.out.println("❌ Error fetching item by ID: " + e.getMessage());
                 javafx.application.Platform.runLater(() -> callback.accept(null));
             }
         });
