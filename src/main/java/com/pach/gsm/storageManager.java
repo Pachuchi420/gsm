@@ -1,6 +1,7 @@
 package com.pach.gsm;
 
 import com.google.gson.Gson;
+import it.auties.protobuf.builtin.ProtobufRepeatedMixin;
 import tools.DBWorker;
 
 import javax.crypto.Cipher;
@@ -176,6 +177,7 @@ public class storageManager {
                     "itemID TEXT NOT NULL, " +
                     "groupID TEXT NOT NULL, " +
                     "last_uploaded TIMESTAMP, " +
+                    "group_name TEXT NOT_NULL," +
                     "FOREIGN KEY(itemID) REFERENCES items(id), " +
                     "FOREIGN KEY(groupID) REFERENCES groups(id), " +
                     "PRIMARY KEY (itemID, groupID));";
@@ -896,16 +898,17 @@ public class storageManager {
 
 
     // 👥📦 Group to Item Links Management
-    public void linkItemToGroups(String itemID, List<String> groupIDs) {
+    public void linkItemToGroups(String itemID, List<Group> groups) {
         dbWorker.submitTask(() -> {
-            String sql = "INSERT OR IGNORE INTO item_groups (itemID, groupID, last_uploaded) VALUES (?, ?, ?)";
+            String sql = "INSERT OR IGNORE INTO item_groups (itemID, groupID, last_uploaded, group_name) VALUES (?, ?, ?, ?)";
             try (Connection conn = DriverManager.getConnection(DATABASE_URL);
                  PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-                for (String groupID : groupIDs) {
+                for (Group group : groups) {
                     pstmt.setString(1, itemID);
-                    pstmt.setString(2, groupID);
+                    pstmt.setString(2, group.getId());
                     pstmt.setTimestamp(3, null);
+                    pstmt.setString(4, group.getName());
                     pstmt.addBatch();
                 }
 
@@ -1153,6 +1156,27 @@ public class storageManager {
         }
         return true;
     }
+
+    public String getItemGroupLinkByName(String name){
+        String sql = "SELECT groupID FROM item_groups WHERE group_name = ? LIMIT 1";
+        String groupID = null;
+
+        try (Connection conn = DriverManager.getConnection(DATABASE_URL);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1,name);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()){
+                groupID = rs.getString("groupID");
+                System.out.println("🔄 Found previous UUID for group name '" + name + "': " + groupID);
+            }
+
+        } catch (SQLException e) {
+            System.out.println("❌ Error retrieving item-group link by name: " + e.getMessage());
+        }
+        return groupID;
+    }
+
     public void deleteAllItemGroupLinks() {
         dbWorker.submitTask(() -> {
             String sql = "DELETE FROM item_groups";

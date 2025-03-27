@@ -441,8 +441,8 @@ public class listViewController {
 
         // Date & Time
         LocalDate date = reserveItemDate.getValue();
-        Integer hour =  reserveItemTimeHour.getValue();
-        Integer minute =  reserveItemTimeMinutes.getValue();
+        Integer hour = reserveItemTimeHour.getValue() == null ? 0 : reserveItemTimeHour.getValue();
+        Integer minute =  reserveItemTimeMinutes.getValue() == null ? 0 : reserveItemTimeMinutes.getValue();
 
 
         // Setting the item reservation
@@ -538,8 +538,6 @@ public class listViewController {
                 enableChatbot.setText("Disabled ");
                 enableChatbot.setSelected(false);
 
-                //storageManager.getInstance().deleteAllGroups();
-                //storageManager.getInstance().deleteAllItemGroupLinks();
 
                 refreshTable(storageManager.getInstance().getUserID());
 
@@ -944,22 +942,22 @@ public class listViewController {
         storage.addItemLocal(newItem);
 
 
-        List<String> selectedGroupIDs = new ArrayList<>();
+        List<Group> selectedGroups = new ArrayList<>();
         for (CheckBox checkBox : itemAddGroupsList.getItems()) {
             if (checkBox.isSelected()) {
                 Group group = (Group) checkBox.getUserData();
-                selectedGroupIDs.add(group.getId());
+                selectedGroups.add(group);
             }
         }
 
-        if (selectedGroupIDs.isEmpty()) {
+        if (selectedGroups.isEmpty()) {
             for (CheckBox checkBox : itemAddGroupsList.getItems()) {
                 Group group = (Group) checkBox.getUserData();
-                selectedGroupIDs.add(group.getId());
+                selectedGroups.add(group);
             }
         }
 
-        storage.linkItemToGroups(newItem.getId(), selectedGroupIDs);
+        storage.linkItemToGroups(newItem.getId(), selectedGroups);
         refreshTable(userID);
 
         addItemToggle.togglePane(addItemPane, () -> {
@@ -1278,6 +1276,7 @@ public class listViewController {
     }
 
     private void addGroup(String userID) {
+
         String name = groupName.getText();
         String intervalString = groupInterval.getText();
         Integer startHour = groupStartHour.getValue();
@@ -1289,6 +1288,7 @@ public class listViewController {
                 startMinute == null || endHour == null || endMinute == null) {
             groupWarningMessage.setText("Please fill in all fields!");
             effects.vanishText(groupWarningMessage, 2);
+            return;
         }
 
         if (storageManager.getInstance().getGroupByName(name) != null) {
@@ -1307,7 +1307,7 @@ public class listViewController {
 
         int interval;
         if (intervalString.contains(" ")) {
-            groupWarningMessage.setText("Price can't contain space \"_\" characters!");
+            groupWarningMessage.setText("Interval can't contain space characters!");
             effects.vanishText(groupWarningMessage, 2);
             return;
         }
@@ -1317,12 +1317,12 @@ public class listViewController {
         if (intervalString.matches("\\d+")) {
             interval = Integer.parseInt(intervalString);
             if (interval <= 0) {
-                groupWarningMessage.setText("Price can only be positive values.");
+                groupWarningMessage.setText("Interval can only be positive values.");
                 effects.vanishText(groupWarningMessage, 2);
                 return;
             }
         } else {
-            groupWarningMessage.setText("Price can only be digits.");
+            groupWarningMessage.setText("Interval can only be digits.");
             effects.vanishText(groupWarningMessage, 2);
             return;
         }
@@ -1330,8 +1330,16 @@ public class listViewController {
 
 
         // Create and add the group
-        Group newGroup = new Group(name, interval, startHour, startMinute, endHour, endMinute);
         storageManager storage = storageManager.getInstance();
+        String groupID = storage.getItemGroupLinkByName(name);
+        Group newGroup;
+        if (groupID != null){
+            System.out.println("✅ Found an existing UUID for this group! Applying it!");
+            newGroup = new Group(groupID, name, interval, startHour, startMinute, endHour, endMinute);
+        } else {
+            newGroup = new Group(name, interval, startHour, startMinute, endHour, endMinute);
+        }
+
 
         if (!itemList.getItems().isEmpty()) {
             openLinkGroupToAllDialog(newGroup, () -> {
@@ -1339,7 +1347,7 @@ public class listViewController {
                 // ✅ Link new group to all items
                 List<Item> allItems = itemList.getItems();
                 for (Item item : allItems) {
-                    storage.linkItemToGroups(item.getId(), List.of(newGroup.getId()));
+                    storage.linkItemToGroups(item.getId(), List.of(newGroup));
                 }
                 refreshTable(userID);
             }, () -> {
@@ -1409,8 +1417,6 @@ public class listViewController {
         for (Group group : new ArrayList<>(allGroups)) {
             storage.deleteGroup(group.getId());
         }
-        storage.deleteAllItemGroupLinks();
-
         refreshTable(userID);
     }
 

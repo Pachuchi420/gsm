@@ -28,6 +28,18 @@ public class Group {
     }
 
 
+    public Group(String id, String name, int interval, int startHour, int startMinute, int endHour, int endMinute){
+        this.id = id;
+        this.userID = storageManager.getInstance().getUserID();
+        this.name = name;
+        this.interval = interval;
+        this.startHour = startHour;
+        this.startMinute = startMinute;
+        this.endHour = endHour;
+        this.endMinute = endMinute;
+        this.lastUpload = null;
+    }
+
     public String getUserID() {
         return userID;
     }
@@ -36,7 +48,7 @@ public class Group {
         this.userID = userID;
     }
 
-    public String getName() {
+    public  String getName() {
         return name;
     }
 
