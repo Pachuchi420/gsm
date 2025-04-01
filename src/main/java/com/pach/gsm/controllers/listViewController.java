@@ -270,15 +270,22 @@ public class listViewController {
 
 
         addItem.setOnAction(event -> openAddItemPane(addItemToggle));
+        effects.addHoverOnMenuIcon(addItem, "Enter", "mdi2k-keyboard-return");
         editItem.setOnAction(event -> openEditItemPane(addItemToggle));
+        effects.addHoverOnMenuIcon(editItem, "Shift", "mdi2a-apple-keyboard-shift");
         sellItem.setOnAction(event -> toggleSold());
         removeItem.setOnAction(event -> openRemoveItemDialog());
+        effects.addHoverOnMenuIcon(removeItem, "Backspace", "mdi2k-keyboard-backspace");
         confirmAddItem.setOnAction(event -> addItem(userID, addItemToggle));
+        effects.addHoverOnMenuIcon(confirmAddItem, "Enter","mdi2k-keyboard-return");
         closeAddItemPane.setOnAction(event -> cancelAddItem(addItemToggle));
+        effects.addHoverOnMenuIcon(closeAddItemPane, "", "mdi2k-keyboard-esc");
         cancelAdditem.setOnAction(event -> cancelAddItem(addItemToggle));
+        effects.addHoverOnMenuIcon(cancelAdditem, "","mdi2k-keyboard-esc");
         logoutButton.setOnAction(event -> openLogoutDialog());
 
         whatsappPane.setOnAction(event -> openWhatsappPane(whatsAppToggle));
+        effects.addHoverOnMenu(whatsappPane, "W");
 
         enableChatbot.setText("Disabled");
         enableChatbot.setSelected(Chatbot.getInstance().isEnabled()); // Optional: set initial state
@@ -333,6 +340,7 @@ public class listViewController {
 
         groupName.setEditable(true);
         reserveItem.setOnAction(event -> openReserveItemPane(reserveItemToggle));
+        effects.addHoverOnMenu(reserveItem, "R");
         closeReservePane.setOnAction(event -> cancelReservation(reserveItemToggle));
         confirmReserveItem.setOnAction(event -> addReservation(reserveItemToggle));
         cancelReserveItem.setOnAction(event -> cancelReservation(reserveItemToggle));
