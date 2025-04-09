@@ -24,6 +24,9 @@ public class Chatbot {
 
 
     private boolean loggedIn;
+
+
+    private boolean wasLoggedIn;
     private boolean turnedOn;
 
 
@@ -83,8 +86,9 @@ public class Chatbot {
                             System.out.println("✅ QR Code saved at: " + file.toAbsolutePath());
                         }))
                         .addLoggedInListener(api -> {
-                            System.out.println("✅ Whatsapp logged in:");
+                            System.out.println("✅ Whatsapp logged in");
                             setLoggedIn(true);
+                            setWasLoggedIn(false);
                             setDisconnected(false);
                         })
                         .addDisconnectedListener(reason -> {
@@ -109,11 +113,17 @@ public class Chatbot {
 
             while (true) {
                 if (supabaseAuthentication.checkIfOnline()) {
-                    if (!isLoggedIn() && qrFile.exists()) { // Ensure the QR image exists
+
+                    // If we are disconnected but file exists
+                    if (!isLoggedIn() && qrFile.exists()) {
                         Platform.runLater(() -> {
                             qrImageView.setImage(new Image(qrFile.toURI().toString()));
                         });
-                    } else if (isLoggedIn()){
+                    } else if (!isLoggedIn() && wasLoggedIn()){
+                        Platform.runLater(() -> {
+                            qrImageView.setImage(new Image(qrFile.toURI().toString()));
+                        });
+                    } else {
                         qrImageView.setImage(null);
                     }
                 }
@@ -136,6 +146,7 @@ public class Chatbot {
             api.store().deleteSession();
             System.out.println("✅ WhatsApp session disconnected successfully & session deleted!");
             setLoggedIn(false);
+            setWasLoggedIn(true);
             setDisconnected(true);
             Chatbot.getInstance().initializeChatbot();
         } else {
@@ -174,6 +185,15 @@ public class Chatbot {
                 .toList();
     }
 
+
+
+    public boolean wasLoggedIn() {
+        return wasLoggedIn;
+    }
+
+    public void setWasLoggedIn(boolean wasLoggedIn) {
+        this.wasLoggedIn = wasLoggedIn;
+    }
 
 
 

@@ -375,9 +375,12 @@ public class listViewController {
             groupList.getSelectionModel().clearSelection();
         });
 
-
-
-
+        groupList.getSelectionModel().selectedItemProperty().addListener((obs, oldGroup, newGroup) -> {
+            if (newGroup != null){
+                groupName.setText(newGroup.getName());
+                populateGroupFields(newGroup);
+            }
+        });
     }
 
     private void deleteReservation(ToggleVerticalPane reserveItemToggle) {
@@ -545,8 +548,6 @@ public class listViewController {
                 setChatBot(false);
                 enableChatbot.setText("Disabled ");
                 enableChatbot.setSelected(false);
-
-
                 refreshTable(storageManager.getInstance().getUserID());
 
             }
@@ -839,7 +840,7 @@ public class listViewController {
                     itemList.setItems(filteredItems);
                     itemList.getSelectionModel().clearSelection();
                     imageThumbnail.setImage(null);
-                    System.out.println("✅ TableView updated with latest items for user: " + storage.getUserID());
+                    // System.out.println("✅ TableView updated with latest items for user: " + storage.getUserID());
                 });
             } else {
                 System.out.println("⚠️ No items found for this user.");
@@ -853,7 +854,7 @@ public class listViewController {
                 javafx.application.Platform.runLater(() -> {
                     groupList.setItems(observableGroups);
                     populateAddItemGroupList();
-                    System.out.println("✅ TableView updated with latest groups for user: " + storage.getUserID());
+                    // System.out.println("✅ TableView updated with latest groups for user: " + storage.getUserID());
                 });
             } else {
                 System.out.println("⚠️ No groups found for this user.");

@@ -21,6 +21,9 @@ public class supabaseAuthentication {
     // Singleton Instance
     private static supabaseAuthentication singletonInstance;
     private  boolean online;
+
+
+
     private boolean wasOnline;
     private static Runnable refreshTableCallback;
 
@@ -44,6 +47,11 @@ public class supabaseAuthentication {
         auth.wasOnline = false;
 
         Thread checker = new Thread(() -> {
+            try {
+                Thread.sleep(3000); // ⏳ Initial delay to allow app to stabilize
+            } catch (InterruptedException e) {
+                System.out.println("❌ Initial delay interrupted: " + e.getMessage());
+            }
             while (true) {
                 boolean isCurrentlyOnline = checkIfOnline();
 
@@ -267,7 +275,6 @@ public class supabaseAuthentication {
         storageManager storage = storageManager.getInstance();
         String userID = storage.getUserID();
         storage.initializeDatabase(userID);
-        supabaseDB.fetchItems(userID);
         List<Item> supabaseItems = supabaseDB.fetchItems(userID);
         if (supabaseItems != null) {
             for (Item item : supabaseItems) {
@@ -315,6 +322,10 @@ public class supabaseAuthentication {
             localStorage.addCredential("accessToken", accessToken);
             System.out.println("✅ Auto-login successful.");
             populateDB();
+            javafx.application.Platform.runLater(() -> {
+                System.out.println("⚡️ Initializing WhatsApp chatbot from autoLogin...");
+                Chatbot.getInstance().initializeChatbot();
+            });
             return true;
         } else{
             System.out.println("❌ Auto-login failed. Redirecting to login.");
@@ -406,6 +417,14 @@ public class supabaseAuthentication {
         }
     }
 
+
+    public boolean isWasOnline() {
+        return wasOnline;
+    }
+
+    public void setWasOnline(boolean wasOnline) {
+        this.wasOnline = wasOnline;
+    }
 
 
 

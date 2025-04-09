@@ -188,29 +188,7 @@ public class storageManager {
             stmt.execute(sqlGroup);
             stmt.execute(sqlItemGroup);
 
-            try (ResultSet rs = stmt.executeQuery("PRAGMA table_info(items);")) {
-                boolean thumbnailExists = false;
-                while (rs.next()) {
-                    if ("thumbnaildata".equals(rs.getString("name"))) {
-                        thumbnailExists = true;
-                        break;
-                    }
-                }
-
-                if (!thumbnailExists) {
-                    System.out.println("🛠️ Migrating: Adding 'thumbnaildata' column to items table...");
-                    stmt.execute("ALTER TABLE items ADD COLUMN thumbnaildata BLOB;");
-                    System.out.println("✅ Migration complete: 'thumbnaildata' column added.");
-                    generateThumbnails();
-                } else {
-                    System.out.println("🔍 'thumbnaildata' column already exists. No migration needed.");
-                }
-            } catch (SQLException e) {
-                System.out.println("❌ Migration error: " + e.getMessage());
-            }
-
-
-            System.out.println("✅ User-specific database initialized for: " + userID);
+            // System.out.println("✅ User-specific database initialized for: " + userID);
             setDbReady(true);
         } catch (SQLException e) {
             e.printStackTrace();

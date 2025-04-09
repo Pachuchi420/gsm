@@ -14,11 +14,12 @@ public class App extends Application {
     public void start(Stage stage) throws IOException {
 
         supabaseAuthentication.sessionManager();
-        System.out.println("Access Token: " + storageManager.getInstance().getAccessToken());
+        // System.out.println("Access Token: " + storageManager.getInstance().getAccessToken());
 
-
+        supabaseAuthentication.checkIfOnline(); // Ensure we know the real online state before autoLogin
         String fxmlFile;
         if (supabaseAuthentication.autoLogin()){
+            supabaseAuthentication.getInstance().setWasOnline(true);
             fxmlFile = "/com/pach/gsm/views/listView.fxml"; // Otherwise, show login
             stage.setTitle("GSM");
             FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource(fxmlFile));
