@@ -9,6 +9,8 @@ public class Group {
     private String name;
     private String id;
 
+    private int itemsPerCycle;
+
     private LocalDateTime lastUpload;
 
 

@@ -1652,6 +1652,27 @@ public class listViewController {
     }
 
 
+    public void startSendingMessagesGroup(){
+        if (botThread != null && botThread.isAlive()) {
+            System.out.println("⚠️ Bot is already running.");
+            return;
+        }
+
+        botThread = new Thread(() -> {
+            String userID = storageManager.getInstance().getUserID();
+            List<Group> groups = storageManager.getInstance().getGroupsForUser(userID);
+
+            for (Group group : groups){
+
+            }
+        });
+
+        botThread.setDaemon(true);
+        botThread.start();
+        }
+
+
+
     public void stopSendingMessages() {
         if (botThread != null && botThread.isAlive()) {
             Chatbot.getInstance().setEnabled(false);
