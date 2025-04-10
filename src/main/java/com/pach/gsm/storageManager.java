@@ -171,7 +171,8 @@ public class storageManager {
                     "startMinute INTEGER," +
                     "endHour INTEGER," +
                     "endMinute INTEGER," +
-                    "last_uploaded TIMESTAMP);";
+                    "last_uploaded TIMESTAMP," +
+                    "itemsPerCycle INTEGER);";
 
             String sqlItemGroup = "CREATE TABLE IF NOT EXISTS item_groups (" +
                     "itemID TEXT NOT NULL, " +
@@ -665,8 +666,8 @@ public class storageManager {
     // 👥 GROUP MANAGEMENT
     public void addGroup(Group group) {
         dbWorker.submitTask(() -> {
-            String sql = "INSERT INTO groups (id, userID, name, interval, startHour, startMinute, endHour, endMinute, last_uploaded) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            String sql = "INSERT INTO groups (id, userID, name, interval, startHour, startMinute, endHour, endMinute, last_uploaded, itemsPerCycle) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             try (Connection conn = DriverManager.getConnection(DATABASE_URL);
                  PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -680,6 +681,7 @@ public class storageManager {
                 pstmt.setInt(7, group.getEndHour());
                 pstmt.setInt(8, group.getEndMinute());
                 pstmt.setTimestamp(9, group.getLastUpload() != null ? Timestamp.valueOf(group.getLastUpload()) : null);
+                pstmt.setInt(10, group.getItemsPerCycle());
 
                 pstmt.executeUpdate();
                 System.out.println("✅ Group added to local database!");
@@ -690,7 +692,7 @@ public class storageManager {
     }
     public void updateGroup(Group group) {
         dbWorker.submitTask(() -> {
-            String sql = "UPDATE groups SET name = ?, interval = ?, startHour = ?, startMinute = ?, endHour = ?, endMinute = ? , last_uploaded = ? " +
+            String sql = "UPDATE groups SET name = ?, interval = ?, startHour = ?, startMinute = ?, endHour = ?, endMinute = ? , last_uploaded = ?, itemsPerCycle = ?" +
                     "WHERE id = ? AND userID = ?";
 
             try (Connection conn = DriverManager.getConnection(DATABASE_URL);
@@ -705,6 +707,7 @@ public class storageManager {
                 pstmt.setTimestamp(7, group.getLastUpload() != null ? Timestamp.valueOf(group.getLastUpload()) : null);
                 pstmt.setString(8, group.getId());
                 pstmt.setString(9, group.getUserID());
+                pstmt.setInt(10, group.getItemsPerCycle());
 
                 int rowsUpdated = pstmt.executeUpdate();
                 if (rowsUpdated > 0) {
@@ -735,7 +738,8 @@ public class storageManager {
                             rs.getInt("startHour"),
                             rs.getInt("startMinute"),
                             rs.getInt("endHour"),
-                            rs.getInt("endMinute")
+                            rs.getInt("endMinute"),
+                            rs.getInt("itemsPerCycle")
                     );
                     group.setId(rs.getString("id"));
                     Timestamp ts = rs.getTimestamp("last_uploaded");
@@ -775,7 +779,8 @@ public class storageManager {
                         rs.getInt("startHour"),
                         rs.getInt("startMinute"),
                         rs.getInt("endHour"),
-                        rs.getInt("endMinute")
+                        rs.getInt("endMinute"),
+                        rs.getInt("itemsPerCycle")
                 );
                 group.setId(rs.getString("id"));
                 Timestamp lastUploadedts = rs.getTimestamp("last_uploaded");
@@ -816,7 +821,8 @@ public class storageManager {
                         rs.getInt("startHour"),
                         rs.getInt("startMinute"),
                         rs.getInt("endHour"),
-                        rs.getInt("endMinute")
+                        rs.getInt("endMinute"),
+                        rs.getInt("itemsPerCycle")
                 );
                 group.setId(rs.getString("id"));
 
@@ -983,7 +989,8 @@ public class storageManager {
                         rs.getInt("startHour"),
                         rs.getInt("startMinute"),
                         rs.getInt("endHour"),
-                        rs.getInt("endMinute")
+                        rs.getInt("endMinute"),
+                        rs.getInt("itemsPerCycle")
                 );
                 group.setId(rs.getString("id"));
                 groups.add(group);

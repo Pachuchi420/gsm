@@ -24,7 +24,6 @@
 <?import javafx.scene.text.Font?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 
-<?import tools.ImageViewPane?>
 <AnchorPane fx:id="mainPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="1000.0" stylesheets="@../../../../styles/dark.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.pach.gsm.controllers.listViewController">
    <children>
       <BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="1000.0" styleClass="backgroundPane" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
@@ -383,6 +382,7 @@
                                   <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                     <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                     <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                 </rowConstraints>
                                  <children>
                                     <Label text="Group Name:" />
@@ -405,7 +405,7 @@
                                           <ComboBox fx:id="groupEndMinute" prefHeight="37.0" prefWidth="118.0" promptText="Minutes" />
                                        </children>
                                     </HBox>
-                                    <HBox alignment="CENTER_LEFT" prefHeight="100.0" prefWidth="200.0" spacing="15.0" GridPane.columnIndex="1" GridPane.rowIndex="4">
+                                    <HBox alignment="CENTER_LEFT" prefHeight="100.0" prefWidth="200.0" spacing="15.0" GridPane.columnIndex="1" GridPane.rowIndex="5">
                                        <children>
                                           <Button fx:id="addGroup" mnemonicParsing="false" text="Add" />
                                           <Button fx:id="removeGroup" mnemonicParsing="false" text="Remove" />
@@ -417,6 +417,8 @@
                                        </GridPane.margin>
                                     </HBox>
                                     <TextField fx:id="groupName" prefHeight="30.0" prefWidth="551.0" promptText="Type a group name..." GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" />
+                                    <Label text="Items Per Cycle:" GridPane.rowIndex="4" />
+                                    <TextField fx:id="groupItemsPerCycle" prefHeight="29.0" prefWidth="141.0" promptText="number of items" GridPane.columnIndex="1" GridPane.rowIndex="4" />
                                  </children>
                                  <VBox.margin>
                                     <Insets bottom="10.0" right="20.0" top="10.0" />
@@ -428,6 +430,7 @@
                                   <TableColumn fx:id="groupIntervalColumn" prefWidth="75.0" text="Interval" />
                                     <TableColumn fx:id="groupStartTimeColumn" prefWidth="75.0" text="Start Time" />
                                     <TableColumn fx:id="groupEndTimeColumn" prefWidth="75.0" text="End Time" />
+                                    <TableColumn fx:id="groupItemsPerCycleColumn" prefWidth="75.0" text="Items Per Cycle" />
                                 </columns>
                                  <columnResizePolicy>
                                     <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />

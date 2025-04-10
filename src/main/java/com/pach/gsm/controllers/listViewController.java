@@ -109,7 +109,7 @@ public class listViewController {
     private Label groupWarningMessage;
 
     @FXML
-    private TextField groupInterval, groupName;
+    private TextField groupInterval, groupName, groupItemsPerCycle;
 
     @FXML
     private ComboBox<Integer> groupStartHour, groupStartMinute, groupEndHour, groupEndMinute;
@@ -121,7 +121,7 @@ public class listViewController {
     private TableView<Group> groupList;
 
     @FXML
-    private TableColumn<Group, String> groupNameColumn, groupIntervalColumn, groupStartTimeColumn, groupEndTimeColumn;
+    private TableColumn<Group, String> groupNameColumn, groupIntervalColumn, groupStartTimeColumn, groupEndTimeColumn, groupItemsPerCycleColumn;
 
     @FXML
     private ToggleButton enableChatbot;
@@ -377,7 +377,6 @@ public class listViewController {
 
         groupList.getSelectionModel().selectedItemProperty().addListener((obs, oldGroup, newGroup) -> {
             if (newGroup != null){
-                groupName.setText(newGroup.getName());
                 populateGroupFields(newGroup);
             }
         });
@@ -510,11 +509,13 @@ public class listViewController {
 
 
     private void populateGroupFields(Group group) {
+        groupName.setText(group.getName());
         groupInterval.setText(String.valueOf(group.getInterval()));
         groupStartHour.setValue(group.getStartHour());
         groupStartMinute.setValue(group.getStartMinute());
         groupEndHour.setValue(group.getEndHour());
         groupEndMinute.setValue(group.getEndMinute());
+        groupItemsPerCycle.setText(String.valueOf(group.getItemsPerCycle()));
     }
 
     private void openWhatsAppLogoutDialog() {
@@ -1017,6 +1018,7 @@ public class listViewController {
         groupIntervalColumn.setCellValueFactory(cellData -> new SimpleStringProperty(String.valueOf(cellData.getValue().getInterval())));
         groupStartTimeColumn.setCellValueFactory(cellData -> new SimpleObjectProperty<>(cellData.getValue().getStartTime()));
         groupEndTimeColumn.setCellValueFactory(cellData -> new SimpleObjectProperty<>(cellData.getValue().getEndTime()));
+        groupItemsPerCycleColumn.setCellValueFactory(cellData -> new SimpleStringProperty(String.valueOf(cellData.getValue().getItemsPerCycle())));
     }
 
     private void logout() throws IOException {
@@ -1292,6 +1294,8 @@ public class listViewController {
         Integer startMinute = groupStartMinute.getValue();
         Integer endHour = groupEndHour.getValue();
         Integer endMinute = groupEndMinute.getValue();
+        String itemsPerCycleText = groupItemsPerCycle.getText();
+        Integer itemsPerCycle;
 
         if (name.isEmpty() || intervalString.isEmpty() || startHour == null ||
                 startMinute == null || endHour == null || endMinute == null) {
@@ -1338,15 +1342,28 @@ public class listViewController {
 
 
 
+        if (itemsPerCycleText.isEmpty() || itemsPerCycleText.equals("0")) {
+            itemsPerCycle = 1;
+        } else if (!itemsPerCycleText.matches("\\d+")) {
+            groupWarningMessage.setText("Items per Cycle can only be a positive number!");
+            effects.vanishText(groupWarningMessage, 2);
+            return;
+        } else {
+            System.out.println("🧪 Raw itemsPerCycleText: " + itemsPerCycleText);
+            itemsPerCycle = Integer.parseInt(itemsPerCycleText);
+            System.out.println("✅ Parsed itemsPerCycle: " + itemsPerCycle);
+        }
+
+
         // Create and add the group
         storageManager storage = storageManager.getInstance();
         String groupID = storage.getItemGroupLinkByName(name);
         Group newGroup;
         if (groupID != null){
             System.out.println("✅ Found an existing UUID for this group! Applying it!");
-            newGroup = new Group(groupID, name, interval, startHour, startMinute, endHour, endMinute);
+            newGroup = new Group(groupID, name, interval, startHour, startMinute, endHour, endMinute, itemsPerCycle);
         } else {
-            newGroup = new Group(name, interval, startHour, startMinute, endHour, endMinute);
+            newGroup = new Group(name, interval, startHour, startMinute, endHour, endMinute, itemsPerCycle);
         }
 
 
@@ -1539,7 +1556,7 @@ public class listViewController {
     }
 
 
-    public void startSendingMessages() {
+    public void startSendingMessagesSingular() {
         if (botThread != null && botThread.isAlive()) {
             System.out.println("⚠️ Bot is already running.");
             return;
@@ -1652,24 +1669,111 @@ public class listViewController {
     }
 
 
-    public void startSendingMessagesGroup(){
+    public void startSendingMessages() {
         if (botThread != null && botThread.isAlive()) {
             System.out.println("⚠️ Bot is already running.");
             return;
         }
 
         botThread = new Thread(() -> {
-            String userID = storageManager.getInstance().getUserID();
-            List<Group> groups = storageManager.getInstance().getGroupsForUser(userID);
+            while (Chatbot.getInstance().isEnabled()) {
+                boolean somethingWasSent = false;
+                String userID = storageManager.getInstance().getUserID();
+                List<Group> groups = storageManager.getInstance().getGroupsForUser(userID);
+                List<Item> items = storageManager.getInstance().getEligibleItems();
+                Collections.shuffle(items);
 
-            for (Group group : groups){
 
+                // Check time window
+                for (Group group : groups) {
+                    if (!group.isNowWithinTimeWindow()){
+                        System.out.println("❌ Group '" + group.getName() + "' out of time window.");
+                        continue;
+                    }
+
+                    LocalDateTime lastSent = storageManager.getInstance().getGroupWideLastUpload(group.getId());
+                    if (lastSent != null) {
+                        long minutesSince = Duration.between(lastSent, LocalDateTime.now()).toMinutes();
+                        if (minutesSince < group.getInterval()) {
+                            LocalDateTime now = LocalDateTime.now();
+                            long diff = Duration.between(group.getLastUpload(), now).toMinutes();
+                            System.out.println("❌ Group '" + group.getName() + "' got a message " + group.getLastUpload() + " minutes ago, wait "+ diff + " minutes!");
+                            continue;
+                        }
+                    }
+
+
+                    // Collecting items
+                    int itemsPerCycle = group.getItemsPerCycle();
+                    List<Item> toSend = new ArrayList<>();
+                    for (Item item : items) {
+                        if (!item.uploadedToday()) {
+                            toSend.add(item);
+                            if (toSend.size() >= itemsPerCycle) break;
+                        }
+                    }
+
+                    for (Item item : toSend) {
+                        try {
+                            var chat = Chatbot.getApi().store().findChatByName(group.getName()).orElseThrow();
+                            var msg = new ImageMessageSimpleBuilder()
+                                    .media(item.getImageData())
+                                    .caption("• " + item.getName() + "\n"
+                                            + "• " + item.getDescription() + "\n"
+                                            + "• " + item.getPrice() + " " + item.getCurrency())
+                                    .build();
+
+                            Chatbot.getApi().sendMessage(chat, msg);
+                            System.out.println("📤 Sent '" + item.getName() + "' to " + group.getName());
+
+                            LocalDateTime now = LocalDateTime.now();
+                            storageManager.getInstance().updateItemGroupLastUploaded(item.getId(), group.getId(), now);
+                            group.setLastUpload(now);
+                            storageManager.getInstance().updateGroup(group);
+
+                            somethingWasSent = true;
+                            Thread.sleep(1000);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+
+                if (!somethingWasSent) {
+                    long sleepMins = 10; // default
+                    LocalDateTime now = LocalDateTime.now();
+
+                    for (Group group : groups) {
+                        if (!group.isNowWithinTimeWindow()) continue;
+
+                        LocalDateTime last = storageManager.getInstance().getGroupWideLastUpload(group.getId());
+                        if (last != null) {
+                            long since = Duration.between(last, now).toMinutes();
+                            long wait = group.getInterval() - since;
+                            if (wait > 0 && wait < sleepMins) sleepMins = wait;
+                        } else {
+                            sleepMins = 0;
+                            break;
+                        }
+                    }
+
+                    try {
+                        System.out.println("⏳ Nothing sent. Sleeping for " + sleepMins + " minutes...");
+                        Thread.sleep(sleepMins * 60 * 1000);
+                    } catch (InterruptedException e) {
+                        System.out.println("🛑 Bot interrupted during sleep.");
+                        break;
+                    }
+                }
             }
+
+            Chatbot.getInstance().setEnabled(false);
+            System.out.println("🛑 Messaging loop ended.");
         });
 
         botThread.setDaemon(true);
         botThread.start();
-        }
+    }
 
 
 

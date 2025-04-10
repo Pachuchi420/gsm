@@ -17,7 +17,7 @@ public class Group {
     private int interval, startHour, startMinute, endHour, endMinute;
 
 
-    public Group(String name, int interval, int startHour, int startMinute, int endHour, int endMinute){
+    public Group(String name, int interval, int startHour, int startMinute, int endHour, int endMinute, int itemsPerCycle){
         this.id = makeUniqueID();
         this.userID = storageManager.getInstance().getUserID();
         this.name = name;
@@ -27,10 +27,11 @@ public class Group {
         this.endHour = endHour;
         this.endMinute = endMinute;
         this.lastUpload = null;
+        this.itemsPerCycle = itemsPerCycle;
     }
 
 
-    public Group(String id, String name, int interval, int startHour, int startMinute, int endHour, int endMinute){
+    public Group(String id, String name, int interval, int startHour, int startMinute, int endHour, int endMinute, int itemsPerCycle){
         this.id = id;
         this.userID = storageManager.getInstance().getUserID();
         this.name = name;
@@ -40,6 +41,7 @@ public class Group {
         this.endHour = endHour;
         this.endMinute = endMinute;
         this.lastUpload = null;
+        this.itemsPerCycle = itemsPerCycle;
     }
 
     public String getUserID() {
@@ -154,5 +156,13 @@ public class Group {
             System.out.println("⏳ Only " + minutesSince + " minutes since last upload. Required: " + interval + " minutes.");
             return false;
         }
+    }
+
+    public int getItemsPerCycle() {
+        return itemsPerCycle;
+    }
+
+    public void setItemsPerCycle(int itemsPerCycle) {
+        this.itemsPerCycle = itemsPerCycle;
     }
 }
