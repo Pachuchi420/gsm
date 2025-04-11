@@ -2,6 +2,7 @@ package com.pach.gsm.controllers;
 
 import com.pach.gsm.*;
 import it.auties.whatsapp.model.message.standard.ImageMessageSimpleBuilder;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -569,7 +570,7 @@ public class listViewController {
                 boolean isDisconnected = Chatbot.getInstance().isDisconnected();
 
                 // Run UI updates on JavaFX thread
-                javafx.application.Platform.runLater(() -> {
+                Platform.runLater(() -> {
                     whatsAppOnline.setVisible(isOnline && isLoggedIn);
                     whatsAppStatus.getStyleClass().removeAll("whatsAppStatusDisconnected", "whatsAppStatusOnline", "whatsAppStatusLoggedIn");
 
@@ -837,7 +838,7 @@ public class listViewController {
 
 
                 // Ensure UI updates on JavaFX thread
-                javafx.application.Platform.runLater(() -> {
+                Platform.runLater(() -> {
                     itemList.setItems(filteredItems);
                     itemList.getSelectionModel().clearSelection();
                     imageThumbnail.setImage(null);
@@ -852,7 +853,7 @@ public class listViewController {
             if (updatedGroups != null) {
                 ObservableList<Group> observableGroups = FXCollections.observableArrayList(updatedGroups);
 
-                javafx.application.Platform.runLater(() -> {
+                Platform.runLater(() -> {
                     groupList.setItems(observableGroups);
                     populateAddItemGroupList();
                     // System.out.println("✅ TableView updated with latest groups for user: " + storage.getUserID());
@@ -1199,7 +1200,7 @@ public class listViewController {
 
                     // Fetch items asynchronously and update UI
                     storage.getAllLocalItems(givenItem.getUserID(), updatedItems -> {
-                        javafx.application.Platform.runLater(() -> {
+                        Platform.runLater(() -> {
                             ObservableList<Item> observableItems = FXCollections.observableArrayList(updatedItems);
                             itemList.setItems(observableItems);
                         });
@@ -1463,6 +1464,7 @@ public class listViewController {
         Integer updatedStartMinute = groupStartMinute.getValue();
         Integer updatedEndHour = groupEndHour.getValue();
         Integer updatedEndMinute = groupEndMinute.getValue();
+        String updatedItemsPerCycleString = groupItemsPerCycle.getText();
 
         if (updatedName.isEmpty() || updatedIntervalStr.isEmpty() ||
                 updatedStartHour == null || updatedStartMinute == null ||
@@ -1471,6 +1473,16 @@ public class listViewController {
             effects.vanishText(groupWarningMessage, 2);
             return;
         }
+
+        int updatedItemsPerCycle;
+        try {
+            updatedItemsPerCycle = Integer.parseInt(updatedItemsPerCycleString);
+        } catch (NumberFormatException e) {
+            groupWarningMessage.setText("Interval must be a valid number!");
+            effects.vanishText(groupWarningMessage, 2);
+            return;
+        }
+
 
         int updatedInterval;
         try {
@@ -1488,6 +1500,7 @@ public class listViewController {
         selectedGroup.setStartMinute(updatedStartMinute);
         selectedGroup.setEndHour(updatedEndHour);
         selectedGroup.setEndMinute(updatedEndMinute);
+        selectedGroup.setItemsPerCycle(updatedItemsPerCycle);
 
         // Save updated group to DB
         storageManager.getInstance().updateGroup(selectedGroup);
@@ -1643,7 +1656,7 @@ public class listViewController {
 
                     if (consecutiveFails >= 20) {
                         System.out.println("❌ Stopping bot after 5 consecutive failed runs.");
-                        javafx.application.Platform.runLater(() -> {
+                        Platform.runLater(() -> {
                             enableChatbot.setText("Disabled ");
                             enableChatbot.setSelected(false);
                             stopSendingMessages();
@@ -1676,18 +1689,32 @@ public class listViewController {
         }
 
         botThread = new Thread(() -> {
+            String userID = storageManager.getInstance().getUserID();
+            if (userID == null) {
+                System.out.println("❌ No user ID found. Aborting.");
+                return;
+            }
+
+            int failCount = 0;
+            int failLimit = 10; // max retry cycles before shutdown
+
             while (Chatbot.getInstance().isEnabled()) {
-                boolean somethingWasSent = false;
-                String userID = storageManager.getInstance().getUserID();
-                List<Group> groups = storageManager.getInstance().getGroupsForUser(userID);
-                List<Item> items = storageManager.getInstance().getEligibleItems();
-                Collections.shuffle(items);
+                List<Group> groups = storageManager.getInstance().getAllGroupsSync(userID);
+                if (groups.isEmpty()) {
+                    System.out.println("⚠️ No groups found. Stopping bot.");
+                    break;
+                }
 
+                boolean somethingSent = false;
+                long minInterval = Long.MAX_VALUE;
 
-                // Check time window
                 for (Group group : groups) {
-                    if (!group.isNowWithinTimeWindow()){
-                        System.out.println("❌ Group '" + group.getName() + "' out of time window.");
+                    System.out.println("ℹ️ Starting cycle with group '" + group.getName() + "'\n");
+
+                    minInterval = Math.min(minInterval, group.getInterval()); // ⏱️ Determine the smallest interval
+
+                    if (!group.isNowWithinTimeWindow()) {
+                        System.out.println("❌ Outside time window for " + group.getName());
                         continue;
                     }
 
@@ -1695,80 +1722,76 @@ public class listViewController {
                     if (lastSent != null) {
                         long minutesSince = Duration.between(lastSent, LocalDateTime.now()).toMinutes();
                         if (minutesSince < group.getInterval()) {
-                            LocalDateTime now = LocalDateTime.now();
-                            long diff = Duration.between(group.getLastUpload(), now).toMinutes();
-                            System.out.println("❌ Group '" + group.getName() + "' got a message " + group.getLastUpload() + " minutes ago, wait "+ diff + " minutes!");
+                            System.out.println("⏳ Sent " + minutesSince + " min ago. Need " + group.getInterval() + " min.");
                             continue;
                         }
                     }
 
+                    List<Item> items = storageManager.getInstance().getEligibleItemsForGroup(group);
+                    Collections.shuffle(items);
 
-                    // Collecting items
-                    int itemsPerCycle = group.getItemsPerCycle();
-                    List<Item> toSend = new ArrayList<>();
-                    for (Item item : items) {
-                        if (!item.uploadedToday()) {
-                            toSend.add(item);
-                            if (toSend.size() >= itemsPerCycle) break;
-                        }
-                    }
-
-                    for (Item item : toSend) {
+                    int limit = Math.min(group.getItemsPerCycle(), items.size());
+                    for (int i = 0; i < limit; i++) {
+                        Item item = items.get(i);
                         try {
                             var chat = Chatbot.getApi().store().findChatByName(group.getName()).orElseThrow();
                             var msg = new ImageMessageSimpleBuilder()
                                     .media(item.getImageData())
-                                    .caption("• " + item.getName() + "\n"
-                                            + "• " + item.getDescription() + "\n"
-                                            + "• " + item.getPrice() + " " + item.getCurrency())
+                                    .caption(
+                                            "• " + item.getName() + "\n" +
+                                                    "• " + item.getDescription() + "\n" +
+                                                    "• " + item.getPrice() + " " + item.getCurrency()
+                                    )
                                     .build();
 
                             Chatbot.getApi().sendMessage(chat, msg);
-                            System.out.println("📤 Sent '" + item.getName() + "' to " + group.getName());
+                            System.out.println("✅ Sent '" + item.getName() + "' to " + group.getName());
 
                             LocalDateTime now = LocalDateTime.now();
-                            storageManager.getInstance().updateItemGroupLastUploaded(item.getId(), group.getId(), now);
                             group.setLastUpload(now);
                             storageManager.getInstance().updateGroup(group);
+                            storageManager.getInstance().updateItemGroupLastUploaded(item.getId(), group.getId(), now);
 
-                            somethingWasSent = true;
-                            Thread.sleep(1000);
+                            somethingSent = true;
+                            Thread.sleep(1200);
                         } catch (Exception e) {
+                            System.out.println("❌ Failed to send item: " + item.getName());
                             e.printStackTrace();
                         }
                     }
+
+                    System.out.println("-----------------------------------\n");
                 }
 
-                if (!somethingWasSent) {
-                    long sleepMins = 10; // default
-                    LocalDateTime now = LocalDateTime.now();
+                if (!somethingSent) {
+                    failCount++;
+                    System.out.println("⚠️ Nothing sent this cycle. Fail count: " + failCount + "/" + failLimit);
+                } else {
+                    failCount = 0; // reset on success
+                }
 
-                    for (Group group : groups) {
-                        if (!group.isNowWithinTimeWindow()) continue;
+                if (failCount >= failLimit) {
+                    System.out.println("🛑 Too many failed cycles. Disabling bot.");
+                    javafx.application.Platform.runLater(() -> {
+                        enableChatbot.setText("Disabled");
+                        enableChatbot.setSelected(false);
+                    });
+                    Chatbot.getInstance().setEnabled(false);
+                    break;
+                }
 
-                        LocalDateTime last = storageManager.getInstance().getGroupWideLastUpload(group.getId());
-                        if (last != null) {
-                            long since = Duration.between(last, now).toMinutes();
-                            long wait = group.getInterval() - since;
-                            if (wait > 0 && wait < sleepMins) sleepMins = wait;
-                        } else {
-                            sleepMins = 0;
-                            break;
-                        }
-                    }
-
-                    try {
-                        System.out.println("⏳ Nothing sent. Sleeping for " + sleepMins + " minutes...");
-                        Thread.sleep(sleepMins * 60 * 1000);
-                    } catch (InterruptedException e) {
-                        System.out.println("🛑 Bot interrupted during sleep.");
-                        break;
-                    }
+                try {
+                    long sleepTimeMillis = Math.max(minInterval, 1) * 60 * 1000; // convert minInterval to ms
+                    System.out.println("🕒 Sleeping " + minInterval + " min before next round...");
+                    Thread.sleep(sleepTimeMillis);
+                } catch (InterruptedException e) {
+                    System.out.println("🛑 Bot interrupted during sleep.");
+                    break;
                 }
             }
 
             Chatbot.getInstance().setEnabled(false);
-            System.out.println("🛑 Messaging loop ended.");
+            System.out.println("🛑 Bot stopped.");
         });
 
         botThread.setDaemon(true);

@@ -206,6 +206,8 @@ public class supabaseAuthentication {
 
             if (response.isSuccessful() && jsonResponse.has("access_token")) {
                 System.out.println("✅ Login Successful!");
+                System.out.println("⚡️ Initializing WhatsApp chatbot from login...");
+                Chatbot.getInstance().initializeChatbot();
                 String accessToken = jsonResponse.get("access_token").getAsString();
                 localStorage.addCredential("accessToken", accessToken);
 
@@ -322,10 +324,8 @@ public class supabaseAuthentication {
             localStorage.addCredential("accessToken", accessToken);
             System.out.println("✅ Auto-login successful.");
             populateDB();
-            javafx.application.Platform.runLater(() -> {
-                System.out.println("⚡️ Initializing WhatsApp chatbot from autoLogin...");
-                Chatbot.getInstance().initializeChatbot();
-            });
+            System.out.println("⚡️ Initializing WhatsApp chatbot from autoLogin...");
+            Chatbot.getInstance().initializeChatbot();
             return true;
         } else{
             System.out.println("❌ Auto-login failed. Redirecting to login.");

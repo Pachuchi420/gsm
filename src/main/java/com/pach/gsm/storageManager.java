@@ -756,6 +756,42 @@ public class storageManager {
             javafx.application.Platform.runLater(() -> callback.accept(groups));
         });
     }
+
+    public List<Group> getAllGroupsSync(String userID) {
+            List<Group> groups = new ArrayList<>();
+            String sql = "SELECT * FROM groups WHERE userID = ?";
+
+            try (Connection conn = DriverManager.getConnection(DATABASE_URL);
+                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+                pstmt.setString(1, userID);
+                ResultSet rs = pstmt.executeQuery();
+
+                while (rs.next()) {
+                    Group group = new Group(
+                            rs.getString("name"),
+                            rs.getInt("interval"),
+                            rs.getInt("startHour"),
+                            rs.getInt("startMinute"),
+                            rs.getInt("endHour"),
+                            rs.getInt("endMinute"),
+                            rs.getInt("itemsPerCycle")
+                    );
+                    group.setId(rs.getString("id"));
+                    Timestamp ts = rs.getTimestamp("last_uploaded");
+                    if (ts != null) {
+                        group.setLastUpload(ts.toLocalDateTime());
+                    }
+                    groups.add(group);
+
+                }
+                System.out.println("✅ Retrieved " + groups.size() + " groups from local database.");
+            } catch (SQLException e) {
+                System.out.println("❌ Error fetching groups for user: " + userID + " - " + e.getMessage());
+            }
+
+            return groups;
+    }
     public Group getGroupByName(String name) {
         String sql = "SELECT * FROM groups WHERE name = ? AND userID = ?";
         String userID = getUserID();  // Retrieve current user's ID
@@ -1040,7 +1076,7 @@ public class storageManager {
 
         return null;
     }
-    public void updateItemGroupLastUploaded(String itemId, String groupId, java.time.LocalDateTime time) {
+    public void updateItemGroupLastUploaded(String itemId, String groupId, LocalDateTime time) {
         dbWorker.submitTask(() -> {
             String sql = "UPDATE item_groups SET last_uploaded = ? WHERE itemID = ? AND groupID = ?";
 
@@ -1113,6 +1149,23 @@ public class storageManager {
             }
         }
         return eligibleGroups;
+    }
+
+
+    public List<Item> getEligibleItemsForGroup(Group group){
+        List<Item> items = getEligibleItems();
+        List<Item> eligibleItems = new ArrayList<>();
+        LocalDateTime now = LocalDateTime.now();
+
+        for (Item item : items){
+            String itemID = item.getId();
+            LocalDateTime lastUploaded = getLastUploadTime(itemID, group.getId());
+            Boolean pass = checkPriorityPass(lastUploaded, now, item.getPriority());
+            if (pass){
+                eligibleItems.add(item);
+            }
+        }
+        return eligibleItems;
     }
     public Boolean checkPriorityPass(LocalDateTime lastUploaded, LocalDateTime now, int priority){
         if (lastUploaded == null) {

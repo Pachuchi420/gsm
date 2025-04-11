@@ -270,6 +270,7 @@
                     <include>**/*.fxml</include>
                     <include>**/*.properties</include>
                     <include>**/*.css</include>
+                    <include>**/*</include>
                 </includes>
             </resource>
         </resources>

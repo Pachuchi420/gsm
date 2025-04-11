@@ -1,6 +1,8 @@
 package com.pach.gsm.controllers;
 
 import com.pach.gsm.supabaseAuthentication;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import tools.ToggleVerticalPane;
 import tools.effects;
 import javafx.application.Platform;
@@ -12,6 +14,8 @@ import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.Objects;
 
 public class loginViewController {
 
@@ -35,6 +39,9 @@ public class loginViewController {
     @FXML
     private ToggleButton rememberMeButton;
 
+    @FXML
+    private ImageView appImage;
+
     private Boolean rememberMe = false;
     private String storedRefreshToken;
     @FXML
@@ -52,7 +59,13 @@ public class loginViewController {
         });
 
         mainPane.setFocusTraversable(true); // Ensure the pane can receive key events
-
+        InputStream logoStream = getClass().getResourceAsStream("/icon/icon.png");
+        if (logoStream != null) {
+            Image logo = new Image(logoStream);
+            appImage.setImage(logo);
+        } else {
+            System.out.println("⚠️ Logo image not found at /icon/icon.png");
+        }
         ToggleGroup rememberMeGroup = new ToggleGroup();
         rememberMeButton.setToggleGroup(rememberMeGroup);
         rememberMeButton.setOnAction(e -> selectRememberMe());
@@ -286,10 +299,3 @@ public class loginViewController {
 
 
 }
-
-
-
-
-
-
-

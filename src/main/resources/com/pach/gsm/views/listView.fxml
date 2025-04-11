@@ -382,14 +382,12 @@
                                   <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                     <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                     <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                                    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                 </rowConstraints>
                                  <children>
                                     <Label text="Group Name:" />
                                     <Label text="Interval:" GridPane.rowIndex="1" />
                                     <Label text="Start Time:" GridPane.rowIndex="2" />
                                     <Label text="End Time: " GridPane.rowIndex="3" />
-                                    <TextField fx:id="groupInterval" promptText="enter interval in minutes" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                                     <HBox prefHeight="100.0" prefWidth="200.0" spacing="10.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
                                        <children>
                                           <ComboBox fx:id="groupStartHour" prefHeight="37.0" prefWidth="101.0" promptText="Hour" />
@@ -405,7 +403,7 @@
                                           <ComboBox fx:id="groupEndMinute" prefHeight="37.0" prefWidth="118.0" promptText="Minutes" />
                                        </children>
                                     </HBox>
-                                    <HBox alignment="CENTER_LEFT" prefHeight="100.0" prefWidth="200.0" spacing="15.0" GridPane.columnIndex="1" GridPane.rowIndex="5">
+                                    <HBox alignment="CENTER_LEFT" prefHeight="100.0" prefWidth="200.0" spacing="15.0" GridPane.columnIndex="1" GridPane.rowIndex="4">
                                        <children>
                                           <Button fx:id="addGroup" mnemonicParsing="false" text="Add" />
                                           <Button fx:id="removeGroup" mnemonicParsing="false" text="Remove" />
@@ -416,9 +414,18 @@
                                           <Insets />
                                        </GridPane.margin>
                                     </HBox>
-                                    <TextField fx:id="groupName" prefHeight="30.0" prefWidth="551.0" promptText="Type a group name..." GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" />
-                                    <Label text="Items Per Cycle:" GridPane.rowIndex="4" />
-                                    <TextField fx:id="groupItemsPerCycle" prefHeight="29.0" prefWidth="141.0" promptText="number of items" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                                    <TextField fx:id="groupName" prefHeight="29.0" prefWidth="477.0" promptText="Type a group name..." GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" />
+                                    <HBox alignment="CENTER_LEFT" prefHeight="100.0" prefWidth="200.0" spacing="10.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                                       <children>
+                                          <TextField fx:id="groupInterval" promptText="enter interval in minutes" />
+                                          <HBox alignment="CENTER_LEFT" prefHeight="29.0" prefWidth="275.0" spacing="5.0">
+                                             <children>
+                                                <Label text="Items Per Cycle:" />
+                                                <TextField fx:id="groupItemsPerCycle" prefHeight="29.0" prefWidth="141.0" promptText="number of items" />
+                                             </children>
+                                          </HBox>
+                                       </children>
+                                    </HBox>
                                  </children>
                                  <VBox.margin>
                                     <Insets bottom="10.0" right="20.0" top="10.0" />
