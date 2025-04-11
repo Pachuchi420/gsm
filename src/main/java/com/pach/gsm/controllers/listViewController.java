@@ -1493,6 +1493,9 @@ public class listViewController {
             return;
         }
 
+        System.out.println("Group before change:");
+        selectedGroup.printDetails();
+
         // Apply updated values to the selected group
         selectedGroup.setName(updatedName);
         selectedGroup.setInterval(updatedInterval);
@@ -1502,8 +1505,15 @@ public class listViewController {
         selectedGroup.setEndMinute(updatedEndMinute);
         selectedGroup.setItemsPerCycle(updatedItemsPerCycle);
 
+
+
         // Save updated group to DB
         storageManager.getInstance().updateGroup(selectedGroup);
+
+        System.out.println("\n\n");
+
+        System.out.println("Group after change:");
+        selectedGroup.printDetails();
         refreshTable(storageManager.getInstance().getUserID());
 
         System.out.println("✅ Group updated from UI action!");

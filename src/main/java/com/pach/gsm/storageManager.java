@@ -721,7 +721,7 @@ public class storageManager {
     }
     public void updateGroup(Group group) {
         dbWorker.submitTask(() -> {
-            String sql = "UPDATE groups SET name = ?, interval = ?, startHour = ?, startMinute = ?, endHour = ?, endMinute = ? , last_uploaded = ?, itemsPerCycle = ?" +
+            String sql = "UPDATE groups SET name = ?, interval = ?, startHour = ?, startMinute = ?, endHour = ?, endMinute = ?, last_uploaded = ?, itemsPerCycle = ? " +
                     "WHERE id = ? AND userID = ?";
 
             try (Connection conn = DriverManager.getConnection(DATABASE_URL);
@@ -734,15 +734,16 @@ public class storageManager {
                 pstmt.setInt(5, group.getEndHour());
                 pstmt.setInt(6, group.getEndMinute());
                 pstmt.setTimestamp(7, group.getLastUpload() != null ? Timestamp.valueOf(group.getLastUpload()) : null);
-                pstmt.setString(8, group.getId());
-                pstmt.setString(9, group.getUserID());
-                pstmt.setInt(10, group.getItemsPerCycle());
+                pstmt.setInt(8, group.getItemsPerCycle());
+                pstmt.setString(9, group.getId());
+                pstmt.setString(10, group.getUserID());
 
                 int rowsUpdated = pstmt.executeUpdate();
                 if (rowsUpdated > 0) {
                     System.out.println("✅ Group updated in local database!");
                 } else {
-                    System.out.println("⚠️ No group found with ID: " + group.getId());
+                    System.out.println("⚠️ " +
+                            "No group found with ID: " + group.getId());
                 }
             } catch (SQLException e) {
                 System.out.println("❌ Error updating group in local database: " + e.getMessage());

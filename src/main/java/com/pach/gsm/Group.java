@@ -165,4 +165,16 @@ public class Group {
     public void setItemsPerCycle(int itemsPerCycle) {
         this.itemsPerCycle = itemsPerCycle;
     }
+
+    public void printDetails() {
+        System.out.println("Group Details:");
+        System.out.println("- Name: " + name);
+        System.out.println("- ID: " + id);
+        System.out.println("- User ID: " + userID);
+        System.out.println("- Interval (min): " + interval);
+        System.out.println("- Start Time: " + getStartTime());
+        System.out.println("- End Time: " + getEndTime());
+        System.out.println("- Items per cycle: " + itemsPerCycle);
+        System.out.println("- Last Upload: " + (lastUpload != null ? lastUpload : "Never"));
+    }
 }
