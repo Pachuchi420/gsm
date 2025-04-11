@@ -1,7 +1,5 @@
 package com.pach.gsm;
 
-import com.google.gson.Gson;
-import it.auties.protobuf.builtin.ProtobufRepeatedMixin;
 import tools.DBWorker;
 
 import javax.crypto.Cipher;
@@ -16,11 +14,11 @@ import java.sql.*;
 import java.sql.Date;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.prefs.Preferences;
 import org.imgscalr.Scalr;
+import tools.SchemaUpdater;
 
 public class storageManager {
 
@@ -139,6 +137,7 @@ public class storageManager {
                 timeoutStmt.execute();
             }
 
+            // Step 1: Create tables if missing
             String sqlItem = "CREATE TABLE IF NOT EXISTS items (" +
                     "id TEXT PRIMARY KEY," +
                     "userID TEXT NOT NULL," +
@@ -149,13 +148,13 @@ public class storageManager {
                     "price INTEGER NOT NULL," +
                     "currency TEXT," +
                     "date TIMESTAMP DEFAULT CURRENT_TIMESTAMP," +
-                    "sold INTEGER DEFAULT 0," +  // 🔄 BOOLEAN → INTEGER (0 = false, 1 = true)
+                    "sold INTEGER DEFAULT 0," +
                     "uploaddate DATE," +
                     "priority INTEGER," +
                     "reservation_buyer TEXT," +
                     "reservation_place TEXT," +
                     "reservation_date DATE," +
-                    "reservation_reserved INTEGER DEFAULT 0," +  // 🔄 BOOLEAN → INTEGER
+                    "reservation_reserved INTEGER DEFAULT 0," +
                     "reservation_hour INTEGER," +
                     "reservation_minute INTEGER," +
                     "supabaseSync INTEGER DEFAULT 0,"+
@@ -178,18 +177,47 @@ public class storageManager {
                     "itemID TEXT NOT NULL, " +
                     "groupID TEXT NOT NULL, " +
                     "last_uploaded TIMESTAMP, " +
-                    "group_name TEXT NOT_NULL," +
+                    "group_name TEXT NOT NULL," +
                     "FOREIGN KEY(itemID) REFERENCES items(id), " +
                     "FOREIGN KEY(groupID) REFERENCES groups(id), " +
                     "PRIMARY KEY (itemID, groupID));";
-
-
 
             stmt.execute(sqlItem);
             stmt.execute(sqlGroup);
             stmt.execute(sqlItemGroup);
 
-            // System.out.println("✅ User-specific database initialized for: " + userID);
+            // 🔧 NEW: SCHEMA UPDATER
+            // ⬇️ Add this part ⬇️
+            SchemaUpdater updater = new SchemaUpdater(DATABASE_URL);
+
+            Map<String, Map<String, String>> expectedSchema = new LinkedHashMap<>();
+
+            Map<String, String> itemColumns = new LinkedHashMap<>();
+            itemColumns.put("reservation_buyer", "TEXT");
+            itemColumns.put("reservation_place", "TEXT");
+            itemColumns.put("reservation_date", "DATE");
+            itemColumns.put("reservation_reserved", "INTEGER DEFAULT 0");
+            itemColumns.put("reservation_hour", "INTEGER");
+            itemColumns.put("reservation_minute", "INTEGER");
+            itemColumns.put("supabaseSync", "INTEGER DEFAULT 0");
+            itemColumns.put("toDelete", "INTEGER DEFAULT 0");
+            itemColumns.put("toUpdate", "INTEGER DEFAULT 0");
+
+            Map<String, String> groupColumns = new LinkedHashMap<>();
+            groupColumns.put("itemsPerCycle", "INTEGER");
+
+            Map<String, String> itemGroupColumns = new LinkedHashMap<>();
+            itemGroupColumns.put("group_name", "TEXT NOT NULL");
+
+            expectedSchema.put("items", itemColumns);
+            expectedSchema.put("groups", groupColumns);
+            expectedSchema.put("item_groups", itemGroupColumns);
+
+
+
+            updater.ensureSchemaCompatibility(expectedSchema);
+            // ⬆️ END SCHEMA UPDATER ⬆️
+
             setDbReady(true);
         } catch (SQLException e) {
             e.printStackTrace();
@@ -197,6 +225,7 @@ public class storageManager {
             setDbReady(false);
         }
     }
+
 
 
     public void generateThumbnails() {
